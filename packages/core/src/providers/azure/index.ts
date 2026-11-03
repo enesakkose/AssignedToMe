@@ -128,7 +128,7 @@ export const azure: Provider = {
   logo: LOGO,
   docsUrl: 'https://learn.microsoft.com/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate',
   fields: [
-    { key: 'org', type: 'text', placeholder: 'kuruluş-adı', label: { tr: 'Kuruluş (organization)', en: 'Organization' } },
+    { key: 'org', type: 'text', placeholder: 'my-organization', label: { tr: 'Kuruluş (organization)', en: 'Organization' } },
     { key: 'pat', type: 'secret', label: { tr: 'Personal access token', en: 'Personal access token' } },
   ],
   guide: [

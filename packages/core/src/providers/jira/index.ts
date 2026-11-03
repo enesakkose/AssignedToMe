@@ -807,8 +807,8 @@ export const jira = createJira({
   name: 'Jira',
   docsUrl: 'https://support.atlassian.com/atlassian-account/docs/manage-api-tokens-for-your-atlassian-account/',
   fields: [
-    { key: 'domain', type: 'url', placeholder: 'sirket.atlassian.net', label: { tr: 'Jira adresi', en: 'Jira site' } },
-    { key: 'email', type: 'email', placeholder: 'ad@sirket.com', label: { tr: 'Atlassian e-postası', en: 'Atlassian email' } },
+    { key: 'domain', type: 'url', placeholder: 'your-company.atlassian.net', label: { tr: 'Jira adresi', en: 'Jira site' } },
+    { key: 'email', type: 'email', placeholder: 'you@company.com', label: { tr: 'Atlassian e-postası', en: 'Atlassian email' } },
     { key: 'apiToken', type: 'secret', label: { tr: 'API token', en: 'API token' } },
   ],
   guide: [
@@ -863,15 +863,19 @@ export const jiraDataCenter = createJira({
   name: 'Jira Data Center',
   docsUrl: 'https://confluence.atlassian.com/enterprise/using-personal-access-tokens-1026032365.html',
   fields: [
-    { key: 'domain', type: 'url', placeholder: 'jira.sirket.com', label: { tr: 'Jira adresi', en: 'Jira address' } },
-    // The secret keeps its old "password" key so existing connections still load; it now usually holds a PAT.
-    { key: 'password', type: 'secret', label: { tr: 'Personal access token', en: 'Personal access token' } },
+    { key: 'domain', type: 'url', placeholder: 'jira.company.com', label: { tr: 'Jira adresi', en: 'Jira address' } },
     {
       key: 'username',
       type: 'text',
-      placeholder: 'ad.soyad',
+      placeholder: 'username',
       optional: true,
       label: { tr: 'Kullanıcı adı (sadece şifreyle girişte)', en: 'Username (password sign-in only)' },
+    },
+    // The secret keeps its old "password" key so existing connections still load; it now usually holds a PAT.
+    {
+      key: 'password',
+      type: 'secret',
+      label: { tr: 'Personal access token ya da şifre', en: 'Personal access token or password' },
     },
   ],
   guide: [
