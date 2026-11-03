@@ -1,6 +1,6 @@
 [package]
 name = "mytask"
-version = "0.1.3"
+version = "0.1.4"
 description = "AssignedToMe: every task assigned to you, in the menu bar"
 authors = ["you"]
 edition = "2024"
@@ -43,7 +43,16 @@ objc2 = "0.6"
 objc2-app-kit = { version = "0.3", features = ["NSApplication", "NSImage", "NSResponder"] }
 objc2-foundation = { version = "0.3", features = ["NSData", "NSBundle", "NSString", "NSError"] }
 # macOS's real "Allow notifications?" prompt; the notification plugin's requestPermission is a no-op on desktop.
-objc2-user-notifications = { version = "0.3", features = ["UNUserNotificationCenter", "block2"] }
+objc2-user-notifications = { version = "0.3", features = [
+  "UNUserNotificationCenter",
+  "UNNotification",
+  "UNNotificationContent",
+  "UNNotificationRequest",
+  "UNNotificationResponse",
+  "UNNotificationSound",
+  "UNNotificationTrigger",
+  "block2",
+] }
 block2 = "0.6"
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]

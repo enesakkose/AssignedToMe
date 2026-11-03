@@ -1,6 +1,7 @@
 import type { Task } from '@mytask/core';
 import { invoke } from '@tauri-apps/api/core';
-import { isPermissionGranted, onAction, requestPermission, sendNotification } from '@tauri-apps/plugin-notification';
+import { listen } from '@tauri-apps/api/event';
+import { isPermissionGranted, requestPermission } from '@tauri-apps/plugin-notification';
 import type { TFunction } from 'i18next';
 import { getStore } from './store';
 
@@ -42,7 +43,7 @@ export async function ensureNotificationPermission(): Promise<void> {
 /** Dev aid: force one notification now (asks permission). From devtools: returns false if permission was refused. */
 export async function sendTestNotification(): Promise<boolean> {
   const ok = await requestAccess();
-  if (ok) sendNotification({ title: 'AssignedToMe', body: 'Test · bildirimler çalışıyor' });
+  if (ok) notify('AssignedToMe', 'Test · bildirimler çalışıyor');
   return ok;
 }
 
@@ -78,19 +79,24 @@ export async function announceNewTasks(boards: Board[], t: TFunction) {
 
   if (fresh.length <= 3) {
     for (const { board, connectionId, task } of fresh)
-      sendNotification({ title: t('notifications.assigned', { board }), body: `${task.key}  ${task.title}`, extra: { c: connectionId, k: task.key } });
+      notify(t('notifications.assigned', { board }), `${task.key}  ${task.title}`, connectionId, task.key);
   } else {
-    sendNotification({ title: t('notifications.assignedMany', { count: fresh.length }), body: fresh.map((f) => f.task.key).join(', ') });
+    notify(t('notifications.assignedMany', { count: fresh.length }), fresh.map((f) => f.task.key).join(', '));
   }
+}
+
+/**
+ * Posts a notification through macOS's own notification center (Rust `notify_task`); the plugin's sendNotification
+ * uses an API macOS drops. A task's board and key ride along so a click can open it.
+ */
+function notify(title: string, body: string, board = '', task = '') {
+  invoke('notify_task', { title, body, board, task }).catch(() => undefined);
 }
 
 /** Calls back when the user clicks a task notification, with the board + task it carried (empty for the summary). */
 export async function onNotificationClick(cb: (connectionId: string, taskKey: string) => void) {
   try {
-    await onAction((event) => {
-      const extra = (event.notification?.extra ?? {}) as { c?: string; k?: string };
-      cb(extra.c ?? '', extra.k ?? '');
-    });
+    await listen<[string, string]>('notification-clicked', ({ payload: [board, task] }) => cb(board, task));
   } catch {
     // Not in Tauri (browser preview).
   }

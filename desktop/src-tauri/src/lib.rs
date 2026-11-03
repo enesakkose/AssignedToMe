@@ -254,23 +254,124 @@ fn opens_window_at_launch(app: &AppHandle) -> bool {
         .unwrap_or(true)
 }
 
-/// Shows macOS's "Allow notifications from AssignedToMe?" prompt; once answered, later calls do nothing visible.
-/// Onboarding calls it because the notification plugin's own requestPermission is a no-op on desktop, so a new user
-/// would never be asked. Only inside a real .app: `tauri dev` runs a bare binary, and the notification center throws
-/// (crashing the app) when the process isn't a bundle.
-#[tauri::command]
-fn request_notification_permission() {
-    #[cfg(target_os = "macos")]
-    {
-        use objc2_foundation::{NSBundle, NSError};
-        use objc2_user_notifications::{UNAuthorizationOptions, UNUserNotificationCenter};
-        if !NSBundle::mainBundle().bundlePath().to_string().ends_with(".app") {
-            return;
+/// Notifications through macOS's current API (UNUserNotificationCenter). The notification plugin asks for nothing
+/// on desktop and posts through the retired NSUserNotification API, which this macOS drops without a trace: that's
+/// why new-task alerts never appeared. Only inside a real .app: for a bare `tauri dev` binary the notification center
+/// throws (crashing the app), so dev falls back to the plugin.
+#[cfg(target_os = "macos")]
+mod native_notifications {
+    use std::sync::OnceLock;
+
+    use objc2::rc::Retained;
+    use objc2::runtime::{NSObject, NSObjectProtocol, ProtocolObject};
+    use objc2::{define_class, msg_send, AllocAnyThread};
+    use objc2_foundation::{NSBundle, NSError, NSString};
+    use objc2_user_notifications::{
+        UNAuthorizationOptions, UNMutableNotificationContent, UNNotification, UNNotificationPresentationOptions,
+        UNNotificationRequest, UNNotificationResponse, UNNotificationSound, UNUserNotificationCenter,
+        UNUserNotificationCenterDelegate,
+    };
+    use tauri::{AppHandle, Emitter};
+
+    static APP: OnceLock<AppHandle> = OnceLock::new();
+
+    pub fn available() -> bool {
+        NSBundle::mainBundle().bundlePath().to_string().ends_with(".app")
+    }
+
+    define_class!(
+        // SAFETY: NSObject has no subclassing requirements and this class doesn't implement Drop.
+        #[unsafe(super(NSObject))]
+        #[name = "AssignedToMeNotificationDelegate"]
+        struct Delegate;
+
+        unsafe impl NSObjectProtocol for Delegate {}
+
+        unsafe impl UNUserNotificationCenterDelegate for Delegate {
+            // Show the banner even while the app is in front; the center hides it then by default.
+            #[unsafe(method(userNotificationCenter:willPresentNotification:withCompletionHandler:))]
+            fn will_present(
+                &self,
+                _center: &UNUserNotificationCenter,
+                _notification: &UNNotification,
+                done: &block2::DynBlock<dyn Fn(UNNotificationPresentationOptions)>,
+            ) {
+                done.call((UNNotificationPresentationOptions::Banner
+                    | UNNotificationPresentationOptions::List
+                    | UNNotificationPresentationOptions::Sound,));
+            }
+
+            // A click: tell the app which board and task it was about (packed into the request id by `show`).
+            #[unsafe(method(userNotificationCenter:didReceiveNotificationResponse:withCompletionHandler:))]
+            fn did_receive(
+                &self,
+                _center: &UNUserNotificationCenter,
+                response: &UNNotificationResponse,
+                done: &block2::DynBlock<dyn Fn()>,
+            ) {
+                let id = response.notification().request().identifier().to_string();
+                let mut parts = id.split('\n');
+                let board = parts.next().unwrap_or_default().to_string();
+                let task = parts.next().unwrap_or_default().to_string();
+                if let Some(app) = APP.get() {
+                    let _ = app.emit("notification-clicked", (board, task));
+                }
+                done.call(());
+            }
         }
+    );
+
+    /// Shows the "Allow notifications from AssignedToMe?" prompt; once answered, it does nothing visible.
+    pub fn request_permission() {
         let done = block2::RcBlock::new(|_granted: objc2::runtime::Bool, _error: *mut NSError| {});
         UNUserNotificationCenter::currentNotificationCenter()
             .requestAuthorizationWithOptions_completionHandler(UNAuthorizationOptions::Alert | UNAuthorizationOptions::Sound, &done);
     }
+
+    /// Becomes the notification center's delegate (clicks, banners while in front). Once, at startup, on the main thread.
+    pub fn install(app: &AppHandle) {
+        let _ = APP.set(app.clone());
+        let delegate: Retained<Delegate> = unsafe { msg_send![Delegate::alloc(), init] };
+        UNUserNotificationCenter::currentNotificationCenter().setDelegate(Some(ProtocolObject::from_ref(&*delegate)));
+        // The center only holds its delegate weakly; this one has to live as long as the app.
+        std::mem::forget(delegate);
+    }
+
+    pub fn show(title: &str, body: &str, board: &str, task: &str) {
+        let content = UNMutableNotificationContent::new();
+        content.setTitle(&NSString::from_str(title));
+        content.setBody(&NSString::from_str(body));
+        content.setSound(Some(&UNNotificationSound::defaultSound()));
+        // Unique per notification; the click handler reads the board and task back out of it.
+        let nanos = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_nanos()).unwrap_or_default();
+        let id = NSString::from_str(&format!("{board}\n{task}\n{nanos}"));
+        let request = UNNotificationRequest::requestWithIdentifier_content_trigger(&id, &content, None);
+        UNUserNotificationCenter::currentNotificationCenter().addNotificationRequest_withCompletionHandler(&request, None);
+    }
+}
+
+/// Shows macOS's "Allow notifications from AssignedToMe?" prompt (from onboarding); once answered, does nothing visible.
+#[tauri::command]
+fn request_notification_permission() {
+    #[cfg(target_os = "macos")]
+    if native_notifications::available() {
+        native_notifications::request_permission();
+    }
+}
+
+/// Posts a task notification; empty board and task for the "several new tasks" summary. A click arrives as the
+/// "notification-clicked" event with (board, task).
+#[tauri::command]
+fn notify_task(app: AppHandle, title: String, body: String, board: String, task: String) {
+    #[cfg(target_os = "macos")]
+    if native_notifications::available() {
+        native_notifications::show(&title, &body, &board, &task);
+        return;
+    }
+    // `tauri dev`: the plugin (macOS shows these as from Terminal), without click-through.
+    let _ = (&board, &task);
+    use tauri_plugin_notification::NotificationExt;
+    let _ = app.notification().builder().title(title).body(body).show();
 }
 
 /// Opens macOS System Settings at the Notifications pane so the user manages this app's alerts where the OS owns them.
@@ -356,6 +457,7 @@ pub fn run() {
             allow_http_origin,
             open_notification_settings,
             request_notification_permission,
+            notify_task,
             show_popover,
             show_app_window,
             focus_app_window
@@ -408,6 +510,18 @@ pub fn run() {
 
             #[cfg(not(debug_assertions))]
             enable_launch_at_login_once(app.handle());
+
+            // Notifications go through macOS's own API: the delegate (clicks, banners while in front) must be in place
+            // before any arrives. Whoever finished onboarding before it asked (0.1.2 and older) is asked once here;
+            // anyone who already answered sees nothing.
+            #[cfg(target_os = "macos")]
+            if native_notifications::available() {
+                native_notifications::install(app.handle());
+                let onboarded = app.store("mytask.json").ok().and_then(|s| s.get("onboarded")).and_then(|v| v.as_bool());
+                if onboarded == Some(true) {
+                    native_notifications::request_permission();
+                }
+            }
 
             // Launched by the user (Finder/Launchpad), not at login: open the window, or the popover for menubar-only users.
             if !std::env::args().any(|a| a == "--autostart") {
