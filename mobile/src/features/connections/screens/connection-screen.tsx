@@ -1,0 +1,337 @@
+import { getProvider, providers, type Connection, type Provider } from "@mytask/core";
+import { AppHeader } from "@/components/layout/app-header";
+import { Section } from "@/components/layout/section";
+import { Screen } from "@/components/layout/screen";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Icon } from "@/components/ui/icon";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/ui/state";
+import { Text } from "@/components/ui/text";
+import { providerErrorText } from "@/lib/errors";
+import { currentLocale } from "@/lib/i18n";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { router } from "expo-router";
+import { ArrowLeft, Trash2 } from "lucide-react-native";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Pressable, View } from "react-native";
+import { toast } from "sonner-native";
+import {
+  newConnectionId,
+  removeConnection,
+  saveConnection,
+  useConnectionsStore,
+  withSecrets,
+  type StoredConnection,
+} from "../api/connections";
+import { ProviderGuide } from "../components/provider-guide";
+import { ProviderLogo } from "../components/provider-logo";
+import { clearHalted } from "@/features/tasks/background-refresh";
+
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const secretKeys = (provider: Provider) =>
+  provider.fields.filter((f) => f.type === "secret").map((f) => f.key);
+
+/** Long tokens show their last 4 like a card number; short ones (passwords) show none. */
+const mask = (secret: string) =>
+  secret ? "••••••••" + (secret.length >= 20 ? secret.slice(-4) : "") : "";
+
+/** Add (no id) or edit (id) a board connection. */
+export function ConnectionScreen({ id }: { id?: string }) {
+  const { t } = useTranslation();
+  const existing = useConnectionsStore((s) => s.connections.find((c) => c.id === id));
+  const [providerId, setProviderId] = useState<string | undefined>(existing?.providerId);
+  const provider = getProvider(providerId ?? "");
+
+  // The saved secrets never come back into the form; it only gets a masked hint of each.
+  const loaded = useQuery({
+    queryKey: ["connection-form", id],
+    queryFn: async () => {
+      const full = await withSecrets(existing!);
+      return Object.fromEntries(secretKeys(provider!).map((k) => [k, mask(full.values[k] ?? "")]));
+    },
+    enabled: !!existing && !!provider,
+    gcTime: 0,
+    staleTime: 0,
+  });
+
+  return (
+    <Screen
+      header={
+        <AppHeader
+          leading={
+            <Button
+              accessibilityLabel={t("ui.back")}
+              onPress={() => router.back()}
+              size="icon"
+              variant="ghost"
+            >
+              <Icon as={ArrowLeft} size={20} />
+            </Button>
+          }
+          title={id ? t("connections.edit") : t("connections.add")}
+        />
+      }
+    >
+      {!provider ? (
+        <ProviderPicker onPick={setProviderId} />
+      ) : existing && !loaded.data ? (
+        loaded.isError ? (
+          <ErrorState
+            className="m-5"
+            description={t("errors.keychain")}
+            title={t("errors.keychainTitle")}
+          />
+        ) : (
+          <View className="gap-3 p-5">
+            <Skeleton className="h-11 w-full rounded-full" />
+            <Skeleton className="h-11 w-full rounded-full" />
+            <Skeleton className="h-11 w-full rounded-full" />
+          </View>
+        )
+      ) : (
+        <ConnectionForm
+          hints={loaded.data}
+          initial={existing}
+          key={id ?? provider.id}
+          provider={provider}
+        />
+      )}
+    </Screen>
+  );
+}
+
+function ProviderPicker({ onPick }: { onPick: (id: string) => void }) {
+  const { t } = useTranslation();
+  return (
+    <Section description={t("connections.pickProviderHint")} title={t("connections.pickProvider")}>
+      <View className="flex-row flex-wrap gap-2">
+        {providers.map((p) => (
+          <Pressable
+            accessibilityRole="button"
+            className="cut min-h-14 grow basis-[45%] flex-row items-center gap-2.5 border border-rule bg-background p-2.5 active:scale-[0.97] active:bg-paper-2"
+            key={p.id}
+            onPress={() => onPick(p.id)}
+          >
+            <ProviderLogo provider={p} />
+            <Text className="shrink text-sm font-medium">{p.name}</Text>
+          </Pressable>
+        ))}
+      </View>
+    </Section>
+  );
+}
+
+function ConnectionForm({
+  provider,
+  initial,
+  hints = {},
+}: {
+  provider: Provider;
+  initial?: StoredConnection;
+  hints?: Record<string, string>;
+}) {
+  const { t } = useTranslation();
+  const locale = currentLocale();
+  const qc = useQueryClient();
+  const [values, setValues] = useState<Record<string, string>>(initial?.values ?? {});
+  const [name, setName] = useState(initial?.name ?? "");
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [removing, setRemoving] = useState(false);
+
+  const connection = (): Connection => ({
+    id: initial?.id ?? newConnectionId(),
+    providerId: provider.id,
+    name: name.trim() || provider.defaultName(values),
+    values: Object.fromEntries(provider.fields.map((f) => [f.key, (values[f.key] ?? "").trim()])),
+  });
+
+  const check = () => {
+    const next: Record<string, string> = {};
+    for (const f of provider.fields) {
+      const v = (values[f.key] ?? "").trim();
+      if (!v && !hints[f.key]) {
+        if (!f.optional) next[f.key] = t("connections.required");
+      } else if (f.type === "email" && !EMAIL.test(v)) next[f.key] = t("connections.invalidEmail");
+    }
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  };
+
+  // A kept secret is read from SecureStore only for this request, never put into form state.
+  const withKept = async (c: Connection): Promise<Connection> => {
+    if (!initial) return c;
+    const saved = await withSecrets(initial);
+    const secrets = new Set(secretKeys(provider));
+    return {
+      ...c,
+      values: Object.fromEntries(
+        Object.entries(c.values).map(([k, v]) => [
+          k,
+          v || (secrets.has(k) ? (saved.values[k] ?? "") : ""),
+        ]),
+      ),
+    };
+  };
+
+  const test = useMutation({
+    mutationFn: async (c: Connection) => provider.validate(await withKept(c), fetch),
+  });
+  const save = useMutation({
+    mutationFn: saveConnection,
+    onSuccess: (_data, c) => {
+      clearHalted(c.id);
+      return qc.invalidateQueries({ queryKey: ["tasks", c.id] });
+    },
+  });
+  const remove = useMutation({
+    mutationFn: removeConnection,
+    onSuccess: (_data, id) => qc.removeQueries({ queryKey: ["tasks", id] }),
+  });
+
+  const onTest = () => {
+    if (!check()) return;
+    test.mutate(connection(), { onSuccess: () => toast.success(t("connections.testOk")) });
+  };
+
+  const onSave = () => {
+    if (!check()) return;
+    const c = connection();
+    test.mutate(c, {
+      onSuccess: () =>
+        save.mutate(c, {
+          onSuccess: () => {
+            toast.success(t("connections.saved", { name: c.name }));
+            router.back();
+          },
+          onError: () => toast.error(t("errors.keychain")),
+        }),
+    });
+  };
+
+  const busy = test.isPending || save.isPending;
+
+  return (
+    <>
+      <View className="gap-4 border-b border-rule p-5">
+        <View className="flex-row items-center gap-3">
+          <ProviderLogo provider={provider} />
+          <Text className="text-[17px] font-semibold">{provider.name}</Text>
+        </View>
+        {provider.fields.map((f) => (
+          <View className="gap-2" key={f.key}>
+            <Label className="text-sm" nativeID={`field-${f.key}`}>
+              {f.label[locale]}
+            </Label>
+            <Input
+              accessibilityLabelledBy={`field-${f.key}`}
+              autoCapitalize="none"
+              autoComplete="off"
+              autoCorrect={false}
+              keyboardType={
+                f.type === "email" ? "email-address" : f.type === "url" ? "url" : "default"
+              }
+              onChangeText={(v) => setValues((prev) => ({ ...prev, [f.key]: v }))}
+              placeholder={(f.type === "secret" && hints[f.key]) || f.placeholder}
+              secureTextEntry={f.type === "secret"}
+              textContentType={f.type === "secret" ? "password" : "none"}
+              value={values[f.key] ?? ""}
+            />
+            {errors[f.key] ? (
+              <Text className="text-sm text-error">{errors[f.key]}</Text>
+            ) : hints[f.key] ? (
+              <Text className="text-sm" variant="muted">
+                {t("connections.secretKept", { hint: hints[f.key] })}
+              </Text>
+            ) : null}
+          </View>
+        ))}
+        <View className="gap-2">
+          <Label className="text-sm" nativeID="field-name">
+            {t("boards.name")}
+          </Label>
+          <Input
+            accessibilityLabelledBy="field-name"
+            maxLength={60}
+            onChangeText={setName}
+            placeholder={provider.defaultName(values)}
+            value={name}
+          />
+          <Text className="text-sm" variant="muted">
+            {t("connections.nameHint")}
+          </Text>
+        </View>
+
+        {test.isError ? (
+          <ErrorState
+            description={providerErrorText(test.error, t, provider.appName)}
+            title={t("connections.testFailed")}
+          />
+        ) : null}
+
+        <View className="flex-row gap-2 pt-1">
+          <Button className="flex-1" disabled={busy} onPress={onSave}>
+            <Text>{initial ? t("ui.save") : t("connections.save")}</Text>
+          </Button>
+          <Button className="flex-1" disabled={busy} onPress={onTest} variant="secondary">
+            <Text>{t("connections.test")}</Text>
+          </Button>
+        </View>
+        {initial ? (
+          <Button className="self-center" onPress={() => setRemoving(true)} variant="ghost">
+            <Icon as={Trash2} className="text-error" size={16} />
+            <Text className="text-error">{t("connections.remove")}</Text>
+          </Button>
+        ) : null}
+      </View>
+
+      <Section title={t("connections.guideTitle", { name: provider.name })}>
+        <ProviderGuide provider={provider} values={values} />
+      </Section>
+
+      {initial ? (
+        <AlertDialog onOpenChange={setRemoving} open={removing}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                {t("connections.removeTitle", { name: initial.name })}
+              </AlertDialogTitle>
+              <AlertDialogDescription>{t("connections.removeDescription")}</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>
+                <Text>{t("ui.cancel")}</Text>
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onPress={() =>
+                  remove.mutate(initial.id, {
+                    onSuccess: () => {
+                      toast.success(t("connections.removed"));
+                      router.back();
+                    },
+                    onError: () => toast.error(t("errors.generic")),
+                  })
+                }
+              >
+                <Text>{t("connections.remove")}</Text>
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      ) : null}
+    </>
+  );
+}

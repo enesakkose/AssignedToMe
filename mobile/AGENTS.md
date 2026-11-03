@@ -8,7 +8,7 @@ This is a native-only Expo + TypeScript boilerplate. Use Bun for all package com
 - React Native Reusables components live in `src/components/ui`; import primitives from there before writing anything custom.
 - Generic layout wrappers live in `src/components/layout`.
 - State/data/forms use Zustand, TanStack Query, React Hook Form and Zod.
-- Storage is split by sensitivity: SecureStore for tokens/secrets, AsyncStorage for non-sensitive preferences.
+- Storage is split by sensitivity: provider keys only in SecureStore (`src/lib/secrets.ts`, this-device-only, readable after first unlock for the background refresh); non-secret app state (connections without secrets, preferences, seen task ids) in Zustand persisted to MMKV.
 - Virtualization uses FlashList. Drag-and-drop uses React Native Reanimated DnD.
 - Bottom sheets use `@gorhom/bottom-sheet`; import the local wrapper from `src/components/ui/bottom-sheet`.
 - OTA readiness uses `expo-updates` with EAS channels and `runtimeVersion.policy = appVersion`.
@@ -28,7 +28,8 @@ This is a native-only Expo + TypeScript boilerplate. Use Bun for all package com
 - Wrap app-level providers only in `src/providers/app-providers.tsx`; do not duplicate QueryClient, Toaster, SafeArea, Gesture or theme wrappers inside screens.
 - App boot/splash provider orchestration lives in `src/providers/splash-provider.tsx`; splash UI can stay in `src/features/splash`.
 - Use the generic `apiClient`, `AppError`, storage adapters and `queryClient` instead of creating feature-local copies.
-- API requests use the Axios-backed `src/lib/api/client.ts`; do not call raw `fetch` in features.
+- API requests use the Axios-backed `src/lib/api/client.ts`; do not call raw `fetch` in features. Exception: `@mytask/core` providers take a fetch-shaped function, and React Native's `fetch` (no CORS) is passed to them in `features/tasks/api` and the connection form.
+- Provider logic comes from `@mytask/core` (`../packages/core`, used from source through `metro.config.js` and `tsconfig.json` paths); never call a provider API from the app.
 - Read app/version/device data from `src/lib/app`; read network status from `src/lib/network`.
 - Prefer extension/wrapper components over new primitives. If a primitive is missing, add it to `src/components/ui` through React Native Reusables when available.
 

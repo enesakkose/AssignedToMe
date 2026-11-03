@@ -8,7 +8,6 @@ export default function NotFoundScreen() {
   return (
     <Screen contentClassName="justify-center">
       <AppHeader
-        eyebrow="404"
         subtitle="The route you opened does not exist in this base app."
         title="Not found"
       />

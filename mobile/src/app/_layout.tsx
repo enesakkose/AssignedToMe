@@ -1,13 +1,15 @@
 import "../../global.css";
+// Defines the background refresh task at startup, also when iOS launches the app headless just to run it.
+import "@/features/tasks/background-refresh";
 
 import { AppProviders } from "@/providers/app-providers";
 import { PortalHost } from "@rn-primitives/portal";
-import { Slot } from "expo-router";
+import { Stack } from "expo-router";
 
 export default function RootLayout() {
   return (
     <AppProviders>
-      <Slot />
+      <Stack screenOptions={{ headerShown: false }} />
       <PortalHost />
     </AppProviders>
   );

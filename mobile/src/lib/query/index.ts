@@ -1,1 +1,1 @@
-export { queryClient } from "./query-client";
+export { isHaltError, queryClient } from "./query-client";

@@ -1,0 +1,103 @@
+{
+  "ui": {
+    "cancel": "Cancel",
+    "save": "Save",
+    "back": "Back",
+    "retry": "Retry",
+    "close": "Close"
+  },
+  "settings": {
+    "title": "Settings",
+    "boards": "Boards",
+    "boardsHint": "Connected tools. Tap one to edit it.",
+    "general": "General",
+    "theme": "Theme",
+    "themeSystem": "System",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "language": "Language",
+    "notifications": "Notifications",
+    "refreshEvery": "Refresh",
+    "minutesShort": "{{m}} min",
+    "hourShort": "1 hr",
+    "openSystem": "Open settings",
+    "refreshHint": "While the app is open. In the background iOS decides when, so alerts can be late.",
+    "notificationsHint": "Alerts for newly assigned tasks.",
+    "notificationsOff": "Turned off in iOS settings.",
+    "allow": "Allow",
+    "version": "Version {{version}}"
+  },
+  "connections": {
+    "add": "Connect a board",
+    "edit": "Edit connection",
+    "save": "Connect",
+    "test": "Test connection",
+    "remove": "Remove",
+    "removed": "Connection removed",
+    "removeTitle": "Remove {{name}}?",
+    "pickProvider": "Where should we connect?",
+    "pickProviderHint": "Pick the tool to pull your tasks from.",
+    "required": "This field is required.",
+    "invalidEmail": "Enter a valid email.",
+    "nameHint": "The name on the tab. Left empty, it comes from the site address.",
+    "testOk": "Connection works",
+    "testFailed": "Couldn't connect",
+    "saved": "{{name}} connected",
+    "guideTitle": "How to connect {{name}}",
+    "removeDescription": "The board and its saved API token are deleted from this device. Tasks at the source are untouched.",
+    "secretKept": "Saved: {{hint}}. Enter a new one to replace it; leave empty to keep it."
+  },
+  "errors": {
+    "generic": "Something went wrong. Try again.",
+    "unauthorized": "Sign-in was refused. I stopped retrying so your account isn't locked; edit the connection and update the details.",
+    "source": "the source app",
+    "notFound": "Site not found. Check the {{app}} address.",
+    "network": "Couldn't connect. Check your internet connection.",
+    "rateLimited": "{{app}}'s request limit was reached. Try again in a few minutes.",
+    "invalidInput": "Details are missing or wrong. Edit the connection.",
+    "keychainTitle": "Couldn't read saved details",
+    "openLink": "Couldn't open the link.",
+    "forbidden": "You don't have permission for this in {{app}}.",
+    "captcha": "{{app}} locked sign-in behind a CAPTCHA. Sign in to {{app}} once in your browser to pass it, then press Retry.",
+    "genericWithDetail": "Something went wrong ({{detail}}).",
+    "blocked": "Your company's network security blocked this request. You can do it in {{app}}; for a lasting fix, ask your security team to allow {{app}} API access.",
+    "keychain": "The iOS Keychain wasn't reachable. Unlock the device and try again."
+  },
+  "onboarding": {
+    "skip": "Skip",
+    "next": "Next",
+    "start": "Get started",
+    "welcome": {
+      "title": "Welcome to AssignedToMe",
+      "body": "Every task assigned to you, from all your boards, in one place."
+    },
+    "boards": {
+      "title": "Connect your boards",
+      "body": "Every tool you connect becomes a tab, refreshed every hour."
+    },
+    "providers": {
+      "title": "Works with your tools",
+      "body": "Pull your tasks from the tools you already use."
+    },
+    "privacy": {
+      "title": "Your keys stay with you",
+      "body": "API keys live only in the iOS Keychain on this device and are never sent anywhere else."
+    },
+    "notify": {
+      "title": "Stay in the loop",
+      "body": "Get notified when a task is assigned to you. iOS asks for permission next."
+    }
+  },
+  "notifications": {
+    "assigned": "New task assigned · {{board}}",
+    "assignedMany": "{{count}} new tasks assigned"
+  },
+  "boards": {
+    "name": "Board name"
+  },
+  "tabs": {
+    "home": "Home",
+    "playground": "Playground",
+    "settings": "Settings"
+  }
+}

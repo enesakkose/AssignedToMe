@@ -12,7 +12,6 @@ export function ExampleScreen() {
   return (
     <Screen>
       <AppHeader
-        eyebrow="Example feature"
         subtitle="A mock feature that demonstrates the recommended feature folder shape."
         title="Feature structure"
       />

@@ -37,7 +37,6 @@ export function LoginScreen() {
   return (
     <Screen>
       <AppHeader
-        eyebrow="Auth"
         subtitle="Generic React Hook Form + Zod example with a native OTP input."
         title="Login"
       />

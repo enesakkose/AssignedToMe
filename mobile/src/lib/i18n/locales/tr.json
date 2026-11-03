@@ -1,0 +1,103 @@
+{
+  "ui": {
+    "cancel": "Vazgeç",
+    "save": "Kaydet",
+    "back": "Geri",
+    "retry": "Tekrar dene",
+    "close": "Kapat"
+  },
+  "settings": {
+    "title": "Ayarlar",
+    "boards": "Board'lar",
+    "boardsHint": "Bağlı araçlar. Düzenlemek için birine dokun.",
+    "general": "Genel",
+    "theme": "Tema",
+    "themeSystem": "Sistem",
+    "themeLight": "Açık",
+    "themeDark": "Koyu",
+    "language": "Dil",
+    "notifications": "Bildirimler",
+    "refreshEvery": "Yenileme",
+    "minutesShort": "{{m}} dk",
+    "hourShort": "1 sa",
+    "openSystem": "Ayarları aç",
+    "refreshHint": "Uygulama açıkken. Arka planda zamanı iOS seçer, bildirim gecikebilir.",
+    "notificationsHint": "Yeni atanan task için bildirim.",
+    "notificationsOff": "iOS ayarlarında kapalı.",
+    "allow": "İzin ver",
+    "version": "Sürüm {{version}}"
+  },
+  "connections": {
+    "add": "Board bağla",
+    "edit": "Bağlantıyı düzenle",
+    "save": "Bağla",
+    "test": "Bağlantıyı test et",
+    "remove": "Kaldır",
+    "removed": "Bağlantı kaldırıldı",
+    "removeTitle": "{{name}} kaldırılsın mı?",
+    "pickProvider": "Nereye bağlanalım?",
+    "pickProviderHint": "Görevlerini çekeceğin aracı seç.",
+    "required": "Bu alan gerekli.",
+    "invalidEmail": "Geçerli bir e-posta yaz.",
+    "nameHint": "Sekmede görünen isim. Boş bırakırsan adresten üretilir.",
+    "testOk": "Bağlantı çalışıyor",
+    "testFailed": "Bağlanamadı",
+    "saved": "{{name}} bağlandı",
+    "guideTitle": "{{name}} nasıl bağlanır?",
+    "removeDescription": "Board ve kayıtlı API token bu cihazdan silinir. Kaynaktaki işlere dokunulmaz.",
+    "secretKept": "Kayıtlı: {{hint}}. Değiştirmek için yenisini gir, boş bırakırsan kayıtlı olan kalır."
+  },
+  "errors": {
+    "generic": "Bir şeyler ters gitti. Tekrar dene.",
+    "unauthorized": "Giriş bilgileri reddedildi. Hesabın kilitlenmesin diye otomatik denemeyi durdurdum; bağlantıyı düzenleyip bilgileri güncelle.",
+    "source": "kaynak uygulama",
+    "notFound": "Adres bulunamadı. {{app}} adresini kontrol et.",
+    "network": "Bağlantı kurulamadı. İnternetini kontrol et.",
+    "rateLimited": "{{app}} istek sınırına ulaşıldı. Birkaç dakika sonra tekrar dene.",
+    "invalidInput": "Bilgiler eksik ya da hatalı. Bağlantıyı düzenle.",
+    "keychainTitle": "Kayıtlı bilgiler okunamadı",
+    "openLink": "Bağlantı açılamadı.",
+    "forbidden": "Bu işlem için {{app}} üzerinde yetkin yok.",
+    "captcha": "{{app}} girişi CAPTCHA'ya kilitledi. Tarayıcıdan {{app}} hesabına bir kez giriş yapıp CAPTCHA'yı geç, sonra Tekrar dene'ye bas.",
+    "genericWithDetail": "Bir şeyler ters gitti ({{detail}}).",
+    "blocked": "Şirket ağ güvenliği bu isteği engelledi. Bunu {{app}} üzerinden yapabilirsin; kalıcı çözüm için güvenlik ekibinden {{app}} API erişimine izin iste.",
+    "keychain": "iOS Anahtar Zinciri'ne erişilemedi. Cihazın kilidini açıp tekrar dene."
+  },
+  "onboarding": {
+    "skip": "Geç",
+    "next": "İleri",
+    "start": "Başla",
+    "welcome": {
+      "title": "AssignedToMe'ye hoş geldin",
+      "body": "Tüm board'larındaki sana atanmış işler tek bir yerde."
+    },
+    "boards": {
+      "title": "Board'larını bağla",
+      "body": "Bağladığın her araç bir sekme olur, saatte bir yenilenir."
+    },
+    "providers": {
+      "title": "Araçlarınla çalışır",
+      "body": "Görevlerini kullandığın araçlardan çek."
+    },
+    "privacy": {
+      "title": "Anahtarların sende kalır",
+      "body": "API anahtarların yalnızca bu cihazdaki iOS Anahtar Zinciri'nde saklanır, başka hiçbir yere gönderilmez."
+    },
+    "notify": {
+      "title": "Haberin olsun",
+      "body": "Sana yeni bir task atandığında bildirim al. Sıradaki adımda iOS izin ister."
+    }
+  },
+  "notifications": {
+    "assigned": "Yeni task atandı · {{board}}",
+    "assignedMany": "{{count}} yeni task atandı"
+  },
+  "boards": {
+    "name": "Board adı"
+  },
+  "tabs": {
+    "home": "Ana sayfa",
+    "playground": "Playground",
+    "settings": "Ayarlar"
+  }
+}

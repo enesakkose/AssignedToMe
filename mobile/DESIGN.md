@@ -35,7 +35,11 @@ Defined in `global.css` (light `:root`, dark `.dark:root`), mapped to classes in
 
 ## Shape
 
-Same as desktop: buttons, inputs and select triggers are pills (`rounded-full`); cards `rounded-lg` (10px); menus, popovers, textareas `rounded-md` (8px); chips `rounded-sm` (4px). Buttons are flat: one fill, no shadow.
+Same as desktop: buttons, inputs and select triggers are pills (`rounded-full`); menus, popovers, textareas `rounded-md` (8px); chips `rounded-sm` (4px). Buttons are flat: one fill, no shadow, no border (`default` = graphite, `secondary` = paper-3, `ghost`). Bordered tiles and notices use desktop's `cut` corners (two opposite corners 10px, the others 3px).
+
+## Layout
+
+No cards. A screen is a slim `AppHeader` (title, leading/trailing actions, hairline under it) fixed above ruled `Section`s: a heading and its content, divided from the next by a `border-rule` hairline. Lists run edge to edge inside a `flush` section, one rule between rows. A setting row has its label (and hint) on the left and the control on the right; one-of-few choices are a `SegmentedControl` (paper-3 track, the chosen pill on paper). Failures show `ErrorState`.
 
 ## Phone-specific rules
 

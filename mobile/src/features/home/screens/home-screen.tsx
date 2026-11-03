@@ -16,12 +16,11 @@ export function HomeScreen() {
   return (
     <Screen>
       <AppHeader
-        eyebrow="AssignedToMe"
         subtitle="Feature-based, native-only Expo boilerplate with generic providers, API, errors, storage, forms and owned UI primitives."
         title="Native starter with a calm system"
       />
 
-      <View className="flex-row flex-wrap gap-2">
+      <View className="flex-row flex-wrap gap-2 px-5 py-4">
         {stack.map((item) => (
           <Badge key={item} variant="secondary">
             <Text>{item}</Text>

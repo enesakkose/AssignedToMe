@@ -4,12 +4,14 @@ import { APP_FONT_FAMILY } from "@/lib/theme";
 import { Tabs } from "expo-router";
 import type { BottomTabBarProps } from "expo-router/build/react-navigation/bottom-tabs";
 import { Home, PanelsTopLeft, Settings } from "lucide-react-native";
+import { BackgroundSync } from "@/features/tasks/components/background-sync";
+import { useTranslation } from "react-i18next";
 import { Pressable, Text as RNText, useWindowDimensions, View } from "react-native";
 
 const tabMeta: Record<string, { icon: typeof Home; label: string }> = {
-  index: { icon: Home, label: "Home" },
-  playground: { icon: PanelsTopLeft, label: "Playground" },
-  settings: { icon: Settings, label: "Settings" },
+  index: { icon: Home, label: "tabs.home" },
+  playground: { icon: PanelsTopLeft, label: "tabs.playground" },
+  settings: { icon: Settings, label: "tabs.settings" },
 };
 
 type TabItemProps = {
@@ -58,6 +60,7 @@ function TabItem({ activeColor, inactiveColor, icon, isFocused, label, onPress }
 
 function MicaTabBar({ descriptors, navigation, state }: BottomTabBarProps) {
   const theme = useAppTheme();
+  const { t } = useTranslation();
   const { width } = useWindowDimensions();
   const dockWidth = Math.min(330, width - 72);
 
@@ -94,7 +97,7 @@ function MicaTabBar({ descriptors, navigation, state }: BottomTabBarProps) {
               inactiveColor={theme.values.tabInactive}
               isFocused={isFocused}
               key={route.key}
-              label={meta.label}
+              label={t(meta.label)}
               onPress={() => {
                 const event = navigation.emit({
                   canPreventDefault: true,
@@ -116,31 +119,34 @@ function MicaTabBar({ descriptors, navigation, state }: BottomTabBarProps) {
 
 export default function AppLayout() {
   return (
-    <Tabs
-      tabBar={(props) => <MicaTabBar {...props} />}
-      screenOptions={{
-        headerShown: false,
-        tabBarHideOnKeyboard: true,
-      }}
-    >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: "Home",
+    <>
+      <BackgroundSync />
+      <Tabs
+        tabBar={(props) => <MicaTabBar {...props} />}
+        screenOptions={{
+          headerShown: false,
+          tabBarHideOnKeyboard: true,
         }}
-      />
-      <Tabs.Screen
-        name="playground"
-        options={{
-          title: "Playground",
-        }}
-      />
-      <Tabs.Screen
-        name="settings"
-        options={{
-          title: "Settings",
-        }}
-      />
-    </Tabs>
+      >
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: "Home",
+          }}
+        />
+        <Tabs.Screen
+          name="playground"
+          options={{
+            title: "Playground",
+          }}
+        />
+        <Tabs.Screen
+          name="settings"
+          options={{
+            title: "Settings",
+          }}
+        />
+      </Tabs>
+    </>
   );
 }

@@ -116,5 +116,17 @@ module.exports = {
   future: {
     hoverOnlyWhenSupported: true,
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [
+    require("tailwindcss-animate"),
+    // Desktop's signature "cut" corners: two opposite corners rounder than the other two.
+    ({ addUtilities }) =>
+      addUtilities({
+        ".cut": {
+          borderBottomLeftRadius: "3px",
+          borderBottomRightRadius: "10px",
+          borderTopLeftRadius: "10px",
+          borderTopRightRadius: "3px",
+        },
+      }),
+  ],
 };

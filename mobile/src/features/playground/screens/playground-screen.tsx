@@ -296,37 +296,31 @@ export function PlaygroundScreen() {
   );
 
   return (
-    <Screen>
-      <AppHeader
-        eyebrow="Design system"
-        subtitle="Every primitive in its states, on the same tokens as the desktop app."
-        title="Component playground"
-      />
-
-      <View className="gap-5 overflow-hidden rounded-lg border border-border bg-card p-5">
-        <View className="gap-2">
-          <Text className="text-3xl font-semibold leading-tight">Silver paper, graphite ink.</Text>
-          <Text className="max-w-2xl text-muted-foreground">
-            Achromatic by default: hue appears only for state (error, done, in progress).
-          </Text>
-        </View>
-
-        <View className="gap-3 rounded-md bg-surface p-3">
-          <View className="flex-row items-center justify-between">
-            <Text className="font-semibold">Theme tokens</Text>
-            <Text variant="muted">desktop tokens</Text>
-          </View>
+    <Screen
+      header={
+        <AppHeader
+          subtitle="Every primitive in its states, on the same tokens as the desktop app."
+          title="Playground"
+        />
+      }
+    >
+      <Section
+        description="Achromatic by default: hue appears only for state (error, done, in progress)."
+        flush
+        title="Tokens"
+      >
+        <View>
           {tokenSwatches.map((item) => (
             <View
-              className="h-12 flex-row items-center justify-between rounded-md border border-border bg-card px-3"
+              className="h-12 flex-row items-center justify-between border-t border-rule px-5"
               key={item.label}
             >
               <Text className="font-mono text-sm">{item.label}</Text>
-              <View className={`h-7 w-20 rounded-full border border-border ${item.className}`} />
+              <View className={`cut h-7 w-20 border border-rule ${item.className}`} />
             </View>
           ))}
         </View>
-      </View>
+      </Section>
 
       <Section
         description="Grouped inventory for every primitive and native extra included in the base."

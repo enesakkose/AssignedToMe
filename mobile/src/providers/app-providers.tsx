@@ -6,7 +6,8 @@ import { SplashProvider } from "@/providers/splash-provider";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { ThemeProvider } from "expo-router/react-navigation";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { type PropsWithChildren } from "react";
+import { usePersistStore } from "@/stores/persist-store";
+import { type PropsWithChildren, useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { DropProvider } from "react-native-reanimated-dnd";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -14,6 +15,10 @@ import { Toaster } from "sonner-native";
 
 export function AppProviders({ children }: PropsWithChildren) {
   const theme = useAppTheme();
+  const themePreference = usePersistStore((s) => s.theme);
+  const { setColorScheme } = theme;
+
+  useEffect(() => setColorScheme(themePreference), [setColorScheme, themePreference]);
 
   return (
     <GestureHandlerRootView className={theme.rootClassName}>

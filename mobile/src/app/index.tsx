@@ -1,5 +1,7 @@
+import { usePersistStore } from "@/stores/persist-store";
 import { Redirect } from "expo-router";
 
 export default function IndexRoute() {
-  return <Redirect href="/(app)" />;
+  const onboarded = usePersistStore((s) => s.onboardingCompleted);
+  return <Redirect href={onboarded ? "/(app)" : "/onboarding"} />;
 }
