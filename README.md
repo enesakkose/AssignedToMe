@@ -40,18 +40,18 @@ Your work is spread out: a client's Jira, your team's Linear, a few GitHub repos
 - **New task notifications.** A macOS notification when something new is assigned to you. Clicking it opens that task.
 - **Copy a link or ID.** Right-click a task to copy its URL, or just its key (e.g. `ENG-142`) for a branch name.
 - **Stays fresh on its own.** Refreshes every hour by default (or every 1, 15 or 30 minutes), and again when you open it.
-- **Feels native.** Light and dark mode, English and Turkish, keyboard shortcuts, launch at login, reduced-motion support.
+- **Feels native.** Light and dark mode, English and Turkish, keyboard shortcuts, launch at login (on by default; turn it off in Settings), reduced-motion support.
 
 ## Supported tools
 
 | | Tool | What you need | Status | Comments | Assign | Log time | Sub-tasks & links |
 |---|---|---|:-:|:-:|:-:|:-:|:-:|
-| <img src="docs/assets/providers/jira.svg" width="20" alt="" /> | **Jira Cloud** | Email + [API token](https://id.atlassian.com/manage-profile/security/api-tokens) | ✓ | ✓ | ✓ | ✓ | ✓ |
-| <img src="docs/assets/providers/jira.svg" width="20" alt="" /> | **Jira Data Center / Server** | Personal access token (Jira 8.14+), or username + password on older versions | ✓ | ✓ | ✓ | ✓ | ✓ |
-| <img src="docs/assets/providers/linear.svg" width="20" alt="" /> | **Linear** | Personal API key (Read) | — | — | — | — | — |
-| <picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/providers/github-dark.svg" /><img src="docs/assets/providers/github-light.svg" width="20" alt="" /></picture> | **GitHub** | Classic personal access token (`repo`, plus `project` for Projects status) | ✓ | ✓ | — | — | ✓ |
-| <img src="docs/assets/providers/gitlab.svg" width="20" alt="" /> | **GitLab** (gitlab.com or self-hosted) | Personal access token (`api`) | ✓ | ✓ | — | — | — |
-| <img src="docs/assets/providers/azure.svg" width="20" alt="" /> | **Azure DevOps** | Personal access token (Work Items: Read & write) | ✓ | ✓ | — | — | — |
+| <img src="docs/assets/providers/jira.svg" width="32" height="32" alt="" /> | **Jira Cloud** | Email + [API token](https://id.atlassian.com/manage-profile/security/api-tokens) | ✓ | ✓ | ✓ | ✓ | ✓ |
+| <img src="docs/assets/providers/jira.svg" width="32" height="32" alt="" /> | **Jira Data Center / Server** | Personal access token (Jira 8.14+), or username + password on older versions | ✓ | ✓ | ✓ | ✓ | ✓ |
+| <img src="docs/assets/providers/linear.svg" width="32" height="32" alt="" /> | **Linear** | Personal API key (Read) | — | — | — | — | — |
+| <picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/providers/github-dark.svg" /><img src="docs/assets/providers/github-light.svg" width="32" height="32" alt="" /></picture> | **GitHub** | Classic personal access token (`repo`, plus `project` for Projects status) | ✓ | ✓ | — | — | ✓ |
+| <img src="docs/assets/providers/gitlab.svg" width="32" height="32" alt="" /> | **GitLab** (gitlab.com or self-hosted) | Personal access token (`api`) | ✓ | ✓ | — | — | — |
+| <img src="docs/assets/providers/azure.svg" width="32" height="32" alt="" /> | **Azure DevOps** | Personal access token (Work Items: Read & write) | ✓ | ✓ | — | — | — |
 
 You don't need to look any of this up: when you add a board, the app walks you through creating the right token, step by step, with links and copy buttons.
 
@@ -142,8 +142,8 @@ packages/core/   Shared TypeScript: provider adapters, types, schemas. No platfo
 desktop/         The macOS app: Tauri v2 + React + Vite + Tailwind + Base UI.
   src/           UI (features/, components/, lib/, locales/)
   src-tauri/     Rust side: menubar, windows, Keychain, permissions
+  design/logo/   Logo sources and usage rules (GUIDELINES.md)
 mobile/          Expo / React Native app (early stage)
-design/          Logo and brand sources
 docs/assets/     Images used by this README
 ```
 

@@ -12,3 +12,6 @@ target
 # Locally installed agent skills (third-party, each with its own license); reinstall from skills-lock.json / AGENTS.md
 .agents/skills/
 .claude/skills/
+
+# Local design explorations; the logo sources the app uses live in desktop/design/logo
+/design/

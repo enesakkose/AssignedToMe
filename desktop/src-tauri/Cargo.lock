@@ -2306,12 +2306,14 @@ checksum = "743fb55ba31b18fb1ecef6bdc9aa2743314978ac084044301a7eee33fb99a20d"
 
 [[package]]
 name = "mytask"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
+ "block2",
  "keyring",
  "objc2",
  "objc2-app-kit",
  "objc2-foundation",
+ "objc2-user-notifications",
  "serde",
  "serde_json",
  "tauri",
@@ -2648,7 +2650,10 @@ version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9df9128cbbfef73cda168416ccf7f837b62737d748333bfe9ab71c245d76613e"
 dependencies = [
+ "bitflags 2.13.2",
+ "block2",
  "objc2",
+ "objc2-core-location",
  "objc2-foundation",
 ]
 

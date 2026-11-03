@@ -1,4 +1,5 @@
 import type { Task } from '@mytask/core';
+import { invoke } from '@tauri-apps/api/core';
 import { isPermissionGranted, onAction, requestPermission, sendNotification } from '@tauri-apps/plugin-notification';
 import type { TFunction } from 'i18next';
 import { getStore } from './store';
@@ -26,10 +27,13 @@ async function requestAccess(): Promise<boolean> {
   return permission ?? false;
 }
 
-/** Ask for notification permission up front (from onboarding), so the first real task doesn't trigger the prompt. */
+/**
+ * Ask for notification permission up front (from onboarding). The plugin's requestPermission never prompts on desktop
+ * (it just answers "granted"), so this shows macOS's own "Allow notifications?" dialog from the Rust side.
+ */
 export async function ensureNotificationPermission(): Promise<void> {
   try {
-    await requestAccess();
+    await invoke('request_notification_permission');
   } catch {
     // Not in Tauri (browser preview) — nothing to request.
   }

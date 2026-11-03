@@ -51,9 +51,9 @@ The playground (`src/features/playground`) shows each of these in every state, w
 
 ## Brand
 
-Name AssignedToMe. The mark ("Nokta"): three rounded bars, the middle one pulled out to the right with a dot where it was — your task pulled from the stack, and you. The masters and usage rules live in `design/logo/final` (`GUIDELINES.md`).
+Name AssignedToMe. The mark ("Nokta"): three rounded bars, the middle one pulled out to the right with a dot where it was — your task pulled from the stack, and you. The masters and usage rules live in `design/logo` (`GUIDELINES.md`).
 - Menubar: template image from the small-size cut (`src-tauri/icons/tray.png`, 44 px, black on transparent).
-- App icon: silver mark on a graphite tile (`design/logo/final/mytask-macos-icon.svg` → `tauri icon`).
+- App icon: silver mark on a graphite tile (`design/logo/mytask-macos-icon.svg` → `tauri icon`).
 - Header: `AppLogo` (small-size cut, `brand-tile`/`brand-mark`, identical in light and dark).
 
 ## Search

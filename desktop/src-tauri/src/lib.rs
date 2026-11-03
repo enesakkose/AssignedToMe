@@ -169,8 +169,8 @@ fn open_app_window(app: &AppHandle) {
     }
     #[cfg(target_os = "macos")]
     let _ = app.set_activation_policy(tauri::ActivationPolicy::Regular);
-    #[cfg(all(debug_assertions, target_os = "macos"))]
-    let _ = app.run_on_main_thread(set_dev_dock_icon);
+    #[cfg(target_os = "macos")]
+    let _ = app.run_on_main_thread(restore_dock_icon);
     // Built in the theme the popover already has (it follows Settings → Theme) so the splash comes up in the right colours.
     let theme = app.get_webview_window("main").and_then(|w| w.theme().ok());
     // The same native material as the popover (tauri.conf.json), so both read as one surface. It also fixes the white
@@ -202,10 +202,11 @@ fn open_app_window(app: &AppHandle) {
     }
 }
 
-/// `tauri dev` runs a bare binary, not an .app, so each switch back to the Dock rebuilds its tile with the generic
-/// "exec" icon (Tauri sets ours only once, at launch). Put the app icon back. A bundled build takes it from icon.icns.
-#[cfg(all(debug_assertions, target_os = "macos"))]
-fn set_dev_dock_icon() {
+/// The app starts out of the Dock (Accessory) and joins it when the window opens. On that switch macOS builds the Dock
+/// tile without an icon: blank in a release .app (its icon.icns is ignored here), the generic "exec" one in `tauri dev`.
+/// So set the icon ourselves, in every build. Must run on the main thread.
+#[cfg(target_os = "macos")]
+fn restore_dock_icon() {
     use objc2::{AllocAnyThread, MainThreadMarker};
     use objc2_app_kit::{NSApplication, NSImage};
     use objc2_foundation::NSData;
@@ -228,6 +229,22 @@ fn focus_app_window(app: AppHandle) -> bool {
     focus_existing_app_window(&app)
 }
 
+/// Launch at login starts out on: the first run of a packaged app registers it, once. From then on it's the user's
+/// switch in Settings, and turning it off is never undone. Not in `tauri dev`, which would register the debug binary.
+#[cfg(not(debug_assertions))]
+fn enable_launch_at_login_once(app: &AppHandle) {
+    use tauri_plugin_autostart::ManagerExt as _;
+    const KEY: &str = "launchAtLoginDefaulted";
+    let Ok(store) = app.store("mytask.json") else { return };
+    if store.get(KEY).is_some() {
+        return;
+    }
+    if app.autolaunch().enable().is_ok() {
+        store.set(KEY, true);
+        let _ = store.save();
+    }
+}
+
 /// Settings → "Open the window at launch" (also chosen in onboarding); on unless the user picked menubar only.
 fn opens_window_at_launch(app: &AppHandle) -> bool {
     app.store("mytask.json")
@@ -235,6 +252,25 @@ fn opens_window_at_launch(app: &AppHandle) -> bool {
         .and_then(|store| store.get("openWindow"))
         .and_then(|value| value.as_bool())
         .unwrap_or(true)
+}
+
+/// Shows macOS's "Allow notifications from AssignedToMe?" prompt; once answered, later calls do nothing visible.
+/// Onboarding calls it because the notification plugin's own requestPermission is a no-op on desktop, so a new user
+/// would never be asked. Only inside a real .app: `tauri dev` runs a bare binary, and the notification center throws
+/// (crashing the app) when the process isn't a bundle.
+#[tauri::command]
+fn request_notification_permission() {
+    #[cfg(target_os = "macos")]
+    {
+        use objc2_foundation::{NSBundle, NSError};
+        use objc2_user_notifications::{UNAuthorizationOptions, UNUserNotificationCenter};
+        if !NSBundle::mainBundle().bundlePath().to_string().ends_with(".app") {
+            return;
+        }
+        let done = block2::RcBlock::new(|_granted: objc2::runtime::Bool, _error: *mut NSError| {});
+        UNUserNotificationCenter::currentNotificationCenter()
+            .requestAuthorizationWithOptions_completionHandler(UNAuthorizationOptions::Alert | UNAuthorizationOptions::Sound, &done);
+    }
 }
 
 /// Opens macOS System Settings at the Notifications pane so the user manages this app's alerts where the OS owns them.
@@ -316,6 +352,7 @@ pub fn run() {
             secret_delete,
             allow_http_origin,
             open_notification_settings,
+            request_notification_permission,
             show_popover,
             show_app_window,
             focus_app_window
@@ -366,6 +403,9 @@ pub fn run() {
                 })
                 .build(app)?;
 
+            #[cfg(not(debug_assertions))]
+            enable_launch_at_login_once(app.handle());
+
             // Launched by the user (Finder/Launchpad), not at login: open the window, or the popover for menubar-only users.
             if !std::env::args().any(|a| a == "--autostart") {
                 if opens_window_at_launch(app.handle()) {
@@ -382,6 +422,9 @@ pub fn run() {
                 let _ = window.hide();
                 *window.state::<LastBlurHide>().0.lock().unwrap() = Some(Instant::now());
             }
+            // Again once the window is up: the Dock may only build its tile after the switch above has returned.
+            #[cfg(target_os = "macos")]
+            WindowEvent::Focused(true) if window.label() == "app" => restore_dock_icon(),
             // App window closed: leave the Dock and keep running in the menubar. ⌘Q / Dock → Quit still quits.
             #[cfg(target_os = "macos")]
             WindowEvent::Destroyed if window.label() == "app" => {

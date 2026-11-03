@@ -2,7 +2,7 @@ import { cn } from '@/lib/cn';
 
 /**
  * The app icon at header size: the "pulled task + dot" mark on a graphite tile, identical in light and dark.
- * Uses the small-size cut from design/logo/final/mytask-symbol-small.svg so bars and gaps stay crisp at 20 px.
+ * Uses the small-size cut from desktop/design/logo/mytask-symbol-small.svg so bars and gaps stay crisp at 20 px.
  */
 export function AppLogo({ className }: { className?: string }) {
   return (
