@@ -8,6 +8,8 @@
 
 A fast macOS menubar app (and window) that pulls your assigned issues from Jira, Linear, GitHub, GitLab and Azure DevOps into a single list, so you stop hopping between tabs to find out what's on your plate.
 
+**[⬇ Download for macOS](https://github.com/enesakkose/AssignedToMe/releases/latest)** &nbsp;·&nbsp; Apple Silicon & Intel &nbsp;·&nbsp; macOS 13+
+
 <p>
   <img src="docs/assets/providers/jira.svg" width="28" height="28" alt="Jira" />&nbsp;&nbsp;
   <img src="docs/assets/providers/linear.svg" width="28" height="28" alt="Linear" />&nbsp;&nbsp;
@@ -68,14 +70,20 @@ A few notes:
 
 ## Getting started
 
-AssignedToMe runs on **macOS**.
+AssignedToMe runs on **macOS 13 (Ventura) or later**, on both Apple Silicon and Intel Macs.
 
-Signed releases aren't published yet. Until then, [build it from source](#development); it takes a few minutes.
+### Install
 
-Once it's running:
+1. Download the latest **`AssignedToMe_…_universal.dmg`** from [Releases](https://github.com/enesakkose/AssignedToMe/releases/latest).
+2. Open it and drag **AssignedToMe** into **Applications**.
+3. Open it from Applications.
 
-1. Click the AssignedToMe icon in your menubar (or open the window).
-2. Go through the short intro, then choose **Connect a board**.
+Releases are signed with a Developer ID and notarized by Apple, so macOS opens them without warnings. Prefer to build it yourself? It's all open source: [build from source](#development) in a few minutes.
+
+### First run
+
+1. The app opens its window with a short intro, where you also choose **Window + menubar** or **Menubar only** (changeable later in Settings).
+2. Choose **Connect a board**.
 3. Pick your tool, follow the steps to create a token, paste it in, and press **Save**. Your tasks appear right away.
 4. Add as many boards as you like. Rename them by double-clicking their tab, or from the board's **⋯** menu.
 
@@ -110,10 +118,12 @@ bun tauri dev
 
 ```bash
 cd desktop
-bun tauri build
+bun tauri build --target universal-apple-darwin
 ```
 
-The `.app` and `.dmg` end up in `desktop/src-tauri/target/release/bundle/`.
+This builds one app for both Apple Silicon and Intel (it needs both Rust targets: `rustup target add aarch64-apple-darwin x86_64-apple-darwin`). The `.app` and `.dmg` end up in `desktop/src-tauri/target/universal-apple-darwin/release/bundle/`. For just your own Mac, plain `bun tauri build` is faster.
+
+A build made this way is fine for your own Mac. To sign and notarize it for others (as the published releases are), you need an Apple Developer account: set `APPLE_SIGNING_IDENTITY` to your "Developer ID Application" certificate and provide notarization credentials (`APPLE_API_KEY` + `APPLE_API_ISSUER` with the matching `.p8` key) when running the build. See Tauri's [macOS code signing guide](https://v2.tauri.app/distribute/sign/macos/). No credentials ever go into the repository.
 
 ### Test and check
 
