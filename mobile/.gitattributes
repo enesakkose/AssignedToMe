@@ -1,0 +1,9 @@
+# Keep GitHub language stats focused on authored app source.
+.agents/** linguist-vendored
+ios/** linguist-vendored
+android/** linguist-vendored
+
+# JavaScript config files are tooling glue, not product source.
+babel.config.js linguist-generated
+metro.config.js linguist-generated
+tailwind.config.js linguist-generated

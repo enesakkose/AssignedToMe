@@ -1,0 +1,75 @@
+/* Hallmark · pre-emit critique: P5 H4 E5 S5 R5 V4 */
+/* Hallmark · macrostructure: Component Playground · theme: Mica Halo · tone: soft-utilitarian · anchor hue: neutral */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 220 18% 96%;
+    --foreground: 225 12% 12%;
+    --card: 220 24% 99%;
+    --card-foreground: 225 12% 12%;
+    --popover: 220 24% 99%;
+    --popover-foreground: 225 12% 12%;
+    --primary: 225 12% 12%;
+    --primary-foreground: 220 24% 98%;
+    --secondary: 220 13% 91%;
+    --secondary-foreground: 225 12% 14%;
+    --muted: 220 14% 92%;
+    --muted-foreground: 222 8% 43%;
+    --accent: 220 14% 89%;
+    --accent-foreground: 225 12% 12%;
+    --destructive: 358 58% 44%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 220 11% 82%;
+    --input: 220 11% 82%;
+    --ring: 225 12% 12%;
+    --radius: 1.25rem;
+    --font-plus-jakarta-sans: "PlusJakartaSans_400Regular";
+    --signal: 225 12% 12%;
+    --signal-foreground: 220 24% 98%;
+    --signal-muted: 220 13% 88%;
+    --rail: 225 12% 12%;
+    --surface: 220 15% 93%;
+    --surface-raised: 220 24% 99%;
+    --chart-1: 225 12% 12%;
+    --chart-2: 222 8% 43%;
+    --chart-3: 204 10% 48%;
+    --chart-4: 36 12% 46%;
+    --chart-5: 350 14% 45%;
+  }
+
+  .dark:root {
+    --background: 225 15% 8%;
+    --foreground: 220 18% 93%;
+    --card: 225 14% 11%;
+    --card-foreground: 220 18% 93%;
+    --popover: 225 14% 11%;
+    --popover-foreground: 220 18% 93%;
+    --primary: 220 18% 93%;
+    --primary-foreground: 225 15% 8%;
+    --secondary: 225 10% 17%;
+    --secondary-foreground: 220 18% 93%;
+    --muted: 225 10% 16%;
+    --muted-foreground: 220 8% 67%;
+    --accent: 225 10% 21%;
+    --accent-foreground: 220 18% 93%;
+    --destructive: 358 58% 58%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 225 9% 25%;
+    --input: 225 9% 25%;
+    --ring: 220 18% 93%;
+    --signal: 220 18% 93%;
+    --signal-foreground: 225 15% 8%;
+    --signal-muted: 225 10% 18%;
+    --rail: 220 18% 93%;
+    --surface: 225 11% 14%;
+    --surface-raised: 225 14% 11%;
+    --chart-1: 220 18% 93%;
+    --chart-2: 220 8% 67%;
+    --chart-3: 204 14% 58%;
+    --chart-4: 36 16% 60%;
+    --chart-5: 350 20% 62%;
+  }
+}

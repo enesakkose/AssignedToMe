@@ -1,0 +1,331 @@
+/* Hallmark · shape: app screen · genre: modern-minimal · theme: Cobalt, recoloured Titanium (deal 1/3, seed macos-menubar-app-gathers-3720·944121ad·2026-10-30·r0)
+ * nav: board tabs under a slim header · signature: the queue, one ruled list of my tasks across boards · states: loading, empty, error, full
+ * axes: light/grotesk-sans/achromatic · posture: restrained · contrast: pass · v2.0.0 */
+/* Hallmark · pre-emit critique: P2 H- E2 S2 R1 V2 · weakest: R, a 400px popover has no room for the ASCII field, so keycaps and cut panels carry the material instead */
+/* waive: body under 16px, a macOS menubar popover follows the 13px system density */
+/* waive 26b: :active and every other state live in Tailwind classes on components/ui, not in this file */
+@import 'tailwindcss';
+@import '@fontsource-variable/instrument-sans/wght.css';
+@import '@fontsource-variable/jetbrains-mono/wght.css';
+
+/* Single source of truth for the visual language. Tailwind utilities map onto these in @theme below. */
+:root {
+  color-scheme: light;
+
+  --color-paper: oklch(97.3% 0.003 250);
+  /* Window surface over the native popover blur. */
+  /* Mostly opaque in light: the popover blur turns grey over dark windows and washes out text. */
+  --color-surface: oklch(97.3% 0.003 250 / 0.85);
+  --color-paper-2: oklch(21% 0.006 260 / 0.04);
+  --color-paper-3: oklch(21% 0.006 260 / 0.07);
+  --color-ink: oklch(21% 0.006 260);
+  --color-ink-2: oklch(33% 0.006 260);
+  --color-muted: oklch(46% 0.008 260);
+  --color-rule: oklch(21% 0.006 260 / 0.05);
+  --color-rule-2: oklch(21% 0.006 260 / 0.1);
+
+  --color-accent: oklch(26% 0.006 260);
+  --color-accent-hover: oklch(33% 0.006 260);
+  --color-accent-text: oklch(42% 0.01 260);
+  --color-accent-wash: oklch(92.5% 0.004 250);
+  --color-accent-ink: oklch(97.5% 0.002 250);
+  --color-focus: oklch(42% 0.01 260);
+
+  --color-error: oklch(52% 0.19 27);
+  --color-error-wash: oklch(96% 0.02 27);
+  --color-success: oklch(50% 0.12 150);
+  /* Status and priority are the only hues in the UI. */
+  --color-progress: oklch(55% 0.1 190);
+  --color-warning: oklch(62% 0.15 65);
+
+  --color-graphite: oklch(21% 0.006 260);
+  --color-graphite-ink: oklch(95% 0.003 250);
+  --color-thumb: oklch(99.5% 0.002 250);
+  --color-backdrop: oklch(21% 0.006 260 / 0.28);
+  --color-track: oklch(85% 0.004 250);
+  /* Brand mark: same graphite tile and silver glyph in both themes, like the app icon. */
+  --color-brand-tile: oklch(26% 0.006 260);
+  --color-brand-mark: oklch(91% 0.003 250);
+  --shadow-float: 0 1px 2px oklch(21% 0.006 260 / 0.08), 0 8px 24px -8px oklch(21% 0.006 260 / 0.22);
+
+  /* One family; display and body differ by weight and tracking only. */
+  --font-display: 'Instrument Sans Variable', system-ui, sans-serif;
+  --font-body: 'Instrument Sans Variable', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
+  --tracking-display: -0.02em;
+
+  /* macOS density: 13px body, 1.125 ratio */
+  --text-xs: 11px;
+  --text-sm: 12px;
+  --text-md: 13px;
+  --text-title: 14px;
+  --text-lg: 15px;
+  --text-xl: 17px;
+
+  --radius-sm: 4px;
+  --radius-input: 8px;
+  --radius-control: 999px;
+  --radius-card: 10px;
+  --radius-window: 12px;
+  --cut: 8px;
+
+  --control-sm: 26px;
+  --control-md: 30px;
+
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --dur-micro: 120ms;
+  --dur-short: 200ms;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+
+    --color-paper: oklch(17.5% 0.004 260);
+    --color-surface: oklch(17.5% 0.004 260 / 0.28);
+    --color-paper-2: oklch(94% 0.003 250 / 0.05);
+    --color-paper-3: oklch(94% 0.003 250 / 0.09);
+    --color-ink: oklch(94% 0.003 250);
+    --color-ink-2: oklch(82% 0.004 250);
+    --color-muted: oklch(68% 0.006 255);
+    --color-rule: oklch(94% 0.003 250 / 0.05);
+    --color-rule-2: oklch(94% 0.003 250 / 0.1);
+
+    --color-accent: oklch(91% 0.003 250);
+    --color-accent-hover: oklch(84% 0.004 250);
+    --color-accent-text: oklch(82% 0.008 255);
+    --color-accent-wash: oklch(29% 0.006 260);
+    --color-accent-ink: oklch(19% 0.005 260);
+    --color-focus: oklch(82% 0.008 255);
+
+    --color-error: oklch(72% 0.16 27);
+    --color-error-wash: oklch(27% 0.05 27);
+    --color-success: oklch(74% 0.13 150);
+    --color-progress: oklch(76% 0.11 190);
+    --color-warning: oklch(80% 0.14 75);
+
+    --color-graphite: oklch(94% 0.003 250);
+    --color-graphite-ink: oklch(19% 0.005 260);
+    --color-backdrop: oklch(10% 0.02 262 / 0.5);
+    --color-track: oklch(36% 0.006 260);
+    --shadow-float: 0 0 0 1px var(--color-rule-2), 0 12px 28px -8px oklch(0% 0 0 / 0.6);
+  }
+}
+
+@theme inline {
+  --color-paper: var(--color-paper);
+  --color-paper-2: var(--color-paper-2);
+  --color-paper-3: var(--color-paper-3);
+  --color-ink: var(--color-ink);
+  --color-ink-2: var(--color-ink-2);
+  --color-muted: var(--color-muted);
+  --color-rule: var(--color-rule);
+  --color-rule-2: var(--color-rule-2);
+  --color-accent: var(--color-accent);
+  --color-accent-hover: var(--color-accent-hover);
+  --color-accent-text: var(--color-accent-text);
+  --color-accent-wash: var(--color-accent-wash);
+  --color-accent-ink: var(--color-accent-ink);
+  --color-error: var(--color-error);
+  --color-error-wash: var(--color-error-wash);
+  --color-success: var(--color-success);
+  --color-progress: var(--color-progress);
+  --color-warning: var(--color-warning);
+  --color-graphite: var(--color-graphite);
+  --color-graphite-ink: var(--color-graphite-ink);
+  --color-backdrop: var(--color-backdrop);
+  --color-thumb: var(--color-thumb);
+  --color-track: var(--color-track);
+  --color-brand-tile: var(--color-brand-tile);
+  --color-brand-mark: var(--color-brand-mark);
+
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+  --font-mono: var(--font-mono);
+
+  --text-xs: var(--text-xs);
+  --text-sm: var(--text-sm);
+  --text-md: var(--text-md);
+  --text-title: var(--text-title);
+  --text-lg: var(--text-lg);
+  --text-xl: var(--text-xl);
+
+  --radius-sm: var(--radius-sm);
+  --radius-input: var(--radius-input);
+  --radius-control: var(--radius-control);
+  --radius-card: var(--radius-card);
+  --radius-window: var(--radius-window);
+  --shadow-float: var(--shadow-float);
+
+  --ease-out: var(--ease-out);
+  --ease-in-out: var(--ease-in-out);
+}
+
+@layer base {
+  html,
+  body {
+    /* No document-level scroll or rubber-band bounce: the elastic overscroll flashes the window's square
+       backing layer past the rounded corners. Content scrolls inside its own ScrollArea, not the page. */
+    overflow: clip;
+    overscroll-behavior: none;
+  }
+  html {
+    scrollbar-color: var(--color-rule-2) transparent;
+  }
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    margin: 0;
+    /* The window is transparent so #root can have rounded corners like a native popover. */
+    background: transparent;
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    font-size: var(--text-md);
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+    caret-color: var(--color-accent);
+    /* Popover feels like a native panel, not a web page. */
+    user-select: none;
+    cursor: default;
+  }
+  #root {
+    overflow: hidden;
+    border-radius: var(--radius-window);
+    /* WebKit does not clip composited scroll layers with overflow + radius; clip-path does. */
+    clip-path: inset(0 round var(--radius-window));
+    /* The hairline is an inset ring, not a real border: a border + clip-path fight at the rounded corners
+       (content clipped to the same outer radius eats the border), so the corners read a different radius. */
+    box-shadow: inset 0 0 0 1px var(--color-rule);
+    background: var(--color-surface);
+  }
+  /* The app window sits on the same blur material as the popover and keeps its translucent surface, so the two match;
+     it's a regular window though, so macOS does the corners: no popover rounding or hairline. */
+  :root[data-surface='window'] #root {
+    border-radius: 0;
+    clip-path: none;
+    box-shadow: none;
+  }
+  input,
+  textarea,
+  [data-selectable] {
+    user-select: text;
+  }
+  ::selection {
+    background: color-mix(in oklab, var(--color-accent) 22%, transparent);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+  h1,
+  h2,
+  h3 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: var(--tracking-display);
+    line-height: 1.15;
+    overflow-wrap: break-word;
+    min-width: 0;
+    text-wrap: balance;
+  }
+  p {
+    margin: 0;
+  }
+  .num {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Cut corners: two opposite bevels where supported, plain radius otherwise. */
+@utility cut {
+  border-radius: var(--radius-card);
+  @supports (corner-shape: bevel) {
+    border-radius: var(--cut) 3px;
+    corner-shape: bevel round;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Source-rendered HTML (Jira descriptions): the house type scale over whatever markup the source sends. */
+@layer components {
+  .source-html {
+    color: var(--color-ink-2);
+    font-size: var(--text-md);
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+
+    & > * + * { margin-top: 0.6em; }
+    & :is(h1, h2, h3, h4, h5, h6) {
+      margin-top: 1em;
+      color: var(--color-ink);
+      font-family: var(--font-display);
+      font-weight: 600;
+      line-height: 1.3;
+    }
+    & :is(h1, h2) { font-size: var(--text-lg); }
+    & :is(h3, h4, h5, h6) { font-size: var(--text-title); }
+    & :is(strong, b) { color: var(--color-ink); font-weight: 600; }
+    & a { color: var(--color-ink); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+    & a:hover { color: var(--color-progress); }
+    & :is(ul, ol) { padding-left: 1.25em; }
+    & ul { list-style: disc; }
+    & ol { list-style: decimal; }
+    & li + li { margin-top: 0.2em; }
+    & :is(code, tt) { font-family: var(--font-mono); font-size: 0.92em; background: var(--color-paper-3); border-radius: 4px; padding: 0 0.3em; }
+    & pre { font-family: var(--font-mono); font-size: var(--text-sm); background: var(--color-paper-3); border-radius: 6px; padding: 0.6em 0.75em; overflow-x: auto; white-space: pre; }
+    & pre code { background: none; padding: 0; }
+    & :is(blockquote, .panel, .confluence-information-macro) {
+      border-left: 2px solid var(--color-rule-2);
+      padding: 0.2em 0 0.2em 0.75em;
+      color: var(--color-ink-2);
+    }
+    & hr { border: 0; border-top: 1px solid var(--color-rule); }
+    /* Wide tables scroll sideways inside the page instead of breaking the layout. */
+    & table { display: block; max-width: 100%; overflow-x: auto; border-collapse: collapse; font-size: var(--text-sm); }
+    & :is(th, td) { border: 1px solid var(--color-rule-2); padding: 0.35em 0.55em; vertical-align: top; text-align: left; min-width: 6em; }
+    & th { color: var(--color-ink); font-weight: 600; background: var(--color-paper-2); }
+    & img { max-width: 100%; max-height: 16rem; border-radius: 4px; cursor: zoom-in; animation: source-fade var(--dur-short, 160ms) ease-out; }
+    & img:not([src]) { display: inline-block; width: 8rem; height: 5rem; background: var(--color-paper-3); }
+  }
+  @keyframes source-fade { from { opacity: 0; } }
+}
+
+/* Content that arrives after the page appears eases in instead of popping. */
+@utility fade-in {
+  animation: source-fade var(--dur-short, 160ms) ease-out;
+}
+
+
+/* First-run onboarding: content eases up and in, staggered; reduced motion keeps only the fade. */
+@keyframes onboard-in {
+  from { opacity: 0; transform: translateY(10px); }
+}
+@keyframes onboard-fade {
+  from { opacity: 0; }
+}
+@utility onboard-item {
+  animation: onboard-in var(--dur-onboard, 420ms) var(--ease-out) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .onboard-item { animation-name: onboard-fade; }
+}
+
+/* App window with the sidebar hidden: the traffic lights and the sidebar toggle sit over the header's left end.
+   Unlayered so it wins over the header's px-3 utility. */
+:root[data-surface='window'][data-sidebar='closed'] .app-header {
+  padding-left: 7.5rem;
+}

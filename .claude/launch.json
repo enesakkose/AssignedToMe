@@ -1,0 +1,6 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "desktop-web", "runtimeExecutable": "bash", "runtimeArgs": ["-lc", "cd desktop && bunx vite --port 5178 --strictPort"], "port": 5178 }
+  ]
+}

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-labelledby="title">
+  <title id="title">AssignedToMe logo (small sizes)</title>
+  <g id="symbol">
+    <rect x="24" y="24" width="152" height="56" rx="28"/>
+    <circle cx="53" cy="128" r="29"/>
+    <rect x="106" y="100" width="126" height="56" rx="28"/>
+    <rect x="24" y="176" width="152" height="56" rx="28"/>
+  </g>
+</svg>

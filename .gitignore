@@ -1,0 +1,14 @@
+node_modules
+dist
+target
+.DS_Store
+
+# Local secrets and logs never go public
+.env
+.env.*
+!.env.example
+*.log
+
+# Locally installed agent skills (third-party, each with its own license); reinstall from skills-lock.json / AGENTS.md
+.agents/skills/
+.claude/skills/
