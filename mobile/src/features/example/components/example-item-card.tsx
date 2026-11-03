@@ -10,7 +10,7 @@ type ExampleItemCardProps = {
 
 export function ExampleItemCard({ item }: ExampleItemCardProps) {
   return (
-    <View className="gap-3 rounded-[24px] border border-border bg-card p-4">
+    <View className="gap-3 rounded-lg border border-border bg-card p-4">
       <View className="flex-row items-center justify-between gap-3">
         <Text className="flex-1 font-semibold">{item.title}</Text>
         <Badge variant="outline">

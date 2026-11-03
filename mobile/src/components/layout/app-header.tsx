@@ -9,7 +9,7 @@ type AppHeaderProps = {
 
 export function AppHeader({ eyebrow, subtitle, title }: AppHeaderProps) {
   return (
-    <View className="gap-3 rounded-[32px] border border-border bg-card p-5">
+    <View className="gap-3 rounded-lg border border-border bg-card p-5">
       {eyebrow ? (
         <Text className="text-muted-foreground" variant="small">
           {eyebrow}

@@ -36,6 +36,8 @@ module.exports = {
         accent: {
           DEFAULT: "hsl(var(--accent))",
           foreground: "hsl(var(--accent-foreground))",
+          text: "hsl(var(--accent-text))",
+          wash: "hsl(var(--accent-wash))",
         },
         popover: {
           DEFAULT: "hsl(var(--popover))",
@@ -45,24 +47,52 @@ module.exports = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        signal: {
-          DEFAULT: "hsl(var(--signal))",
-          foreground: "hsl(var(--signal-foreground))",
-          muted: "hsl(var(--signal-muted))",
-        },
-        rail: "hsl(var(--rail))",
         surface: {
           DEFAULT: "hsl(var(--surface))",
           raised: "hsl(var(--surface-raised))",
         },
+        // Desktop token names (desktop/DESIGN.md). Note: desktop's text-muted is text-muted-foreground here,
+        // because React Native Reusables already uses `muted` for a fill.
+        paper: {
+          DEFAULT: "hsl(var(--paper))",
+          2: "hsl(var(--paper-2))",
+          3: "hsl(var(--paper-3))",
+        },
+        ink: {
+          DEFAULT: "hsl(var(--ink))",
+          2: "hsl(var(--ink-2))",
+        },
+        rule: {
+          DEFAULT: "hsl(var(--rule))",
+          2: "hsl(var(--rule-2))",
+        },
+        error: {
+          DEFAULT: "hsl(var(--error))",
+          wash: "hsl(var(--error-wash))",
+        },
+        success: "hsl(var(--success))",
+        progress: "hsl(var(--progress))",
+        warning: "hsl(var(--warning))",
+        graphite: {
+          DEFAULT: "hsl(var(--graphite))",
+          ink: "hsl(var(--graphite-ink))",
+        },
+        track: "hsl(var(--track))",
+        thumb: "hsl(var(--thumb))",
+        brand: {
+          tile: "hsl(var(--brand-tile))",
+          mark: "hsl(var(--brand-mark))",
+        },
       },
       fontFamily: {
-        sans: ["PlusJakartaSans_400Regular"],
+        sans: ["InstrumentSans_400Regular"],
+        mono: ["JetBrainsMono_400Regular"],
       },
+      // Desktop shapes: pills for buttons and inputs (rounded-full), 10px cards, 8px small panels, 4px chips.
       borderRadius: {
         lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        md: "8px",
+        sm: "4px",
       },
       borderWidth: {
         hairline: hairlineWidth(),

@@ -42,9 +42,9 @@ function TabItem({ activeColor, inactiveColor, icon, isFocused, label, onPress }
         <RNText
           style={{
             color,
-            fontFamily: isFocused ? APP_FONT_FAMILY.extraBold : APP_FONT_FAMILY.bold,
+            fontFamily: isFocused ? APP_FONT_FAMILY.semiBold : APP_FONT_FAMILY.medium,
             fontSize: 11,
-            fontWeight: isFocused ? "800" : "700",
+            fontWeight: isFocused ? "600" : "500",
             lineHeight: 13,
             marginTop: 1,
           }}
@@ -73,7 +73,7 @@ function MicaTabBar({ descriptors, navigation, state }: BottomTabBarProps) {
       }}
     >
       <View
-        className="flex-row items-center rounded-[30px] border"
+        className="flex-row items-center rounded-full border"
         style={{
           backgroundColor: theme.values.dockBackground,
           borderColor: theme.tokens.border,

@@ -4,8 +4,6 @@ import * as ExpoSplashScreen from "expo-splash-screen";
 import { useFonts } from "expo-font";
 import { type PropsWithChildren, useEffect, useState } from "react";
 
-const MOCK_BOOT_DELAY_MS = 3000;
-
 void ExpoSplashScreen.preventAutoHideAsync();
 
 export function SplashProvider({ children }: PropsWithChildren) {
@@ -17,24 +15,9 @@ export function SplashProvider({ children }: PropsWithChildren) {
       return;
     }
 
-    let isMounted = true;
-
-    async function boot() {
-      await new Promise((resolve) => setTimeout(resolve, MOCK_BOOT_DELAY_MS));
-
-      if (!isMounted) {
-        return;
-      }
-
-      setIsReady(true);
-      await ExpoSplashScreen.hideAsync();
-    }
-
-    void boot();
-
-    return () => {
-      isMounted = false;
-    };
+    // Ready as soon as the fonts are in (or failed, then the system font stands in): no artificial wait.
+    setIsReady(true);
+    void ExpoSplashScreen.hideAsync();
   }, [fontError, fontsLoaded]);
 
   if (!isReady) {

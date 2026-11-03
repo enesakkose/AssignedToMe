@@ -36,12 +36,12 @@ This is a native-only Expo + TypeScript boilerplate. Use Bun for all package com
 
 - Follow installed skills in `.agents/skills` for UI quality, theme taste, interaction layers and React Native guidance.
 - Treat `DESIGN.md` as the source of truth for this base's product language. Update it first when the design direction changes.
-- Theme tokens are defined in `global.css`, `tailwind.config.js` and `src/lib/theme.ts`; keep them synchronized.
+- Theme tokens are defined in `global.css`, `tailwind.config.js` and `src/lib/theme/theme.ts`; keep them synchronized with each other and with `desktop/src/styles/globals.css`.
 - Theme scheme control uses NativeWind through `src/hooks/use-app-theme.ts`; do not add a Zustand store just for theme mode.
-- Default typography uses Plus Jakarta Sans via `src/lib/fonts.ts`; keep the public font variable name as `--font-plus-jakarta-sans`.
+- Typography is Instrument Sans with JetBrains Mono for machine values, via `src/lib/theme/fonts.ts`; the font variable is `--font-instrument-sans`.
 - `lib/theme.ts` is a small React Native Reusables doctor mirror; keep it aligned with `src/lib/theme.ts`.
 - React Native Reusables is the primitive layer, not the visual identity. Do not ship the default RNR/shadcn look unchanged.
-- The default visual language is Mica Halo: soft neutral surfaces, generous radius, floating halo dock navigation, capsule wells, contrast-led actions, quiet borders and tactile native feedback.
+- The visual language is AssignedToMe's, shared with desktop (`desktop/DESIGN.md` is the source of truth; `DESIGN.md` here maps it to RNR): silver-grey paper, hairline rules, flat graphite pill buttons, no hue except state.
 - Keep color usage minimal. Do not add purple glows, beige craft palettes, decorative dots, fake metrics or bright default brand colors.
 - Buttons and pressable controls should preserve 44 px touch targets and subtle `scale(0.96)` press feedback where the primitive supports it.
 - Button haptics are centralized through `src/lib/utils/haptics.ts`; use the local `Button` `haptic` prop instead of calling haptics inline for simple press feedback.

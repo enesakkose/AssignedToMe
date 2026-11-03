@@ -14,7 +14,8 @@
     "check": "bun run lint && bun run format:check && bun run typecheck"
   },
   "dependencies": {
-    "@expo-google-fonts/plus-jakarta-sans": "^0.4.2",
+    "@expo-google-fonts/instrument-sans": "^0.4.2",
+    "@expo-google-fonts/jetbrains-mono": "^0.4.1",
     "@gorhom/bottom-sheet": "^5.2.14",
     "@hookform/resolvers": "^5.4.0",
     "@react-native-async-storage/async-storage": "2.2.0",

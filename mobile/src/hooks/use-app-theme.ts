@@ -19,11 +19,12 @@ export function useAppTheme() {
     toggleColorScheme: nativeWindTheme.toggleColorScheme,
     values: {
       bottomSheetBackdropOpacity: isDark ? 0.54 : 0.22,
-      dockBackground: isDark ? "hsla(225, 14%, 11%, 0.97)" : "hsla(220, 24%, 99%, 0.97)",
-      handleIndicator: isDark ? "hsl(220 8% 58%)" : "hsl(222 8% 43%)",
-      mutedInk: isDark ? "hsl(220 8% 67%)" : "hsl(222 8% 43%)",
-      surface: isDark ? "hsl(225 11% 14%)" : "hsl(220 15% 93%)",
-      tabInactive: isDark ? "hsl(220 8% 58%)" : "hsl(222 8% 43%)",
+      // Paper-2 at 97% (raised from the page), muted ink and the paper-2 fill (global.css).
+      dockBackground: isDark ? "hsla(217, 5.1%, 10.9%, 0.97)" : "hsla(211, 19.9%, 96.6%, 0.97)",
+      handleIndicator: isDark ? "hsl(214 3% 59.9%)" : "hsl(217 4% 34.9%)",
+      mutedInk: isDark ? "hsl(214 3% 59.9%)" : "hsl(217 4% 34.9%)",
+      surface: isDark ? "hsl(217 5.1% 10.9%)" : "hsl(211 10% 93.1%)",
+      tabInactive: isDark ? "hsl(214 3% 59.9%)" : "hsl(217 4% 34.9%)",
     },
   };
 }

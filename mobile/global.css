@@ -1,75 +1,103 @@
-/* Hallmark · pre-emit critique: P5 H4 E5 S5 R5 V4 */
-/* Hallmark · macrostructure: Component Playground · theme: Mica Halo · tone: soft-utilitarian · anchor hue: neutral */
+/* AssignedToMe design language on mobile: the desktop Titanium tokens (desktop/src/styles/globals.css, desktop/DESIGN.md),
+   converted from OKLCH to HSL because NativeWind and React Native Reusables read `hsl(var(--token))`. Desktop's alpha
+   tokens (paper-2/3, rule/rule-2) are composited over that theme's paper: on an opaque phone screen they look the same.
+   Keep in sync with desktop, tailwind.config.js and src/lib/theme/theme.ts. */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 220 18% 96%;
-    --foreground: 225 12% 12%;
-    --card: 220 24% 99%;
-    --card-foreground: 225 12% 12%;
-    --popover: 220 24% 99%;
-    --popover-foreground: 225 12% 12%;
-    --primary: 225 12% 12%;
-    --primary-foreground: 220 24% 98%;
-    --secondary: 220 13% 91%;
-    --secondary-foreground: 225 12% 14%;
-    --muted: 220 14% 92%;
-    --muted-foreground: 222 8% 43%;
-    --accent: 220 14% 89%;
-    --accent-foreground: 225 12% 12%;
-    --destructive: 358 58% 44%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 220 11% 82%;
-    --input: 220 11% 82%;
-    --ring: 225 12% 12%;
-    --radius: 1.25rem;
-    --font-plus-jakarta-sans: "PlusJakartaSans_400Regular";
-    --signal: 225 12% 12%;
-    --signal-foreground: 220 24% 98%;
-    --signal-muted: 220 13% 88%;
-    --rail: 225 12% 12%;
-    --surface: 220 15% 93%;
-    --surface-raised: 220 24% 99%;
-    --chart-1: 225 12% 12%;
-    --chart-2: 222 8% 43%;
-    --chart-3: 204 10% 48%;
-    --chart-4: 36 12% 46%;
-    --chart-5: 350 14% 45%;
+    /* React Native Reusables roles, mapped onto the desktop palette. */
+    --background: 211 19.9% 96.6%;
+    --foreground: 217 8.9% 9.8%;
+    --card: 211 19.9% 96.6%;
+    --card-foreground: 217 8.9% 9.8%;
+    --popover: 211 19.9% 96.6%;
+    --popover-foreground: 217 8.9% 9.8%;
+    --primary: 217 6.4% 14.4%;
+    --primary-foreground: 211 14.2% 96.8%;
+    --secondary: 212 7.3% 90.5%;
+    --secondary-foreground: 217 8.9% 9.8%;
+    --muted: 211 10% 93.1%;
+    --muted-foreground: 217 4% 34.9%;
+    --accent: 212 7.3% 90.5%;
+    --accent-foreground: 217 8.9% 9.8%;
+    --destructive: 0 68.8% 44.1%;
+    --destructive-foreground: 211 19.9% 96.6%;
+    --border: 212 5.8% 87.9%;
+    --input: 212 5.8% 87.9%;
+    --ring: 217 5.6% 30.7%;
+    --radius: 10px;
+    --font-instrument-sans: "InstrumentSans_400Regular";
+
+    /* Desktop names, for code shared in spirit with desktop. */
+    --paper: 211 19.9% 96.6%;
+    --paper-2: 211 10% 93.1%;
+    --paper-3: 212 7.3% 90.5%;
+    --ink: 217 8.9% 9.8%;
+    --ink-2: 217 4.6% 21.2%;
+    --rule: 212 8.9% 92.2%;
+    --rule-2: 212 5.8% 87.9%;
+    --accent-text: 217 5.6% 30.7%;
+    --accent-wash: 211 9.3% 90.4%;
+    --error: 0 68.8% 44.1%;
+    --error-wash: 7 100% 96%;
+    /* Status and priority are the only hues in the UI. */
+    --success: 139 56.2% 29.5%;
+    --progress: 178 100% 25.8%;
+    --warning: 34 100% 38%;
+    --graphite: 217 8.9% 9.8%;
+    --graphite-ink: 211 10.5% 93.6%;
+    --track: 211 4.6% 80.8%;
+    --thumb: 211 79.6% 99.4%;
+    /* Brand mark: same graphite tile and silver glyph in both themes, like the app icon. */
+    --brand-tile: 217 6.4% 14.4%;
+    --brand-mark: 211 5.8% 88.4%;
+    --surface: 211 10% 93.1%;
+    --surface-raised: 211 19.9% 96.6%;
   }
 
   .dark:root {
-    --background: 225 15% 8%;
-    --foreground: 220 18% 93%;
-    --card: 225 14% 11%;
-    --card-foreground: 220 18% 93%;
-    --popover: 225 14% 11%;
-    --popover-foreground: 220 18% 93%;
-    --primary: 220 18% 93%;
-    --primary-foreground: 225 15% 8%;
-    --secondary: 225 10% 17%;
-    --secondary-foreground: 220 18% 93%;
-    --muted: 225 10% 16%;
-    --muted-foreground: 220 8% 67%;
-    --accent: 225 10% 21%;
-    --accent-foreground: 220 18% 93%;
-    --destructive: 358 58% 58%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 225 9% 25%;
-    --input: 225 9% 25%;
-    --ring: 220 18% 93%;
-    --signal: 220 18% 93%;
-    --signal-foreground: 225 15% 8%;
-    --signal-muted: 225 10% 18%;
-    --rail: 220 18% 93%;
-    --surface: 225 11% 14%;
-    --surface-raised: 225 14% 11%;
-    --chart-1: 220 18% 93%;
-    --chart-2: 220 8% 67%;
-    --chart-3: 204 14% 58%;
-    --chart-4: 36 16% 60%;
-    --chart-5: 350 20% 62%;
+    --background: 217 8.4% 6.6%;
+    --foreground: 211 8.7% 92.3%;
+    --card: 217 8.4% 6.6%;
+    --card-foreground: 211 8.7% 92.3%;
+    --popover: 217 5.1% 10.9%;
+    --popover-foreground: 211 8.7% 92.3%;
+    --primary: 211 5.8% 88.4%;
+    --primary-foreground: 217 8.9% 7.9%;
+    --secondary: 216 3.9% 14.3%;
+    --secondary-foreground: 211 8.7% 92.3%;
+    --muted: 217 5.1% 10.9%;
+    --muted-foreground: 214 3% 59.9%;
+    --accent: 216 3.9% 14.3%;
+    --accent-foreground: 211 8.7% 92.3%;
+    --destructive: 5 91.7% 70%;
+    --destructive-foreground: 217 8.4% 6.6%;
+    --border: 216 3.7% 15.2%;
+    --input: 216 3.7% 15.2%;
+    --ring: 214 7.4% 77.2%;
+
+    --paper: 217 8.4% 6.6%;
+    --paper-2: 217 5.1% 10.9%;
+    --paper-3: 216 3.9% 14.3%;
+    --ink: 211 8.7% 92.3%;
+    --ink-2: 211 3.8% 77%;
+    --rule: 217 5.1% 10.9%;
+    --rule-2: 216 3.7% 15.2%;
+    --accent-text: 214 7.4% 77.2%;
+    --accent-wash: 217 5.5% 17.2%;
+    --error: 5 91.7% 70%;
+    --error-wash: 6 41.1% 16.5%;
+    --success: 134 42% 58.5%;
+    --progress: 177 53.1% 53.5%;
+    --warning: 37 86.6% 61.6%;
+    --graphite: 211 8.7% 92.3%;
+    --graphite-ink: 217 8.9% 7.9%;
+    --track: 217 4.1% 24.2%;
+    --thumb: 211 79.6% 99.4%;
+    --surface: 217 5.1% 10.9%;
+    --surface-raised: 216 3.9% 14.3%;
   }
 }

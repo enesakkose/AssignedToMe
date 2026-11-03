@@ -216,11 +216,15 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 const tokenSwatches = [
-  { className: "bg-background", label: "Paper" },
-  { className: "bg-card", label: "Raised" },
-  { className: "bg-muted", label: "Field" },
-  { className: "bg-accent", label: "Active" },
-  { className: "bg-foreground", label: "Ink" },
+  { className: "bg-paper", label: "paper" },
+  { className: "bg-paper-2", label: "paper-2" },
+  { className: "bg-paper-3", label: "paper-3" },
+  { className: "bg-ink", label: "ink" },
+  { className: "bg-primary", label: "accent" },
+  { className: "bg-error", label: "error" },
+  { className: "bg-success", label: "success" },
+  { className: "bg-progress", label: "progress" },
+  { className: "bg-warning", label: "warning" },
 ];
 
 export function PlaygroundScreen() {
@@ -272,7 +276,7 @@ export function PlaygroundScreen() {
 
       return (
         <SortableItem key={id} data={item} id={id} {...rest}>
-          <View className="h-16 flex-row items-center justify-between rounded-[24px] border border-border bg-card px-4">
+          <View className="h-16 flex-row items-center justify-between rounded-lg border border-border bg-card px-4">
             <View className="flex-row items-center gap-3">
               <View className="size-9 items-center justify-center rounded-full bg-surface">
                 <Icon as={Layers} className="text-muted-foreground" size={17} />
@@ -294,33 +298,30 @@ export function PlaygroundScreen() {
   return (
     <Screen>
       <AppHeader
-        eyebrow="Mica Halo"
-        subtitle="A neutral native system with floating chrome, capsule wells and tactile controls. Bring your brand color later."
+        eyebrow="Design system"
+        subtitle="Every primitive in its states, on the same tokens as the desktop app."
         title="Component playground"
       />
 
-      <View className="gap-5 overflow-hidden rounded-[36px] border border-border bg-card p-5">
+      <View className="gap-5 overflow-hidden rounded-lg border border-border bg-card p-5">
         <View className="gap-2">
-          <Text className="text-3xl font-semibold leading-tight">
-            Soft primitives, owned rhythm.
-          </Text>
+          <Text className="text-3xl font-semibold leading-tight">Silver paper, graphite ink.</Text>
           <Text className="max-w-2xl text-muted-foreground">
-            The base stays colorless, but it is no longer anonymous: halo docks, pill wells, quiet
-            rails and native press feedback carry the identity.
+            Achromatic by default: hue appears only for state (error, done, in progress).
           </Text>
         </View>
 
-        <View className="gap-3 rounded-[28px] bg-surface p-3">
+        <View className="gap-3 rounded-md bg-surface p-3">
           <View className="flex-row items-center justify-between">
             <Text className="font-semibold">Theme tokens</Text>
-            <Text variant="muted">neutral base</Text>
+            <Text variant="muted">desktop tokens</Text>
           </View>
           {tokenSwatches.map((item) => (
             <View
-              className="h-12 flex-row items-center justify-between rounded-[20px] border border-border bg-card px-3"
+              className="h-12 flex-row items-center justify-between rounded-md border border-border bg-card px-3"
               key={item.label}
             >
-              <Text variant="small">{item.label}</Text>
+              <Text className="font-mono text-sm">{item.label}</Text>
               <View className={`h-7 w-20 rounded-full border border-border ${item.className}`} />
             </View>
           ))}
@@ -333,7 +334,7 @@ export function PlaygroundScreen() {
       >
         <View className="gap-3">
           {catalog.map((group) => (
-            <View className="gap-3 rounded-3xl bg-surface p-4" key={group.id}>
+            <View className="gap-3 rounded-md bg-surface p-4" key={group.id}>
               <Text className="text-base font-semibold">{group.title}</Text>
               <View className="flex-row flex-wrap gap-2">
                 {group.items.map((item) => (
@@ -408,7 +409,7 @@ export function PlaygroundScreen() {
         <Alert icon={Terminal}>
           <AlertTitle>Generic feedback</AlertTitle>
           <AlertDescription>
-            Alerts, badges, progress and skeleton states inherit Mica tokens.
+            Alerts, badges, progress and skeleton states use the shared tokens.
           </AlertDescription>
         </Alert>
 
@@ -671,13 +672,13 @@ export function PlaygroundScreen() {
               description="Gesture-driven native sheet for contextual tasks and compact flows."
               title="Bottom sheet"
             />
-            <View className="gap-3 rounded-[28px] bg-surface p-4">
+            <View className="gap-3 rounded-md bg-surface p-4">
               <View className="flex-row items-center gap-3">
                 <View className="size-10 items-center justify-center rounded-full bg-card">
                   <Icon as={PanelTop} className="text-muted-foreground" size={18} />
                 </View>
                 <View className="flex-1">
-                  <Text className="font-semibold">Mica sheet surface</Text>
+                  <Text className="font-semibold">Sheet surface</Text>
                   <Text variant="muted">Provider lives once in AppProviders.</Text>
                 </View>
               </View>
@@ -778,16 +779,16 @@ export function PlaygroundScreen() {
       </Section>
 
       <Section description="NumberFlow animates numeric changes." title="NumberFlow">
-        <View className="flex-row items-center justify-between gap-4 rounded-[28px] border border-border bg-surface p-4">
+        <View className="flex-row items-center justify-between gap-4 rounded-md border border-border bg-surface p-4">
           <View>
             <Text variant="muted">Animated metric</Text>
             <NumberFlow
               value={count}
               style={{
                 color: theme.tokens.foreground,
-                fontFamily: APP_FONT_FAMILY.extraBold,
+                fontFamily: APP_FONT_FAMILY.semiBold,
                 fontSize: 42,
-                fontWeight: "800",
+                fontWeight: "600",
               }}
             />
           </View>
@@ -839,7 +840,7 @@ export function PlaygroundScreen() {
         title="Drag and drop"
       >
         <View
-          className="overflow-hidden rounded-[30px] border border-border bg-surface p-2"
+          className="overflow-hidden rounded-md border border-border bg-surface p-2"
           style={{ backgroundColor: surfaceColor }}
         >
           <Sortable
@@ -856,7 +857,7 @@ export function PlaygroundScreen() {
 
       <Section title="Native motion and notifications">
         <NativeOnlyAnimatedView entering={FadeInDown.duration(220)}>
-          <View className="flex-row items-center gap-3 rounded-[24px] border border-border bg-card p-4">
+          <View className="flex-row items-center gap-3 rounded-lg border border-border bg-card p-4">
             <Icon as={Activity} className="text-muted-foreground" size={18} />
             <Text className="flex-1 leading-6">
               NativeOnlyAnimatedView renders animated surfaces on iOS/Android.

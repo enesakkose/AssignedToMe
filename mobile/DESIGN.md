@@ -1,74 +1,53 @@
-# Mica Halo Design System
+# AssignedToMe Design Language (mobile)
 
-Mica Halo is the default product language for this React Native base. React Native Reusables provides the primitive mechanics; Mica Halo provides the visual contract: soft radius, floating chrome, capsule wells, quiet hierarchy and tactile native interaction.
+Mobile uses the same visual language as desktop. **`desktop/DESIGN.md` is the source of truth** for character, tokens, rules, components and brand; change it there first, then mirror it here. This file only records what differs on a phone and how the tokens map onto React Native Reusables (RNR).
 
-## Design Read
+## Character
 
-- Audience: product engineers building native iOS and Android apps from this base.
-- Use: inspect the system quickly, then replace brand colors without rebuilding primitives.
-- Tone: soft, utilitarian, calm, slightly distinctive.
-- Hallmark macrostructure: Component Playground.
-- Dials: variance 6, motion 4, density 5.
-- Signature: halo dock navigation, rounded tool wells, offset capsule rhythm and neutral-first contrast.
+Exact and technical, metallic and achromatic: silver-grey paper, hairline rules, flat graphite pill buttons. No hue except state (error, done, in progress, priority). Emphasis comes from contrast, weight and the graphite fill. Nothing decorative.
 
-## Color
+## Tokens
 
-The default palette is nearly colorless. Brand color is intentionally absent because each app built from this base will bring its own. Identity comes from shape, depth and interaction before color.
+Defined in `global.css` (light `:root`, dark `.dark:root`), mapped to classes in `tailwind.config.js`, mirrored for JS in `src/lib/theme/theme.ts`. Keep the three in sync with `desktop/src/styles/globals.css`.
 
-| Role | OKLCH Intent | Native Token |
-| --- | --- | --- |
-| Paper | `oklch(0.965 0.012 260)` | `--background` |
-| Ink | `oklch(0.18 0.012 260)` | `--foreground` |
-| Raised surface | `oklch(0.99 0.008 260)` | `--card`, `--surface-raised` |
-| Field surface | `oklch(0.93 0.01 260)` | `--surface`, `--muted` |
-| Active surface | `oklch(0.90 0.01 260)` | `--accent` |
-| Destructive | `oklch(0.52 0.17 27)` | `--destructive` |
+- Values are desktop's OKLCH converted to HSL (NativeWind and RNR read `hsl(var(--token))`). Desktop's translucent tokens (`paper-2`, `paper-3`, `rule`, `rule-2`) are composited over that theme's paper, since a phone screen is opaque.
+- Desktop names exist as classes: `bg-paper`, `bg-paper-2/3`, `text-ink`, `text-ink-2`, `border-rule`, `border-rule-2`, `text-accent-text`, `bg-accent-wash`, `text-error`, `bg-error-wash`, `text-success`, `text-progress`, `text-warning`, `bg-graphite`, `bg-track`, `bg-thumb`, `bg-brand-tile`, `text-brand-mark`.
+- RNR roles map onto them:
 
-NativeWind/RNR consume HSL custom properties through `hsl(var(--token))`, so `global.css` stores HSL-compatible values while this document records the perceptual OKLCH intent.
+| RNR role | Desktop token |
+|---|---|
+| `background`, `card` | `paper` |
+| `foreground` | `ink` |
+| `primary` / `primary-foreground` | `accent` (graphite, silver in dark) / `accent-ink` |
+| `secondary`, `accent` (RNR's hover/selected fill) | `paper-3` |
+| `muted` (fill) | `paper-2` |
+| `muted-foreground` | `muted` (desktop's `text-muted` is `text-muted-foreground` here) |
+| `border`, `input` | `rule-2` |
+| `ring` | `focus` |
+| `destructive` | `error` |
+| `popover` | `paper` (light), `paper-2` (dark, so sheets lift off the near-black page) |
 
-## Typography
+## Type
 
-- Default app font is Plus Jakarta Sans.
-- The font variable name is `--font-plus-jakarta-sans`; native runtime maps it through `src/lib/fonts.ts`.
-- Display text is left aligned, compact and medium-heavy, not black-weight by default.
-- Body text uses 16 px minimum and comfortable line height.
-- Numbers that move or compare should use tabular treatment where the platform supports it.
-- No italic display words. Emphasis comes from weight, placement and contrast.
+- Instrument Sans for everything, JetBrains Mono for machine values (task keys, tokens, commands): `src/lib/theme/fonts.ts`, loaded in `src/providers/splash-provider.tsx`. The font variable is `--font-instrument-sans`.
+- React Native picks weight by font file, so `Text` maps `font-medium`/`font-semibold`/`font-bold` to the matching file, and `font-mono` to JetBrains Mono.
+- Sizes are larger than desktop's 13px macOS density: body is 16px minimum on a phone. Weights and the type rules (sentence case, no tracked capitals, no italic display) are desktop's.
 
-## Shape And Surface
+## Shape
 
-- Base radius is `20px`.
-- Large panels use `28-36px` radius.
-- Buttons, inputs, badges, tabs and segmented controls should feel pill-soft, not square.
-- Bottom navigation is a floating halo dock: rounded, theme-aware, slightly detached from the screen edge.
-- Bottom sheets are native gesture surfaces. Use them for contextual tasks, compact choices and short forms that should not become full routes.
-- Repeated controls sit inside soft wells. A well is filled, rounded and quiet; it should not look like a web card pasted into native.
-- Cards are quiet raised surfaces. Avoid nested card stacks unless the inner element is a real repeated record or framed control.
-- Prefer soft filled fields over hard outline-only surfaces.
+Same as desktop: buttons, inputs and select triggers are pills (`rounded-full`); cards `rounded-lg` (10px); menus, popovers, textareas `rounded-md` (8px); chips `rounded-sm` (4px). Buttons are flat: one fill, no shadow.
 
-## Interaction
+## Phone-specific rules
 
-- Minimum touch target is 44 px.
-- Press feedback uses `scale(0.96)` where the primitive supports it.
-- UI motion stays below 300 ms and should communicate feedback, state or spatial continuity.
-- Drag surfaces must visually follow the finger: no foreign white containers, no hard stops, no delayed state feedback.
-- Animate transform and opacity only. Drag behavior belongs to React Native Reanimated DnD.
-- Silent success is preferred. Use toasts for failures or actions whose result is not visible.
+- Touch targets are at least 44px.
+- Press feedback is `scale(0.96)`; haptics through the `Button` `haptic` prop.
+- Motion is transform and opacity only, under 300ms, and respects reduced motion.
+- Every data region has the four states from desktop: loading (skeleton), empty, error, full.
 
-## Component Rules
+## Brand
 
-- Import from `src/components/ui` first.
-- Extend primitives through layout wrappers or feature-local components, not by creating a second primitive library.
-- Every primitive example belongs in the playground.
-- Use primary as contrast, not as a brand color.
-- Use lucide icons consistently through `Icon` when possible.
+The mark ("Nokta") and its colours come from `desktop/design/logo`. The app icon is the graphite tile (`#2B2D31`) with the silver mark (`#E4E5E7`), the same as macOS; the splash screen shows that icon on the theme's paper.
 
-## Playground Acceptance
+## Playground
 
-`src/features/playground/playground-screen.tsx` must feel like a working system bench:
-
-- Every RNR primitive family is visible.
-- External native packages are demonstrated: NumberFlow, OTP, FlashList, React Native Reanimated DnD and Sonner.
-- The opening screen shows the system through real surfaces, not giant color swatches.
-- Component inventory is grouped by purpose.
-- Copy stays functional. No fake metrics, fake testimonials or decorative version strings.
+`src/features/playground/screens/playground-screen.tsx` shows every primitive in its states. Check new components there first, in light and dark.

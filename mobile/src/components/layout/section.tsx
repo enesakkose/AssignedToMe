@@ -9,7 +9,7 @@ type SectionProps = PropsWithChildren<{
 
 export function Section({ children, description, title }: SectionProps) {
   return (
-    <View className="gap-4 rounded-[28px] border border-border bg-card p-5">
+    <View className="gap-4 rounded-lg border border-border bg-card p-5">
       <View className="gap-1">
         <Text className="text-xl font-semibold leading-tight">{title}</Text>
         {description ? (

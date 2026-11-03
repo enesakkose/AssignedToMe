@@ -1,12 +1,12 @@
 # RN Base
 
-Native-only Expo + TypeScript boilerplate with Bun, Expo Router, NativeWind, React Native Reusables, Mica Halo design tokens and native-first extras.
+Native-only Expo + TypeScript boilerplate with Bun, Expo Router, NativeWind, React Native Reusables, the AssignedToMe design tokens (shared with desktop) and native-first extras.
 
 ## Stack
 
 - Expo SDK 57 + Expo Router + TypeScript
 - NativeWind + React Native Reusables
-- Plus Jakarta Sans via `--font-plus-jakarta-sans`
+- Instrument Sans and JetBrains Mono via `--font-instrument-sans`
 - TanStack Query, React Hook Form, Zod, Zustand reference store
 - Axios-backed generic API client
 - EAS build/update profiles with `expo-updates`
