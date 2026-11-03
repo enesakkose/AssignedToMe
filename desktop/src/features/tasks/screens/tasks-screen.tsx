@@ -15,6 +15,7 @@ import { Tab, Tabs, TabsList } from '@/components/ui/tabs';
 import { toast } from '@/components/ui/toaster';
 import type { StoredConnection } from '@/features/connections/api/connections';
 import { useConnections } from '@/features/connections/hooks/use-connections';
+import { UpdateBanner } from '@/features/updates/update-banner';
 import { errorText } from '@/lib/errors';
 import { timeAgo } from '@/lib/format';
 import { openExternal } from '@/lib/open-external';
@@ -288,6 +289,7 @@ export function TasksScreen() {
             )}
           </ScrollArea>
 
+          <UpdateBanner />
           <footer className="flex h-8 shrink-0 items-center justify-between border-t border-rule pr-1.5 pl-3 text-xs text-muted">
             <span className="num">
               {fetching

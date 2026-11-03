@@ -1,4 +1,5 @@
 import { getProvider, type Locale } from '@mytask/core';
+import { getVersion } from '@tauri-apps/api/app';
 import { disable, enable, isEnabled } from '@tauri-apps/plugin-autostart';
 import { ArrowLeft, ChevronRight, Monitor, Moon, Plus, Sun } from 'lucide-react';
 import { invoke } from '@tauri-apps/api/core';
@@ -16,6 +17,7 @@ import { toast } from '@/components/ui/toaster';
 import { setLanguage } from '@/lib/i18n';
 import { getTheme, setTheme, type ThemePreference } from '@/lib/theme';
 import { REFRESH_CHOICES_MIN, useNav } from '@/stores/nav';
+import { UpdateBanner, useAvailableUpdate } from '@/features/updates/update-banner';
 import { useConnections } from '../hooks/use-connections';
 
 function useLaunchAtLogin() {
@@ -44,6 +46,8 @@ export function SettingsScreen() {
   const go = useNav((s) => s.go);
   const connections = useConnections();
   const { query: autostart, mutation: setAutostart } = useLaunchAtLogin();
+  const version = useQuery({ queryKey: ['app-version'], queryFn: getVersion, staleTime: Infinity });
+  const update = useAvailableUpdate();
   const refreshMs = useNav((s) => s.refreshMs);
   const setRefreshMs = useNav((s) => s.setRefreshMs);
   const openWindow = useNav((s) => s.openWindow);
@@ -159,6 +163,23 @@ export function SettingsScreen() {
             </span>
             <Switch checked={openWindow} onCheckedChange={setOpenWindow} />
           </label>
+          <div className="flex items-center justify-between gap-3 text-md">
+            <span className="num">{t('update.version', { version: version.data ?? '' })}</span>
+            <Button
+              size="sm"
+              className="shrink-0"
+              loading={update.isFetching}
+              onClick={() =>
+                void update.refetch().then((r) => {
+                  if (r.isError) toast.error(t('update.checkFailed'));
+                  // A newer one shows as the update bar below.
+                  else if (!r.data) toast.success(t('update.upToDate'));
+                })
+              }
+            >
+              {t('update.check')}
+            </Button>
+          </div>
         </Section>
 
         {import.meta.env.DEV && (
@@ -169,6 +190,7 @@ export function SettingsScreen() {
           </Section>
         )}
       </ScrollArea>
+      <UpdateBanner />
     </div>
   );
 }

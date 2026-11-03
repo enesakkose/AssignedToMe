@@ -341,6 +341,9 @@ pub fn run() {
         .manage(AllowedOrigins(Mutex::new(HashSet::new())))
         .plugin(tauri_plugin_autostart::Builder::new().arg("--autostart").build())
         .plugin(tauri_plugin_positioner::init())
+        // In-app updates from GitHub Releases (latest.json), verified against the pubkey in tauri.conf.json.
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_nspanel::init())

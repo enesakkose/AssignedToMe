@@ -16,6 +16,8 @@
     "core:tray:allow-get-by-id",
     "store:default",
     "notification:default",
+    "updater:default",
+    "process:allow-restart",
     {
       "identifier": "http:default",
       "allow": [

@@ -297,5 +297,15 @@
       "title": "Your keys stay with you",
       "body": "API keys live only in the macOS Keychain and are never sent anywhere else."
     }
+  },
+  "update": {
+    "available": "AssignedToMe {{version}} is available",
+    "install": "Update & restart",
+    "installing": "Updating…",
+    "failed": "Couldn't install the update. Try again later.",
+    "version": "Version {{version}}",
+    "check": "Check for updates",
+    "checkFailed": "Couldn't check for updates. Check your connection.",
+    "upToDate": "You're on the latest version."
   }
 }

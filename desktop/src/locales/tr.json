@@ -296,5 +296,15 @@
       "title": "Anahtarların sende kalır",
       "body": "API anahtarların yalnızca macOS Anahtar Zinciri'nde saklanır, başka hiçbir yere gönderilmez."
     }
+  },
+  "update": {
+    "available": "AssignedToMe {{version}} hazır",
+    "install": "Güncelle ve yeniden başlat",
+    "installing": "Güncelleniyor…",
+    "failed": "Güncelleme kurulamadı. Biraz sonra tekrar dene.",
+    "version": "Sürüm {{version}}",
+    "check": "Güncellemeleri denetle",
+    "checkFailed": "Güncellemeler denetlenemedi. Bağlantını kontrol et.",
+    "upToDate": "En güncel sürümü kullanıyorsun."
   }
 }

@@ -40,6 +40,7 @@ Your work is spread out: a client's Jira, your team's Linear, a few GitHub repos
 - **New task notifications.** A macOS notification when something new is assigned to you. Clicking it opens that task.
 - **Copy a link or ID.** Right-click a task to copy its URL, or just its key (e.g. `ENG-142`) for a branch name.
 - **Stays fresh on its own.** Refreshes every hour by default (or every 1, 15 or 30 minutes), and again when you open it.
+- **Updates itself.** When a new version is out, a bar under your tasks offers to update and restart. Every update is checked against our signing key before it installs.
 - **Feels native.** Light and dark mode, English and Turkish, keyboard shortcuts, launch at login (on by default; turn it off in Settings), reduced-motion support.
 
 ## Supported tools
@@ -78,7 +79,7 @@ AssignedToMe runs on **macOS 13 (Ventura) or later**, on both Apple Silicon and 
 2. Open it and drag **AssignedToMe** into **Applications**.
 3. Open it from Applications.
 
-Releases are signed with a Developer ID and notarized by Apple, so macOS opens them without warnings. Prefer to build it yourself? It's all open source: [build from source](#development) in a few minutes.
+Releases are signed with a Developer ID and notarized by Apple, so macOS opens them without warnings. From then on the app updates itself (from 0.1.3 on; if you have 0.1.2 or older, download the latest release once). Prefer to build it yourself? It's all open source: [build from source](#development) in a few minutes.
 
 ### First run
 
@@ -124,6 +125,17 @@ bun tauri build --target universal-apple-darwin
 This builds one app for both Apple Silicon and Intel (it needs both Rust targets: `rustup target add aarch64-apple-darwin x86_64-apple-darwin`). The `.app` and `.dmg` end up in `desktop/src-tauri/target/universal-apple-darwin/release/bundle/`. For just your own Mac, plain `bun tauri build` is faster.
 
 A build made this way is fine for your own Mac. To sign and notarize it for others (as the published releases are), you need an Apple Developer account: set `APPLE_SIGNING_IDENTITY` to your "Developer ID Application" certificate and provide notarization credentials (`APPLE_API_KEY` + `APPLE_API_ISSUER` with the matching `.p8` key) when running the build. See Tauri's [macOS code signing guide](https://v2.tauri.app/distribute/sign/macos/). No credentials ever go into the repository.
+
+### Releasing
+
+For maintainers. A release needs the Apple signing and notarization credentials (see above) plus the **updater signing key**, whose private half never leaves the maintainer's machine; its public half is the `pubkey` in `tauri.conf.json`.
+
+1. Bump the version in `desktop/src-tauri/tauri.conf.json`, `desktop/src-tauri/Cargo.toml` and `desktop/package.json`.
+2. Build with `TAURI_SIGNING_PRIVATE_KEY` (path to the updater key) and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` set, alongside the Apple variables. The build then also writes `AssignedToMe.app.tar.gz` and its `.sig`.
+3. `cd desktop && bun scripts/latest-json.ts "What changed"` writes `latest.json`.
+4. Create release `v<version>` and upload three files: the `.dmg`, `AssignedToMe.app.tar.gz` and `latest.json`. Running apps find it through `releases/latest/download/latest.json`.
+
+If the updater key is lost, installed apps can no longer be updated automatically, so keep a backup.
 
 ### Test and check
 
