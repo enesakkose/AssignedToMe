@@ -1,6 +1,6 @@
 [package]
 name = "mytask"
-version = "0.1.5"
+version = "0.1.6"
 description = "AssignedToMe: every task assigned to you, in the menu bar"
 authors = ["you"]
 edition = "2024"
