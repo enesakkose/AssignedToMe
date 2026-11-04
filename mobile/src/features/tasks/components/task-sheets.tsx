@@ -9,6 +9,13 @@ import { BottomSheetModal, type BottomSheetModalRef } from "@/components/ui/bott
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Icon } from "@/components/ui/icon";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Text } from "@/components/ui/text";
 import { useAppTheme } from "@/hooks/use-app-theme";
@@ -26,7 +33,7 @@ import { Check, ExternalLink, FileInput, Trash2, UserMinus } from "lucide-react-
 import { cssInterop } from "nativewind";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { ActivityIndicator, Pressable, View } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, useWindowDimensions, View } from "react-native";
 import { toast } from "sonner-native";
 import { create } from "zustand";
 import { openInSource } from "../api/open-in-source";
@@ -133,13 +140,13 @@ function SheetRow({
   );
 }
 
-function SheetInput(props: React.ComponentProps<typeof BottomSheetTextInput>) {
+function SheetInput({ className, ...props }: React.ComponentProps<typeof BottomSheetTextInput>) {
   const theme = useAppTheme();
   return (
     <BottomSheetTextInput
       className={cn(
         "h-11 rounded-full border border-input bg-background px-4 text-base text-foreground",
-        props.className,
+        className,
       )}
       placeholderTextColor={theme.values.mutedInk}
       style={{ fontFamily: APP_FONT_FAMILY.regular }}
@@ -274,6 +281,42 @@ function StatusSheet({ target, onDone }: { target: SheetTarget; onDone: () => vo
   );
 }
 
+/** A field's choices as a dropdown, so a long list (Jira projects, components) stays one row tall. */
+function OptionSelect({
+  label,
+  options,
+  value,
+  onChange,
+}: {
+  label: string;
+  options: { id: string; name: string }[];
+  value?: string;
+  onChange: (id: string) => void;
+}) {
+  const { width, height } = useWindowDimensions();
+  const picked = options.find((o) => o.id === value);
+  return (
+    <Select
+      onValueChange={(o) => o && onChange(o.value)}
+      value={picked ? { label: picked.name, value: picked.id } : undefined}
+    >
+      <SelectTrigger className="h-11 w-full rounded-full border-input bg-background px-4 shadow-none">
+        <SelectValue className="text-base" placeholder={label} />
+      </SelectTrigger>
+      {/* Trigger width (the sheet's 20 pt sides); the list scrolls instead of running off screen. */}
+      <SelectContent style={{ width: width - 40 }}>
+        <ScrollView bounces={false} style={{ maxHeight: height * 0.4 }}>
+          {options.map((o) => (
+            <SelectItem key={o.id} label={o.name} value={o.id}>
+              <Text>{o.name}</Text>
+            </SelectItem>
+          ))}
+        </ScrollView>
+      </SelectContent>
+    </Select>
+  );
+}
+
 /** The transition's screen (e.g. "Estimated Budget Effort"), built from the fields the source reports. */
 function TransitionForm({
   taskKey,
@@ -326,27 +369,12 @@ function TransitionForm({
             {f.required ? f.name : t("tasks.optionalField", { name: f.name })}
           </Text>
           {f.kind === "select" ? (
-            <View className="flex-row flex-wrap gap-2">
-              {(f.options ?? []).map((o) => {
-                const on = values[f.key] === o.id;
-                return (
-                  <Pressable
-                    accessibilityRole="radio"
-                    accessibilityState={{ selected: on }}
-                    className={cn(
-                      "h-9 justify-center rounded-full px-3.5",
-                      on ? "bg-primary" : "bg-paper-3",
-                    )}
-                    key={o.id}
-                    onPress={() => set(f.key, on ? "" : o.id)}
-                  >
-                    <Text className={cn("text-sm font-medium", on && "text-primary-foreground")}>
-                      {o.name}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
+            <OptionSelect
+              label={f.name}
+              onChange={(id) => set(f.key, id)}
+              options={f.options ?? []}
+              value={values[f.key]}
+            />
           ) : (
             <SheetInput
               className={f.kind === "textarea" ? "h-24 rounded-md py-3" : undefined}

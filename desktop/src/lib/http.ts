@@ -15,5 +15,10 @@ export const http: Fetch = (async (input: string | URL | Request, init?: Request
     await invoke('allow_http_origin', { origin });
     granted.add(origin);
   }
-  return tauriFetch(input, init);
+  // The plugin stamps `Origin: tauri://localhost` on every request, which tells the server a web page on another
+  // site sent it (Jira's XSRF/CORS checks and firewalls treat it that way). A native client has no origin, as on
+  // mobile; an empty value makes the plugin drop it (needs the `unsafe-headers` feature).
+  const headers = new Headers(init?.headers);
+  headers.set('Origin', '');
+  return tauriFetch(input, { ...init, headers });
 }) as Fetch;
