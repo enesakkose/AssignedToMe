@@ -1,6 +1,7 @@
 import "@/lib/i18n";
 
 import { useAppTheme } from "@/hooks/use-app-theme";
+import { colorScheme } from "nativewind";
 import { APP_FONT_FAMILY } from "@/lib/theme";
 import { queryClient } from "@/lib/query";
 import { SplashProvider } from "@/providers/splash-provider";
@@ -13,6 +14,9 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { DropProvider } from "react-native-reanimated-dnd";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Toaster } from "sonner-native";
+
+// The saved theme is applied before the first frame, not in an effect after it (which flashed the system theme).
+colorScheme.set(usePersistStore.getState().theme);
 
 export function AppProviders({ children }: PropsWithChildren) {
   const theme = useAppTheme();

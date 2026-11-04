@@ -39,6 +39,7 @@ import {
 } from "../api/connections";
 import { ProviderGuide } from "../components/provider-guide";
 import { ProviderLogo } from "../components/provider-logo";
+import { forgetTasks } from "@/features/tasks/api/task-cache";
 import { clearHalted } from "@/features/tasks/background-refresh";
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -200,7 +201,10 @@ function ConnectionForm({
   });
   const remove = useMutation({
     mutationFn: removeConnection,
-    onSuccess: (_data, id) => qc.removeQueries({ queryKey: ["tasks", id] }),
+    onSuccess: (_data, id) => {
+      forgetTasks(id);
+      qc.removeQueries({ queryKey: ["tasks", id] });
+    },
   });
 
   const onTest = () => {

@@ -58,13 +58,17 @@ export function NotificationsScreen() {
             <Pressable
               accessibilityHint={t("tasks.viewDetails")}
               accessibilityRole="button"
-              className="flex-row gap-3 border-b border-rule px-5 py-3.5 active:bg-paper-2"
+              className="flex-row gap-2.5 border-b border-rule px-5 py-3.5 active:bg-paper-2"
               // A board removed since then has nothing to open.
               disabled={!connection}
               key={n.id}
               onPress={() => openTask({ connectionId: n.connectionId, key: n.key })}
             >
-              {provider ? <ProviderLogo provider={provider} /> : null}
+              {provider ? (
+                <View className="mt-0.5 size-[18px]">
+                  <ProviderLogo bare provider={provider} />
+                </View>
+              ) : null}
               <View className="min-w-0 flex-1 gap-1">
                 <View className="flex-row items-center gap-2">
                   {fresh ? (

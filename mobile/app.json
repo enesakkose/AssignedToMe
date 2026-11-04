@@ -32,9 +32,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "versionCode": 1,
-      "permissions": [
-        "android.permission.CAMERA"
-      ]
+      "permissions": ["android.permission.CAMERA"]
     },
     "web": {
       "output": "static",

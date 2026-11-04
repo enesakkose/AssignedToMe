@@ -1,5 +1,6 @@
 import { useConnectionsStore } from "@/features/connections/api/connections";
 import { announceNewTasks } from "@/lib/notifications";
+import { useBoot } from "@/stores/boot";
 import { usePersistStore } from "@/stores/persist-store";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
@@ -13,6 +14,11 @@ export function BackgroundSync() {
   const results = useBoardTasks(boards);
   const refreshMinutes = usePersistStore((s) => s.refreshMinutes);
   const hasBoards = boards.length > 0;
+  // Every board has data (cached or fetched) or an error: the splash may lift.
+  const settled = results.every((r) => !r.isPending);
+  useEffect(() => {
+    if (settled) useBoot.setState({ tasksReady: true });
+  }, [settled]);
 
   useEffect(() => {
     if (hasBoards) registerBackgroundRefresh(refreshMinutes).catch(() => undefined);

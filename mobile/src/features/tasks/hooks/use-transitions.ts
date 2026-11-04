@@ -42,15 +42,20 @@ export function useChangeStatus(connectionId: string) {
       await qc.cancelQueries({ queryKey: tasksKey });
       const previous = qc.getQueryData<Task[]>(tasksKey);
       const status = { status: transition.to.name, statusCategory: transition.to.category };
+      // Moved to done (or cancelled): it leaves the list now, not on the next refresh (my list holds open work only).
+      // A sub-task stays under its parent, shown as done.
+      const leaves = transition.to.category === "done";
       qc.setQueryData<Task[]>(tasksKey, (tasks) =>
-        tasks?.map((t) =>
-          t.key === taskKey
-            ? { ...t, ...status }
-            : {
-                ...t,
-                subtasks: t.subtasks?.map((s) => (s.key === taskKey ? { ...s, ...status } : s)),
-              },
-        ),
+        tasks
+          ?.filter((t) => !(leaves && t.key === taskKey))
+          .map((t) =>
+            t.key === taskKey
+              ? { ...t, ...status }
+              : {
+                  ...t,
+                  subtasks: t.subtasks?.map((s) => (s.key === taskKey ? { ...s, ...status } : s)),
+                },
+          ),
       );
       return { previous };
     },

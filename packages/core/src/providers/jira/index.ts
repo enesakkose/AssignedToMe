@@ -735,7 +735,9 @@ function createJira(flavor: Flavor): Provider {
     fetchMyTasks: async (connection, fetch) => {
       const ctx = ctxOf(connection, fetch);
       const site = await cachedSiteFields(ctx);
-      return toTasks(ctx, site, await search(ctx, JQL, fieldsFor(site)));
+      // The JQL already leaves done work out; one that comes back done anyway is Jira's search index lagging behind a
+      // transition just made (for a few seconds), so it would linger in the list as "Cancelled" until the next refresh.
+      return (await toTasks(ctx, site, await search(ctx, JQL, fieldsFor(site)))).filter((t) => t.statusCategory !== 'done');
     },
     getDescriptionHtml: async (connection, taskKey, fetch) => {
       if (!ISSUE_KEY.test(taskKey)) throw new ProviderError('invalid_input', 'Not a Jira issue key');

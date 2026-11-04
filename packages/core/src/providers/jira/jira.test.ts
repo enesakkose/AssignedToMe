@@ -75,6 +75,12 @@ test('adfToText flattens paragraphs and breaks', () => {
   expect(adfToText(null)).toBe('');
 });
 
+test('fetchMyTasks leaves out a task Jira still lists right after it was moved to done', async () => {
+  const done = { ...issue(3), fields: { ...issue(3).fields, status: { name: 'Cancelled', statusCategory: { key: 'done' } } } };
+  const tasks = await jira.fetchMyTasks(connection, fakeFetch([{ issues: [issue(1), done] }]));
+  expect(tasks.map((t) => t.key)).toEqual(['ABC-1']);
+});
+
 test('fetchMyTasks normalizes issues and follows pages', async () => {
   const calls: string[] = [];
   const tasks = await jira.fetchMyTasks(

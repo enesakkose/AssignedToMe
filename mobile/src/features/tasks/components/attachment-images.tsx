@@ -7,7 +7,6 @@ import { ExternalLink, ImageOff, X } from "lucide-react-native";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Image, Modal, Pressable, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { toast } from "sonner-native";
 import { openInSource } from "../api/open-in-source";
 import { useAttachmentImage, useCanShowAttachments } from "../hooks/use-attachment";
@@ -60,8 +59,9 @@ export function ImagePreview({
 }) {
   const { t } = useTranslation();
   return (
-    <Modal animationType="fade" onRequestClose={onClose} presentationStyle="fullScreen" visible>
-      <SafeAreaView className="flex-1 bg-background">
+    // iOS's page sheet: it sits below the status bar, and swiping it down closes it (onRequestClose), like Photos.
+    <Modal animationType="slide" onRequestClose={onClose} presentationStyle="pageSheet" visible>
+      <View className="flex-1 bg-background pb-8">
         <View className="h-14 flex-row items-center gap-2 border-b border-rule px-3">
           <Button accessibilityLabel={t("ui.close")} onPress={onClose} size="icon" variant="ghost">
             <Icon as={X} size={20} />
@@ -88,7 +88,7 @@ export function ImagePreview({
           connectionId={connectionId}
           contain
         />
-      </SafeAreaView>
+      </View>
     </Modal>
   );
 }

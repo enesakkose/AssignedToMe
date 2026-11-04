@@ -247,10 +247,14 @@ export function TaskRow({ task, provider }: { task: Task; provider?: Provider })
       <TaskMenu connectionId={task.connectionId} openLabel={openLabel} task={task}>
         <Pressable
           accessibilityHint={t("tasks.viewDetails")}
-          className="flex-row gap-3 px-5 py-3.5 active:bg-paper-2"
+          className="flex-row gap-2.5 px-5 py-3.5 active:bg-paper-2"
           onPress={() => openTask(task)}
         >
-          {provider ? <ProviderLogo provider={provider} /> : null}
+          {provider ? (
+            <View className="mt-0.5 size-[18px]">
+              <ProviderLogo bare provider={provider} />
+            </View>
+          ) : null}
           <View className="min-w-0 flex-1 gap-1.5">
             <View className="flex-row items-center gap-2">
               <Text className="shrink-0 font-mono text-xs text-ink-2">{task.key}</Text>
@@ -326,7 +330,7 @@ export function TaskRow({ task, provider }: { task: Task; provider?: Provider })
         </Pressable>
       </TaskMenu>
       {expanded && subtasks.length > 0 ? (
-        <View className="bg-paper-2 py-3 pl-[68px] pr-5">
+        <View className="bg-paper-2 px-5 py-3">
           <SubtaskList provider={provider} task={task} />
         </View>
       ) : null}

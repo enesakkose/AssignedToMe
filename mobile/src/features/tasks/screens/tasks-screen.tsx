@@ -95,8 +95,8 @@ function Tab({
 function RowSkeleton() {
   // Shaped like the rows it stands in for.
   return (
-    <View className="flex-row gap-3 border-b border-rule px-5 py-3.5">
-      <Skeleton className="size-9 rounded-md" />
+    <View className="flex-row gap-2.5 border-b border-rule px-5 py-3.5">
+      <Skeleton className="mt-0.5 size-[18px] rounded-sm" />
       <View className="flex-1 gap-2">
         <Skeleton className="h-3 w-24 rounded-sm" />
         <Skeleton className="h-4 w-4/5 rounded-sm" />
