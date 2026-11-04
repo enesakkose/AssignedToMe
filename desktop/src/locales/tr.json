@@ -328,6 +328,7 @@
     "expired": "Bu aktarım 10 dakikadan eski. Yenisini oluştur.",
     "invalid": "Bu bir AssignedToMe aktarımı değil.",
     "noBoards": "Eklenecek bir şey yok: bu board'lar bu sürümün tanımadığı araçlar.",
-    "codeInvalid": "8 karakterlik kodu gir."
+    "codeInvalid": "8 karakterlik kodu gir.",
+    "closeWhenDone": "Telefonun board'ların eklendiğini söylediyse bunu kapatabilirsin."
   }
 }

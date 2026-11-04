@@ -329,6 +329,7 @@
     "expired": "This transfer is older than 10 minutes. Make a new one.",
     "invalid": "This isn't an AssignedToMe transfer.",
     "noBoards": "Nothing to add: these boards use tools this version doesn't know.",
-    "codeInvalid": "Enter the 8-character code."
+    "codeInvalid": "Enter the 8-character code.",
+    "closeWhenDone": "When your phone says the boards were added, you can close this."
   }
 }

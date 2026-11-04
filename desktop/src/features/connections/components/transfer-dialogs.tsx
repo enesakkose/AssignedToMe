@@ -10,7 +10,6 @@ import {
   TransferError,
 } from '@mytask/core';
 import { useQueryClient } from '@tanstack/react-query';
-import QRCode from 'qrcode';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -23,29 +22,24 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/toaster';
 import { saveConnection, withSecrets, type StoredConnection } from '../api/connections';
 import { connectionsKey } from '../hooks/use-connections';
+import { qrShape } from '../lib/qr-shape';
 
 const transferErrorKey = (e: unknown) =>
   e instanceof TransferError ? (({ wrong_code: 'transfer.wrongCode', expired: 'transfer.expired', invalid: 'transfer.invalid' }) as const)[e.code] : 'errors.generic';
 
-/** The QR as SVG squares drawn from its matrix (no markup strings, no canvas). */
+/**
+ * The transfer QR in the app's look: graphite soft modules on a paper card with cut corners. Always dark-on-light,
+ * whatever the theme, because phone cameras read that most reliably; the paper tone keeps it from glaring in dark mode.
+ */
 function Qr({ text }: { text: string }) {
-  const path = useMemo(() => {
-    const { modules } = QRCode.create(text, { errorCorrectionLevel: 'L' });
-    let d = '';
-    for (let y = 0; y < modules.size; y++)
-      for (let x = 0; x < modules.size; x++) if (modules.get(y, x)) d += `M${x} ${y}h1v1h-1z`;
-    return { d, size: modules.size };
-  }, [text]);
-  // A quiet zone of 4 modules and black on white whatever the theme: phone cameras read it best that way.
+  const shape = useMemo(() => qrShape(text), [text]);
   return (
-    <svg
-      viewBox={`-4 -4 ${path.size + 8} ${path.size + 8}`}
-      className="aspect-square w-full max-w-72 self-center rounded-input bg-white"
-      shapeRendering="crispEdges"
-      role="img"
-    >
-      <path d={path.d} fill="#000" />
-    </svg>
+    <div className="cut self-center border border-rule bg-[#F5F6F8] p-4">
+      <svg viewBox={`-3 -3 ${shape.size + 6} ${shape.size + 6}`} className="block size-80" role="img" aria-label="QR">
+        <path d={shape.dots} fill="#2B2D31" />
+        <path d={shape.eyes} fill="#2B2D31" fillRule="evenodd" />
+      </svg>
+    </div>
   );
 }
 
@@ -108,7 +102,11 @@ export function SendToPhoneDialog({ boards, open, onOpenChange }: { boards: Stor
       }
     >
       {qr ? (
-        <Qr text={qr} />
+        <div className="flex flex-col gap-3">
+          <Qr text={qr} />
+          {/* The phone can't tell the Mac it's done (nothing travels back), so the person closes it. */}
+          <p className="text-center text-sm text-muted">{t('transfer.closeWhenDone')}</p>
+        </div>
       ) : (
         <div className="flex flex-col gap-3">
           <Field label={t('transfer.code')} error={error ?? undefined}>
