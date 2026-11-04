@@ -58,6 +58,10 @@ export async function saveConnection(connection: Connection) {
   );
 }
 
+export function renameConnection(id: string, name: string) {
+  write(list().map((c) => (c.id === id ? { ...c, name } : c)));
+}
+
 export async function removeConnection(id: string) {
   const target = list().find((c) => c.id === id);
   if (target)

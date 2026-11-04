@@ -1,3 +1,3 @@
-import { HomeScreen } from "@/features/home/screens/home-screen";
+import { TasksScreen } from "@/features/tasks/screens/tasks-screen";
 
-export default HomeScreen;
+export default TasksScreen;

@@ -1,6 +1,7 @@
 import "@/lib/i18n";
 
 import { useAppTheme } from "@/hooks/use-app-theme";
+import { APP_FONT_FAMILY } from "@/lib/theme";
 import { queryClient } from "@/lib/query";
 import { SplashProvider } from "@/providers/splash-provider";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
@@ -29,7 +30,30 @@ export function AppProviders({ children }: PropsWithChildren) {
               <DropProvider>
                 <SplashProvider>
                   {children}
-                  <Toaster position="top-center" richColors theme={theme.colorScheme} />
+                  {/* Desktop's toast: paper, a hairline, cut corners; colour only on the icon. */}
+                  <Toaster
+                    position="top-center"
+                    theme={theme.colorScheme}
+                    toastOptions={{
+                      descriptionStyle: {
+                        color: theme.values.mutedInk,
+                        fontFamily: APP_FONT_FAMILY.regular,
+                      },
+                      style: {
+                        backgroundColor: theme.tokens.popover,
+                        borderBottomLeftRadius: 3,
+                        borderBottomRightRadius: 10,
+                        borderColor: theme.tokens.border,
+                        borderTopLeftRadius: 10,
+                        borderTopRightRadius: 3,
+                        borderWidth: 1,
+                      },
+                      titleStyle: {
+                        color: theme.tokens.foreground,
+                        fontFamily: APP_FONT_FAMILY.medium,
+                      },
+                    }}
+                  />
                 </SplashProvider>
               </DropProvider>
             </BottomSheetModalProvider>

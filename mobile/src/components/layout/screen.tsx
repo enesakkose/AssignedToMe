@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import { type PropsWithChildren, type ReactNode } from "react";
-import { ScrollView, View, type ViewProps } from "react-native";
+import { ScrollView, View, type ScrollViewProps, type ViewProps } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 type ScreenProps = PropsWithChildren<
@@ -9,6 +9,7 @@ type ScreenProps = PropsWithChildren<
     contentClassName?: string;
     /** Stays put above the scrolling content (an `AppHeader`). */
     header?: ReactNode;
+    refreshControl?: ScrollViewProps["refreshControl"];
   }
 >;
 
@@ -17,6 +18,7 @@ export function Screen({
   className,
   contentClassName,
   header,
+  refreshControl,
   scroll = true,
   ...props
 }: ScreenProps) {
@@ -35,10 +37,13 @@ export function Screen({
       {header}
       {scroll ? (
         <ScrollView
+          // Keeps a focused field (a form, the comment box) above the keyboard.
+          automaticallyAdjustKeyboardInsets
           className="flex-1"
           contentContainerClassName="grow items-center"
           keyboardDismissMode="on-drag"
           keyboardShouldPersistTaps="handled"
+          refreshControl={refreshControl}
         >
           {content}
         </ScrollView>

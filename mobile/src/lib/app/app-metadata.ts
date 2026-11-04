@@ -23,7 +23,7 @@ export const appMetadata = {
     osName: Device.osName,
     osVersion: Device.osVersion,
   },
-  name: Application.applicationName ?? Constants.expoConfig?.name ?? "rn-base",
+  name: Application.applicationName ?? Constants.expoConfig?.name ?? "AssignedToMe",
   runtimeVersion: readRuntimeVersion(),
   version: Application.nativeApplicationVersion ?? Constants.expoConfig?.version ?? "1.0.0",
 };

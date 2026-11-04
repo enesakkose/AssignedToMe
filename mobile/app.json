@@ -1,14 +1,14 @@
 {
   "expo": {
     "name": "AssignedToMe",
-    "slug": "rn-base",
+    "slug": "assignedtome",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "runtimeVersion": {
       "policy": "appVersion"
     },
-    "scheme": "rnbase",
+    "scheme": "assignedtome",
     "updates": {
       "checkAutomatically": "ON_LOAD",
       "enabled": true,
@@ -17,11 +17,11 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "buildNumber": "1",
-      "bundleIdentifier": "com.enesakkose.rnbase",
+      "bundleIdentifier": "com.mytask.mobile",
       "icon": "./assets/images/icon.png"
     },
     "android": {
-      "package": "com.enesakkose.rnbase",
+      "package": "com.mytask.mobile",
       "adaptiveIcon": {
         "backgroundColor": "#2B2D31",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -53,7 +53,9 @@
       "expo-localization",
       "expo-updates",
       "expo-background-task",
-      "expo-notifications"
+      "expo-notifications",
+      "@react-native-community/datetimepicker",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,

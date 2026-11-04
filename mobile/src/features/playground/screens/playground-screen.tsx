@@ -29,6 +29,7 @@ import {
   type BottomSheetModalRef,
 } from "@/components/ui/bottom-sheet";
 import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -232,6 +233,7 @@ export function PlaygroundScreen() {
   const mutedInk = theme.values.mutedInk;
   const surfaceColor = theme.values.surface;
   const bottomSheetRef = useRef<BottomSheetModalRef>(null);
+  const [pickedDate, setPickedDate] = useState(() => new Date());
   const [checked, setChecked] = useState(false);
   const [collapsibleOpen, setCollapsibleOpen] = useState(true);
   const [count, setCount] = useState(1240);
@@ -715,6 +717,13 @@ export function PlaygroundScreen() {
             </SelectGroup>
           </SelectContent>
         </Select>
+      </Section>
+
+      <Section
+        description="A pill that opens the system calendar; no future dates here."
+        title="DatePicker"
+      >
+        <DatePicker label="Date" max={new Date()} onChange={setPickedDate} value={pickedDate} />
       </Section>
 
       <Section description="RHF + Zod form wrappers" title="Form wrappers">

@@ -39,7 +39,7 @@ Same as desktop: buttons, inputs and select triggers are pills (`rounded-full`);
 
 ## Layout
 
-No cards. A screen is a slim `AppHeader` (title, leading/trailing actions, hairline under it) fixed above ruled `Section`s: a heading and its content, divided from the next by a `border-rule` hairline. Lists run edge to edge inside a `flush` section, one rule between rows. A setting row has its label (and hint) on the left and the control on the right; one-of-few choices are a `SegmentedControl` (paper-3 track, the chosen pill on paper). Failures show `ErrorState`.
+No cards. A screen is a slim `AppHeader` (title, leading/trailing actions, hairline under it) fixed above ruled `Section`s: a heading and its content, divided from the next by a `border-rule` hairline. Lists run edge to edge inside a `flush` section, one rule between rows. A setting row has its label (and hint) on the left and the control on the right; one-of-few choices are a `SegmentedControl` (paper-3 track, the chosen pill on paper). Failures show `ErrorState`. Dates are picked with `DatePicker` (a pill plus the system calendar), never a bare native field. Links open in the in-app browser sheet (`src/lib/open-link.ts`), never by leaving the app.
 
 ## Phone-specific rules
 

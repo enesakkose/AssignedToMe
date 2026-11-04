@@ -1,23 +1,16 @@
-# RN Base
+# AssignedToMe (mobile)
 
-Native-only Expo + TypeScript boilerplate with Bun, Expo Router, NativeWind, React Native Reusables, the AssignedToMe design tokens (shared with desktop) and native-first extras.
+The iOS/Android app of AssignedToMe: every task assigned to you, from all your boards, in one list, with the same actions as desktop (status, assignment, time, comments). Provider logic comes from `packages/core`; keys live in the iOS Keychain / Android Keystore.
 
 ## Stack
 
-- Expo SDK 57 + Expo Router + TypeScript
-- NativeWind + React Native Reusables
-- Instrument Sans and JetBrains Mono via `--font-instrument-sans`
-- TanStack Query, React Hook Form, Zod, Zustand reference store
-- Axios-backed generic API client
-- EAS build/update profiles with `expo-updates`
-- Native app metadata through `expo-application` and `expo-device`
-- Device language bootstrap through `expo-localization`
-- Network status helpers through `expo-network`
-- FlashList for virtualization
-- React Native Reanimated DnD for drag and drop
-- `@gorhom/bottom-sheet` for native bottom sheets
-- `number-flow-react-native`, `input-otp-native`, `sonner-native`
-- Oxlint + Oxfmt instead of ESLint/Prettier
+- Expo SDK 57 + Expo Router + TypeScript, NativeWind + React Native Reusables
+- `@mytask/core` (used from source through `metro.config.js`)
+- TanStack Query for provider data, Zustand on MMKV for non-secret state, SecureStore for keys
+- `expo-notifications` + `expo-background-task` for new-task alerts
+- `@gorhom/bottom-sheet`, `sonner-native`, `react-native-webview` (sandboxed source HTML)
+- Instrument Sans and JetBrains Mono, the AssignedToMe design tokens shared with desktop
+- Oxlint + Oxfmt
 
 ## Commands
 
@@ -57,31 +50,12 @@ bunx expo run:android
 - `src/components/ui`: React Native Reusables primitives and native wrappers.
 - `src/components/layout`: generic layout wrappers such as `Screen`, `Section`, `AppHeader`.
 - `src/providers`: app-level provider composition, including splash boot orchestration.
-- `src/lib`: generic API, errors, fonts, i18n, query, storage and theme utilities.
+- `src/lib`: errors, fonts, i18n, query, storage, secrets, notifications and theme utilities.
 - `src/lib/app`: app version, build, bundle and device metadata.
 - `src/lib/localization`: supported locales, device locale and app-locale resolution.
 - `src/lib/network`: native network status helpers.
 - `src/hooks`: reusable cross-feature hooks.
-- `src/stores`: Zustand reference patterns for real cross-feature state.
-
-## Feature Shape
-
-Use `src/features/example` as the reference structure:
-
-```txt
-src/features/example/
-  api/
-  components/
-  constants/
-  hooks/
-  schemas/
-  screens/
-  types/
-  utils/
-  index.ts
-```
-
-Routes should import screens from the feature `screens` folder. Keep `src/app` as route wiring, not product implementation.
+- `src/stores`: persisted, non-secret preferences.
 
 ## Theme
 
@@ -111,7 +85,7 @@ It wires:
 
 `eas.json` includes `development`, `development-simulator`, `preview` and `production` build profiles. The app config uses `runtimeVersion.policy = appVersion`, so production OTA compatibility follows the native app version.
 
-Run `bunx eas-cli init` for a real app before the first EAS build/update. Expo will attach the project id and update URL for that EAS project; do not copy another app's `updates.url` into this base.
+Run `bunx eas-cli init` for a real app before the first EAS build/update. Expo will attach the project id and update URL for that EAS project.
 
 ## UI Rules
 

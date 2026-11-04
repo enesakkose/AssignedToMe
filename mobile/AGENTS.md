@@ -1,6 +1,6 @@
-# RN Base Agent Guide
+# AssignedToMe Mobile Agent Guide
 
-This is a native-only Expo + TypeScript boilerplate. Use Bun for all package commands.
+The AssignedToMe iOS/Android app (Expo + TypeScript): the tasks assigned to you across your boards, the same features as desktop. Read the root `AGENTS.md` first. Use Bun for all package commands.
 
 ## Core Stack
 
@@ -20,15 +20,15 @@ This is a native-only Expo + TypeScript boilerplate. Use Bun for all package com
 - Keep `src/app` thin. Route files should only wire layouts and feature screens.
 - Build product code under `src/features/<feature-name>`.
 - Feature screens live in `src/features/<feature-name>/screens`; route files import from that folder.
-- A full feature can use `api`, `components`, `hooks`, `schemas`, `screens`, `utils`, `constants`, `types` and `index.ts`. See `src/features/example` for the reference shape.
-- Keep cross-feature logic in `src/lib`, `src/providers`, `src/stores`, `src/config` or `src/types`.
-- `src/stores/example-store.ts` is a small Zustand reference pattern; copy the pattern for real cross-feature state and rename it for the domain.
+- A feature can use `api`, `components`, `hooks` and `screens` (see `src/features/tasks`).
+- Keep cross-feature logic in `src/lib`, `src/providers` or `src/stores` (`persist-store.ts` holds the non-secret preferences).
 - Reusable hooks live in `src/hooks`; keep feature-specific hooks inside their own feature folder.
 - Locale/device language selection lives in `src/lib/localization`; UI code should use `src/hooks/use-app-locale.ts`.
 - Wrap app-level providers only in `src/providers/app-providers.tsx`; do not duplicate QueryClient, Toaster, SafeArea, Gesture or theme wrappers inside screens.
 - App boot/splash provider orchestration lives in `src/providers/splash-provider.tsx`; splash UI can stay in `src/features/splash`.
-- Use the generic `apiClient`, `AppError`, storage adapters and `queryClient` instead of creating feature-local copies.
-- API requests use the Axios-backed `src/lib/api/client.ts`; do not call raw `fetch` in features. Exception: `@mytask/core` providers take a fetch-shaped function, and React Native's `fetch` (no CORS) is passed to them in `features/tasks/api` and the connection form.
+- Use the storage adapters, `src/lib/secrets.ts` and `queryClient` instead of creating feature-local copies.
+- Every network call goes through a `@mytask/core` provider, which takes a fetch-shaped function; the app passes React Native's `fetch` (no CORS). Task actions (status, assign, log time, comments) open one shared sheet (`openTaskSheet` in `features/tasks/components/task-sheets.tsx`), never a sheet per row.
+- Source HTML (task descriptions) is untrusted: it renders only in `features/tasks/components/source-html.tsx`, a WebView whose page policy blocks scripts, frames, forms and remote loads; links open outside, images load through the connection.
 - Provider logic comes from `@mytask/core` (`../packages/core`, used from source through `metro.config.js` and `tsconfig.json` paths); never call a provider API from the app.
 - Read app/version/device data from `src/lib/app`; read network status from `src/lib/network`.
 - Prefer extension/wrapper components over new primitives. If a primitive is missing, add it to `src/components/ui` through React Native Reusables when available.
@@ -59,6 +59,7 @@ This is a native-only Expo + TypeScript boilerplate. Use Bun for all package com
 - `bun run format`: format with Oxfmt.
 - `bun run typecheck`: TypeScript check.
 - `bun run check`: lint, format check and typecheck.
+- `bun run test`: unit tests (`bun test`).
 - `bunx eas-cli build --profile development`: create a device dev build.
 - `bunx eas-cli build --profile development-simulator`: create an iOS simulator dev build.
 - `bunx eas-cli build --profile preview`: create an internal preview build.

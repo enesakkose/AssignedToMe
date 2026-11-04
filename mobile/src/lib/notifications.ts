@@ -1,5 +1,6 @@
 import type { Task } from "@mytask/core";
 import { mmkvStorage } from "@/lib/storage/mmkv-storage";
+import { useNotificationHistory } from "@/stores/notification-history";
 import * as Notifications from "expo-notifications";
 import type { TFunction } from "i18next";
 import { Linking } from "react-native";
@@ -39,22 +40,39 @@ type Board = { id: string; name: string; tasks: Task[] | undefined };
  */
 export async function announceNewTasks(boards: Board[], t: TFunction) {
   const seen: Seen = JSON.parse(mmkvStorage.getItem(SEEN_KEY) ?? "{}");
-  const fresh: { board: string; task: Task }[] = [];
+  const fresh: { board: string; connectionId: string; task: Task }[] = [];
   for (const b of boards) {
     if (!b.tasks) continue;
     const known = seen[b.id];
     if (known) {
       const knownSet = new Set(known);
-      for (const task of b.tasks) if (!knownSet.has(task.id)) fresh.push({ board: b.name, task });
+      for (const task of b.tasks)
+        if (!knownSet.has(task.id)) fresh.push({ board: b.name, connectionId: b.id, task });
     }
     seen[b.id] = b.tasks.map((task) => task.id);
   }
   mmkvStorage.setItem(SEEN_KEY, JSON.stringify(seen));
-  if (!fresh.length || !(await isNotificationGranted())) return;
+  if (!fresh.length) return;
+  // Kept for the Notifications tab whether or not iOS lets us show an alert.
+  const at = Date.now();
+  useNotificationHistory.getState().add(
+    fresh.map(({ board, connectionId, task }) => ({
+      at,
+      board,
+      connectionId,
+      id: `${connectionId}:${task.id}:${at}`,
+      key: task.key,
+      title: task.title,
+    })),
+  );
+  if (!(await isNotificationGranted())) return;
 
   if (fresh.length <= 3) {
-    for (const { board, task } of fresh)
-      await notify(t("notifications.assigned", { board }), `${task.key}  ${task.title}`);
+    for (const { board, connectionId, task } of fresh)
+      await notify(t("notifications.assigned", { board }), `${task.key}  ${task.title}`, {
+        connectionId,
+        key: task.key,
+      });
   } else {
     await notify(
       t("notifications.assignedMany", { count: fresh.length }),
@@ -63,7 +81,8 @@ export async function announceNewTasks(boards: Board[], t: TFunction) {
   }
 }
 
-const notify = (title: string, body: string) =>
-  Notifications.scheduleNotificationAsync({ content: { body, title }, trigger: null }).catch(
+/** A task's board and key ride along, so a tap can open it (see useOpenTaskFromNotification). */
+const notify = (title: string, body: string, data?: { connectionId: string; key: string }) =>
+  Notifications.scheduleNotificationAsync({ content: { body, data, title }, trigger: null }).catch(
     () => undefined,
   );

@@ -15,7 +15,9 @@ export function Section({ children, description, title, flush }: SectionProps) {
   return (
     <View className={cn("gap-3 border-b border-rule py-5", flush ? "pb-0" : "px-5")}>
       <View className={cn("gap-0.5", flush && "px-5")}>
-        <Text className="text-base font-semibold">{title}</Text>
+        <Text accessibilityRole="header" className="text-base font-semibold">
+          {title}
+        </Text>
         {description ? (
           <Text className="text-sm leading-5" variant="muted">
             {description}

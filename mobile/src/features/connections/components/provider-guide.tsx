@@ -1,10 +1,11 @@
 import { fillGuide, isSafeUrl, type Provider } from "@mytask/core";
+import { openLink } from "@/lib/open-link";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { currentLocale } from "@/lib/i18n";
 import { ExternalLink } from "lucide-react-native";
-import { Linking, View } from "react-native";
+import { View } from "react-native";
 
 /** Step-by-step "how to get your key", generated from the provider definition. */
 export function ProviderGuide({
@@ -27,7 +28,7 @@ export function ProviderGuide({
             {step.link && isSafeUrl(step.link) ? (
               <Button
                 className="self-start"
-                onPress={() => void Linking.openURL(step.link!)}
+                onPress={() => void openLink(step.link!).catch(() => undefined)}
                 size="sm"
                 variant="secondary"
               >

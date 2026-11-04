@@ -16,14 +16,7 @@ export type BottomSheetModalRef = BottomSheetModalMethods;
 
 const BottomSheetModal = React.forwardRef<BottomSheetModalRef, BottomSheetModalProps>(
   (
-    {
-      backdropComponent,
-      backgroundStyle,
-      handleIndicatorStyle,
-      handleStyle,
-      snapPoints = ["42%"],
-      ...props
-    },
+    { backdropComponent, backgroundStyle, handleIndicatorStyle, handleStyle, snapPoints, ...props },
     ref,
   ) => {
     const theme = useAppTheme();
@@ -59,7 +52,8 @@ const BottomSheetModal = React.forwardRef<BottomSheetModalRef, BottomSheetModalP
         ]}
         handleStyle={[{ paddingBottom: 10, paddingTop: 10 }, handleStyle]}
         ref={ref}
-        snapPoints={snapPoints}
+        // A sheet that sizes to its content needs no fixed snap point.
+        snapPoints={snapPoints ?? (props.enableDynamicSizing ? undefined : ["42%"])}
         {...props}
       />
     );

@@ -169,7 +169,7 @@ export function SettingsScreen() {
         </Row>
       </Section>
 
-      <Text className="px-5 py-4 font-mono text-xs" variant="muted">
+      <Text className="px-5 py-4" variant="muted">
         {t("settings.version", { version: appMetadata.version })}
       </Text>
     </Screen>

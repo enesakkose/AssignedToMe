@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
+import { SecretInput } from "@/components/ui/secret-input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/ui/state";
@@ -236,20 +237,31 @@ function ConnectionForm({
             <Label className="text-sm" nativeID={`field-${f.key}`}>
               {f.label[locale]}
             </Label>
-            <Input
-              accessibilityLabelledBy={`field-${f.key}`}
-              autoCapitalize="none"
-              autoComplete="off"
-              autoCorrect={false}
-              keyboardType={
-                f.type === "email" ? "email-address" : f.type === "url" ? "url" : "default"
-              }
-              onChangeText={(v) => setValues((prev) => ({ ...prev, [f.key]: v }))}
-              placeholder={(f.type === "secret" && hints[f.key]) || f.placeholder}
-              secureTextEntry={f.type === "secret"}
-              textContentType={f.type === "secret" ? "password" : "none"}
-              value={values[f.key] ?? ""}
-            />
+            {f.type === "secret" ? (
+              <SecretInput
+                accessibilityLabelledBy={`field-${f.key}`}
+                autoCapitalize="none"
+                autoComplete="off"
+                autoCorrect={false}
+                onChangeText={(v) => setValues((prev) => ({ ...prev, [f.key]: v }))}
+                placeholder={hints[f.key] || f.placeholder}
+                textContentType="password"
+                value={values[f.key] ?? ""}
+              />
+            ) : (
+              <Input
+                accessibilityLabelledBy={`field-${f.key}`}
+                autoCapitalize="none"
+                autoComplete="off"
+                autoCorrect={false}
+                keyboardType={
+                  f.type === "email" ? "email-address" : f.type === "url" ? "url" : "default"
+                }
+                onChangeText={(v) => setValues((prev) => ({ ...prev, [f.key]: v }))}
+                placeholder={f.placeholder}
+                value={values[f.key] ?? ""}
+              />
+            )}
             {errors[f.key] ? (
               <Text className="text-sm text-error">{errors[f.key]}</Text>
             ) : hints[f.key] ? (
