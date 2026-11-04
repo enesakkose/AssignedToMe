@@ -64,6 +64,7 @@ The AssignedToMe iOS/Android app (Expo + TypeScript): the tasks assigned to you 
 - `bunx eas-cli build --profile development-simulator`: create an iOS simulator dev build.
 - `bunx eas-cli build --profile preview`: create an internal preview build.
 - `bunx eas-cli build --profile production`: create a production build.
+- EAS builds the monorepo: the `eas-build-pre-install` script runs `bun install` at the repo root first, because `@mytask/core` is used from source and its packages live in the root workspace.
 - `bunx eas-cli update --channel preview`: publish an OTA update to preview.
 - `bunx eas-cli update --channel production`: publish an OTA update to production.
 

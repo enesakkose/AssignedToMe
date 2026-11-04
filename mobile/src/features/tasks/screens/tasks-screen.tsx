@@ -25,7 +25,7 @@ import { providerErrorText } from "@/lib/errors";
 import { timeAgo } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { router } from "expo-router";
-import { Plus } from "lucide-react-native";
+import { Plus, QrCode } from "lucide-react-native";
 import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -172,10 +172,17 @@ export function TasksScreen() {
       <Screen header={<AppHeader title={t("tasks.title")} />}>
         <EmptyState
           action={
-            <Button onPress={() => router.push("/connection")}>
-              <Icon as={Plus} className="text-primary-foreground" size={16} />
-              <Text>{t("connections.add")}</Text>
-            </Button>
+            <View className="items-center gap-2">
+              <Button onPress={() => router.push("/connection")}>
+                <Icon as={Plus} className="text-primary-foreground" size={16} />
+                <Text>{t("connections.add")}</Text>
+              </Button>
+              {/* Already set up on the Mac: bring those boards over instead of making new keys. */}
+              <Button onPress={() => router.push("/transfer-receive")} variant="ghost">
+                <Icon as={QrCode} size={16} />
+                <Text>{t("transfer.receive")}</Text>
+              </Button>
+            </View>
           }
           description={t("tasks.noBoardsDescription")}
           title={t("tasks.noBoardsTitle")}

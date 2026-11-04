@@ -80,19 +80,24 @@
     },
     "boards": {
       "title": "Connect your boards",
-      "body": "Every tool you connect becomes a tab, refreshed every hour."
+      "body": "Every tool you connect becomes a board, and your tasks refresh on their own; pick how often in Settings."
     },
     "providers": {
       "title": "Works with your tools",
-      "body": "Pull your tasks from the tools you already use."
+      "body": "See your tasks from Jira, Linear, GitHub, GitLab and Azure DevOps in one list."
     },
     "privacy": {
       "title": "Your keys stay with you",
-      "body": "API keys live only in the iOS Keychain on this device and are never sent anywhere else."
+      "body": "API keys stay in this device's Keychain and go only to the tool they belong to."
     },
     "notify": {
       "title": "Stay in the loop",
       "body": "Get notified when a task is assigned to you. iOS asks for permission next."
+    },
+    "desktop": {
+      "title": "Using it on your Mac?",
+      "body": "Bring your boards over without new tokens: on the Mac, open Settings → Send to phone and scan its QR here.",
+      "action": "Receive from desktop"
     }
   },
   "notifications": {
@@ -261,5 +266,27 @@
     "deleteDescription": "It's removed from {{app}} for good and can't be undone.",
     "deleted": "Comment deleted",
     "deleteFailed": "Couldn't delete the comment"
+  },
+  "transfer": {
+    "receive": "Receive from desktop",
+    "send": "Send to desktop",
+    "receiveTitle": "Receive from desktop",
+    "receiveStep": "On your Mac, open Settings → Send to phone and enter this code. Then scan the QR it shows.",
+    "allowCamera": "Allow camera",
+    "cameraNeeded": "The camera is used only to scan the QR on your Mac.",
+    "sendTitle": "Send to desktop",
+    "sendStep": "On your Mac, open Settings → Receive from phone. Enter the code it shows here.",
+    "code": "Code from your Mac",
+    "boards": "Boards to send",
+    "copy": "Copy transfer text",
+    "copied": "Copied. Paste it on your Mac within 10 minutes.",
+    "imported_one": "{{count}} board added",
+    "imported_other": "{{count}} boards added",
+    "wrongCode": "This QR was made for a different code. On the Mac, start again with the code shown here.",
+    "expired": "This transfer is older than 10 minutes. Make a new one.",
+    "invalid": "This isn't an AssignedToMe transfer QR.",
+    "noBoards": "Nothing to add: these boards use tools this version doesn't know.",
+    "codeInvalid": "Enter the 8-character code.",
+    "scanAgain": "Scan again"
   }
 }

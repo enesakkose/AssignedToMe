@@ -272,15 +272,15 @@
     "start": "Başla",
     "welcome": {
       "title": "AssignedToMe'ye hoş geldin",
-      "body": "Tüm board'larındaki sana atanmış işler tek bir yerde."
+      "body": "Tüm board'larındaki sana atanmış task'lar tek bir yerde."
     },
     "boards": {
       "title": "Board'larını bağla",
-      "body": "Bağladığın her araç bir sekme olur, saatte bir yenilenir."
+      "body": "Bağladığın her araç bir board olur ve task'ların otomatik yenilenir; ne sıklıkla, Ayarlar'dan seçersin."
     },
     "providers": {
       "title": "Araçlarınla çalışır",
-      "body": "Görevlerini kullandığın araçlardan çek."
+      "body": "Jira, Linear, GitHub, GitLab ve Azure DevOps'taki task'larını tek listede gör."
     },
     "surfaces": {
       "title": "Menü çubuğunda ya da pencerede",
@@ -290,11 +290,11 @@
     },
     "notify": {
       "title": "Haberin olsun",
-      "body": "Sana yeni bir task atandığında bildirim al; sıklığı Ayarlar'dan seç."
+      "body": "Sana yeni bir task atandığında bildirim al. Ne sıklıkla kontrol edileceğini Ayarlar'dan seçersin."
     },
     "privacy": {
       "title": "Anahtarların sende kalır",
-      "body": "API anahtarların yalnızca macOS Anahtar Zinciri'nde saklanır, başka hiçbir yere gönderilmez."
+      "body": "API anahtarların yalnızca bu Mac'in Anahtar Zinciri'nde durur ve sadece ait olduğu araca gider. Telefona sen aktarırsan, tek seferlik bir kodla şifrelenir."
     }
   },
   "update": {
@@ -306,5 +306,28 @@
     "check": "Güncellemeleri denetle",
     "checkFailed": "Güncellemeler denetlenemedi. Bağlantını kontrol et.",
     "upToDate": "En güncel sürümü kullanıyorsun."
+  },
+  "transfer": {
+    "send": "Telefona aktar",
+    "sendHint": "Board'larını, anahtarlarıyla birlikte telefondaki AssignedToMe uygulamasına taşı.",
+    "receive": "Telefondan al",
+    "sendTitle": "Board'ları telefona aktar",
+    "sendStep": "Telefonda Ayarlar → Desktop'tan al'ı aç. Orada görünen kodu buraya gir.",
+    "code": "Telefondaki kod",
+    "boards": "Aktarılacak board'lar",
+    "showQr": "QR'ı göster",
+    "scan": "Bunu telefonla okut. 10 dakika ve yalnızca o kodla çalışır.",
+    "tooMany": "Tek QR için fazla board var. Daha azını seç, kalanları ikinci turda gönder.",
+    "receiveTitle": "Telefondan board'ları al",
+    "receiveStep": "Telefonda Ayarlar → Desktop'a gönder'i aç ve bu kodu gir. Kopyaladığı metni aşağıya yapıştır.",
+    "paste": "Aktarım metni",
+    "import": "Board'ları ekle",
+    "imported_one": "{{count}} board eklendi",
+    "imported_other": "{{count}} board eklendi",
+    "wrongCode": "Bu metin başka bir kod için hazırlanmış. Telefonda buradaki kodla yeniden başla.",
+    "expired": "Bu aktarım 10 dakikadan eski. Yenisini oluştur.",
+    "invalid": "Bu bir AssignedToMe aktarımı değil.",
+    "noBoards": "Eklenecek bir şey yok: bu board'lar bu sürümün tanımadığı araçlar.",
+    "codeInvalid": "8 karakterlik kodu gir."
   }
 }

@@ -27,7 +27,7 @@ import {
 import { REFRESH_CHOICES_MIN, usePersistStore } from "@/stores/persist-store";
 import { useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
-import { ChevronRight, Plus } from "lucide-react-native";
+import { ChevronRight, Laptop, Plus, QrCode } from "lucide-react-native";
 import { type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, View } from "react-native";
@@ -89,11 +89,28 @@ export function SettingsScreen() {
               </Pressable>
             );
           })}
-          <View className={connections.length ? "border-t border-rule px-5 py-4" : "px-5 pb-5"}>
-            <Button className="self-start" onPress={() => router.push("/connection")}>
+          <View
+            className={
+              connections.length
+                ? "flex-row flex-wrap gap-2 border-t border-rule px-5 py-4"
+                : "flex-row flex-wrap gap-2 px-5 pb-5"
+            }
+          >
+            <Button onPress={() => router.push("/connection")}>
               <Icon as={Plus} className="text-primary-foreground" size={16} />
               <Text>{t("connections.add")}</Text>
             </Button>
+            {/* Boards and their keys move between the Mac and this phone, encrypted with a one-time code. */}
+            <Button onPress={() => router.push("/transfer-receive")} variant="secondary">
+              <Icon as={QrCode} size={16} />
+              <Text>{t("transfer.receive")}</Text>
+            </Button>
+            {connections.length ? (
+              <Button onPress={() => router.push("/transfer-send")} variant="secondary">
+                <Icon as={Laptop} size={16} />
+                <Text>{t("transfer.send")}</Text>
+              </Button>
+            ) : null}
           </View>
         </View>
       </Section>

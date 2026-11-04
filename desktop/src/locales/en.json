@@ -277,11 +277,11 @@
     },
     "boards": {
       "title": "Connect your boards",
-      "body": "Every tool you connect becomes a tab, refreshed every hour."
+      "body": "Every tool you connect becomes a board, and your tasks refresh on their own; pick how often in Settings."
     },
     "providers": {
       "title": "Works with your tools",
-      "body": "Pull your tasks from the tools you already use."
+      "body": "See your tasks from Jira, Linear, GitHub, GitLab and Azure DevOps in one list."
     },
     "surfaces": {
       "title": "In the menubar, or as a window",
@@ -291,11 +291,11 @@
     },
     "notify": {
       "title": "Stay in the loop",
-      "body": "Get notified when a task is assigned to you; pick how often in Settings."
+      "body": "Get notified when a task is assigned to you. Pick how often to check in Settings."
     },
     "privacy": {
       "title": "Your keys stay with you",
-      "body": "API keys live only in the macOS Keychain and are never sent anywhere else."
+      "body": "API keys stay in this Mac's Keychain and go only to the tool they belong to. If you move them to your phone, they're encrypted with a one-time code."
     }
   },
   "update": {
@@ -307,5 +307,28 @@
     "check": "Check for updates",
     "checkFailed": "Couldn't check for updates. Check your connection.",
     "upToDate": "You're on the latest version."
+  },
+  "transfer": {
+    "send": "Send to phone",
+    "sendHint": "Move your boards, keys included, to the AssignedToMe app on your phone.",
+    "receive": "Receive from phone",
+    "sendTitle": "Send boards to your phone",
+    "sendStep": "On your phone, open Settings → Receive from desktop. Enter the code it shows here.",
+    "code": "Code from your phone",
+    "boards": "Boards to send",
+    "showQr": "Show QR",
+    "scan": "Scan this with your phone. It works for 10 minutes and only with that code.",
+    "tooMany": "Too many boards for one QR. Pick fewer and send the rest in a second round.",
+    "receiveTitle": "Receive boards from your phone",
+    "receiveStep": "On your phone, open Settings → Send to desktop and enter this code. Then paste what it copies below.",
+    "paste": "Transfer text",
+    "import": "Add boards",
+    "imported_one": "{{count}} board added",
+    "imported_other": "{{count}} boards added",
+    "wrongCode": "This text was made for a different code. Start again on the phone with the code shown here.",
+    "expired": "This transfer is older than 10 minutes. Make a new one.",
+    "invalid": "This isn't an AssignedToMe transfer.",
+    "noBoards": "Nothing to add: these boards use tools this version doesn't know.",
+    "codeInvalid": "Enter the 8-character code."
   }
 }

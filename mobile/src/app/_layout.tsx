@@ -1,4 +1,6 @@
 import "../../global.css";
+// Before anything that encrypts: gives Hermes a secure crypto.getRandomValues.
+import "@/lib/crypto-polyfill";
 // Defines the background refresh task at startup, also when iOS launches the app headless just to run it.
 import "@/features/tasks/background-refresh";
 

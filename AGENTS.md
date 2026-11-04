@@ -34,6 +34,7 @@ mytask/
 - Never work around a company's network or security controls (e.g. imitating a browser to get past a firewall/SOC block page). Detect the block, say so, and offer "open in the source app"; the fix is the security team allowing the API.
 - Validate all external data with zod before use. Treat provider payloads (titles, descriptions) as untrusted: no `dangerouslySetInnerHTML` without sanitizing.
 - Only open `http(s)` task URLs; reject other schemes.
+- Boards move between devices only through `core/src/transfer.ts`: the receiving device shows a one-time code, the sender encrypts with it (scrypt + XChaCha20-Poly1305, 10-minute expiry) and sends a QR (desktop → phone) or pasted text (phone → desktop). Never put keys in a QR, link or clipboard unencrypted, and never show the code on the sending screen.
 - Run the **security-audit** skill on any change that touches keys, storage, networking, auth, Tauri capabilities/permissions or the web proxy, and before every release.
 
 ## How to Write Code

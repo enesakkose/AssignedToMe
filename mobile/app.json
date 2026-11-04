@@ -18,7 +18,10 @@
     "ios": {
       "buildNumber": "1",
       "bundleIdentifier": "com.mytask.mobile",
-      "icon": "./assets/images/icon.png"
+      "icon": "./assets/images/icon.png",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.mytask.mobile",
@@ -28,7 +31,10 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "versionCode": 1
+      "versionCode": 1,
+      "permissions": [
+        "android.permission.CAMERA"
+      ]
     },
     "web": {
       "output": "static",
@@ -55,11 +61,27 @@
       "expo-background-task",
       "expo-notifications",
       "@react-native-community/datetimepicker",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "AssignedToMe uses the camera only to scan the QR code from the desktop app.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false
+        }
+      ],
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "400b6e00-4f55-441a-9274-78aa966b68a2"
+      }
+    },
+    "owner": "enesakkose"
   }
 }

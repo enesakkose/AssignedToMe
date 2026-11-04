@@ -7,7 +7,15 @@ import { requestNotificationPermission } from "@/lib/notifications";
 import { cn } from "@/lib/utils";
 import { usePersistStore } from "@/stores/persist-store";
 import { router } from "expo-router";
-import { ArrowRight, Bell, KeyRound, Layers, type LucideIcon } from "lucide-react-native";
+import {
+  ArrowRight,
+  Bell,
+  KeyRound,
+  Laptop,
+  Layers,
+  QrCode,
+  type LucideIcon,
+} from "lucide-react-native";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Image, View } from "react-native";
@@ -18,13 +26,15 @@ const LOGO = require("../../../../assets/images/splash-icon.png");
 
 type Step = { key: string; icon?: LucideIcon };
 
-// Desktop's steps minus "surfaces" (menubar vs window), which a phone doesn't have.
+// Desktop's steps minus "surfaces" (menubar vs window), which a phone doesn't have, plus "desktop".
 const STEPS: Step[] = [
   { key: "welcome" }, // uses the app mark
   { key: "boards", icon: Layers },
   { key: "providers" }, // uses the provider logo grid
   { key: "notify", icon: Bell },
   { key: "privacy", icon: KeyRound },
+  // Phone-only: someone already set up on the Mac brings their boards over instead of making new tokens.
+  { key: "desktop", icon: Laptop },
 ];
 
 export function OnboardingScreen() {
@@ -34,9 +44,10 @@ export function OnboardingScreen() {
   const step = STEPS[i]!;
   const last = i === STEPS.length - 1;
 
-  const finish = () => {
+  const finish = (then?: "/transfer-receive") => {
     setOnboardingCompleted(true);
     router.replace("/(app)");
+    if (then) router.push(then);
   };
 
   const next = async () => {
@@ -87,6 +98,16 @@ export function OnboardingScreen() {
           <Text className="mt-2 text-center text-base leading-6 text-ink-2">
             {t(`onboarding.${step.key}.body`)}
           </Text>
+          {step.key === "desktop" ? (
+            <Button
+              className="mt-6"
+              onPress={() => finish("/transfer-receive")}
+              variant="secondary"
+            >
+              <Icon as={QrCode} size={16} />
+              <Text>{t("onboarding.desktop.action")}</Text>
+            </Button>
+          ) : null}
         </Animated.View>
       </View>
 
@@ -100,7 +121,7 @@ export function OnboardingScreen() {
           ))}
         </View>
         <View className="flex-row items-center justify-between gap-3">
-          <Button onPress={finish} variant="ghost">
+          <Button onPress={() => finish()} variant="ghost">
             <Text>{t("onboarding.skip")}</Text>
           </Button>
           <Button onPress={() => void next()}>

@@ -1,9 +1,10 @@
 import { getProvider, type Locale } from '@mytask/core';
 import { getVersion } from '@tauri-apps/api/app';
 import { disable, enable, isEnabled } from '@tauri-apps/plugin-autostart';
-import { ArrowLeft, ChevronRight, Monitor, Moon, Plus, Sun } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Download, Monitor, Moon, Plus, Smartphone, Sun } from 'lucide-react';
 import { invoke } from '@tauri-apps/api/core';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AppHeader } from '@/components/layout/app-header';
 import { Section } from '@/components/layout/section';
@@ -18,6 +19,7 @@ import { setLanguage } from '@/lib/i18n';
 import { getTheme, setTheme, type ThemePreference } from '@/lib/theme';
 import { REFRESH_CHOICES_MIN, useNav } from '@/stores/nav';
 import { UpdateBanner, useAvailableUpdate } from '@/features/updates/update-banner';
+import { ReceiveFromPhoneDialog, SendToPhoneDialog } from '../components/transfer-dialogs';
 import { useConnections } from '../hooks/use-connections';
 
 function useLaunchAtLogin() {
@@ -45,6 +47,7 @@ export function SettingsScreen() {
   const { t, i18n } = useTranslation();
   const go = useNav((s) => s.go);
   const connections = useConnections();
+  const [transfer, setTransfer] = useState<'send' | 'receive' | null>(null);
   const { query: autostart, mutation: setAutostart } = useLaunchAtLogin();
   const version = useQuery({ queryKey: ['app-version'], queryFn: getVersion, staleTime: Infinity });
   const update = useAvailableUpdate();
@@ -96,10 +99,23 @@ export function SettingsScreen() {
               </ul>
             )
           )}
-          <Button className="self-start" onClick={() => go({ name: 'connection' })}>
-            <Plus />
-            {t('connections.add')}
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button onClick={() => go({ name: 'connection' })}>
+              <Plus />
+              {t('connections.add')}
+            </Button>
+            {/* Boards and their keys move between this Mac and the phone app, encrypted with a one-time code. */}
+            {!!connections.data?.length && (
+              <Button variant="ghost" onClick={() => setTransfer('send')}>
+                <Smartphone />
+                {t('transfer.send')}
+              </Button>
+            )}
+            <Button variant="ghost" onClick={() => setTransfer('receive')}>
+              <Download />
+              {t('transfer.receive')}
+            </Button>
+          </div>
         </Section>
 
         <Section title={t('settings.general')} description={t('settings.refreshHint')}>
@@ -191,6 +207,10 @@ export function SettingsScreen() {
         )}
       </ScrollArea>
       <UpdateBanner />
+      {transfer === 'send' && connections.data && (
+        <SendToPhoneDialog boards={connections.data} open onOpenChange={(o) => !o && setTransfer(null)} />
+      )}
+      {transfer === 'receive' && <ReceiveFromPhoneDialog open onOpenChange={(o) => !o && setTransfer(null)} />}
     </div>
   );
 }
