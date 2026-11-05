@@ -8,6 +8,7 @@
 |---|---|
 | `mytask-symbol.svg` | Ana sembol (24 px ve üstü); diğer renk ve boyutlar bundan üretilir |
 | `mytask-symbol-small.svg` | Küçük boyut çizimi (24 px ve altı: menubar, uygulama başlığı); çubuklar kalın, boşluklar geniş |
+| `mytask-oauth-logo.svg` | Giriş (OAuth) izin sayfalarındaki logo: grafit kare, ortada küçültülmüş gümüş işaret (GitHub'da daire içine kırpılır). `export/mytask-oauth-logo.png` (512 px): Atlassian ve Linear kayıt isteğiyle bu adresten alır; GitHub uygulamasının ayarına elle yüklenir |
 | `mytask-macos-icon.svg` | macOS uygulama ikonu (1024, macOS ızgarası); `tauri icon` bunun PNG'sinden üretilir |
 | `export/mytask-macos-icon.png` | Uygulama ikonunun PNG'si |
 | `export/tray/` | Menubar şablon ikonu (44 px = 22 pt @2x, siyah, saydam) |

@@ -83,7 +83,8 @@ export function TaskRow({ task, provider, onOpen }: TaskRowProps) {
       variant="ghost"
       aria-label={openLabel}
       onClick={() => openInSource(task.connectionId, task.key, task.url, onOpen)}
-      className="relative z-10 -my-1 ml-auto gap-1 px-2"
+      // Out into the arrow column's width, so it ends where the ↗ above it does (every board, any source name).
+      className="relative z-10 -my-1 -mr-[calc(var(--control-sm)_+_0.625rem)] ml-auto gap-1 px-2"
     >
       {openLabel}
       <ArrowUpRight className="size-3.5" />

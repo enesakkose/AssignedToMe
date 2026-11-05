@@ -239,7 +239,7 @@ fn focus_app_window(app: AppHandle) -> bool {
 }
 
 /// The page the browser lands on after signing in, in the app's look (DESIGN.md tokens, light or dark with the system).
-/// It offers assignedtome:// to bring the app back; on success it tries that once by itself.
+/// It offers assignedtome:// to bring the app back with a button; the app also comes forward by itself when the sign-in is done.
 const OAUTH_PAGE: &str = r#"<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AssignedToMe</title><meta name="description" content="AssignedToMe sign-in finished.">
 <style>
 /* Hallmark · scope: component · system: desktop/DESIGN.md (locked) · signature: the open-the-app action */
@@ -267,7 +267,7 @@ small{display:block;margin-top:12px;color:var(--muted);font-size:12px}
 <section><h1>{icon}{title}</h1><p>{text}</p>
 <a class="open" href="assignedtome://open">Open AssignedToMe</a>
 <small>You can close this tab.</small></section>
-</main>{script}</body></html>"#;
+</main></body></html>"#;
 const OAUTH_CHECK: &str = r#"<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M5 8.2l2 2 4-4.2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>"#;
 const OAUTH_DONE: &str = "Signed in|Your Jira boards are being added. They’re waiting in the app.";
 const OAUTH_CANCELLED: &str = "Sign-in didn’t finish|Nothing was added. Go back to the app to try again.";
@@ -336,9 +336,7 @@ async fn oauth_wait(app: AppHandle, state: String) -> Result<String, String> {
                 .replace("{title}", title)
                 .replace("{text}", text)
                 .replace("{icon}", if done { OAUTH_CHECK } else { "" })
-                .replace("{signal}", "oklch(50% 0.12 150)")
-                // Back to the app by itself once; the browser may ask first. The button stays for when it doesn't.
-                .replace("{script}", if done { "<script>setTimeout(()=>{location.href='assignedtome://open'},400)</script>" } else { "" });
+                .replace("{signal}", "oklch(50% 0.12 150)");
             let _ = stream.write_all(format!("HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\nCache-Control: no-store\r\nReferrer-Policy: no-referrer\r\nX-Content-Type-Options: nosniff\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{page}", page.len()).as_bytes());
             return Ok(format!("http://localhost:{port}{target}"));
         }

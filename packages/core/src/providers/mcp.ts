@@ -10,6 +10,12 @@ import { accessToken, codeFrom, expiresAt, pkce, postForm, randomState, REFRESH_
 
 const PROTOCOL = '2025-06-18';
 
+// shortcut: the logo and site shown on the provider's consent page ("AssignedToMe is requesting access"), served from
+// this repo's main branch; move them to our own domain if the repo is renamed or goes private.
+const REPO = 'enesakkose/AssignedToMe';
+const LOGO_URI = `https://raw.githubusercontent.com/${REPO}/main/desktop/design/logo/export/mytask-oauth-logo.png`;
+const CLIENT_URI = `https://github.com/${REPO}`;
+
 const rpcSchema = z.object({
   id: z.number().optional(),
   result: z
@@ -126,6 +132,8 @@ export async function beginMcpSignIn(fetch: Fetch, auth: McpAuth, redirectUri: s
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         client_name: 'AssignedToMe',
+        logo_uri: LOGO_URI,
+        client_uri: CLIENT_URI,
         redirect_uris: [redirectUri],
         grant_types: ['authorization_code', 'refresh_token'],
         response_types: ['code'],
