@@ -1,5 +1,6 @@
 import { AlertDialog as BaseAlertDialog } from '@base-ui/react/alert-dialog';
 import { Dialog as BaseDialog } from '@base-ui/react/dialog';
+import { X } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/cn';
@@ -28,12 +29,21 @@ type DialogProps = {
 };
 
 export function Dialog({ open, onOpenChange, title, description, children, footer }: DialogProps) {
+  const { t } = useTranslation();
   return (
     <BaseDialog.Root open={open} onOpenChange={onOpenChange}>
       <BaseDialog.Portal>
         <BaseDialog.Backdrop className={backdropClass} />
         <BaseDialog.Popup className={popupClass}>
-          <BaseDialog.Title className={titleClass}>{title}</BaseDialog.Title>
+          <div className="flex items-start justify-between gap-2">
+            <BaseDialog.Title className={titleClass}>{title}</BaseDialog.Title>
+            <BaseDialog.Close
+              aria-label={t('ui.close')}
+              className="-mt-0.5 -mr-1 grid size-6 shrink-0 place-items-center rounded-sm text-muted transition-colors hover:bg-paper-3 hover:text-ink"
+            >
+              <X className="size-3.5" />
+            </BaseDialog.Close>
+          </div>
           {description && <BaseDialog.Description className={descriptionClass}>{description}</BaseDialog.Description>}
           {children}
           {footer && <div className="mt-1 flex justify-end gap-2">{footer}</div>}

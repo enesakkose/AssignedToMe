@@ -32,7 +32,7 @@ export function Select({ value, onValueChange, options, placeholder, id, invalid
       </BaseSelect.Trigger>
       <BaseSelect.Portal>
         <BaseSelect.Positioner alignItemWithTrigger={false} sideOffset={4} collisionPadding={8} className="z-[60]">
-          <BaseSelect.Popup data-floating className={cn(floatingPanelClass, 'min-w-[var(--anchor-width)]')}>
+          <BaseSelect.Popup data-floating className={cn(floatingPanelClass, 'w-[var(--anchor-width)]')}>
             <BaseSelect.List className="max-h-[min(16rem,var(--available-height))] overflow-y-auto">
               {options.map((o) => (
                 <BaseSelect.Item
@@ -40,7 +40,7 @@ export function Select({ value, onValueChange, options, placeholder, id, invalid
                   value={o.value}
                   className="flex h-7 cursor-default items-center gap-2 rounded-sm px-2 text-md outline-none data-[highlighted]:bg-paper-3"
                 >
-                  <BaseSelect.ItemText className="min-w-0 flex-1 truncate">{o.label}</BaseSelect.ItemText>
+                  <BaseSelect.ItemText className="min-w-0 flex-1 truncate" title={o.label}>{o.label}</BaseSelect.ItemText>
                   <BaseSelect.ItemIndicator>
                     <Check className="size-3.5 text-ink-2" />
                   </BaseSelect.ItemIndicator>

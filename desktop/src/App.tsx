@@ -41,7 +41,8 @@ function useOutsideClickOnlyCloses() {
     let swallow = false;
     const down = (e: PointerEvent) => {
       const target = e.target as Element | null;
-      swallow = !!document.querySelector('[data-floating]') && !target?.closest('[data-floating]');
+      // A closed Select keeps its popup in the DOM (marked data-closed); only an open one counts.
+      swallow = !!document.querySelector('[data-floating]:not([data-closed])') && !target?.closest('[data-floating]');
     };
     const click = (e: MouseEvent) => {
       if (!swallow) return;

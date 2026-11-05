@@ -170,7 +170,16 @@ fn open_app_window(app: &AppHandle) {
     #[cfg(target_os = "macos")]
     let _ = app.set_activation_policy(tauri::ActivationPolicy::Regular);
     #[cfg(target_os = "macos")]
-    let _ = app.run_on_main_thread(restore_dock_icon);
+    {
+        let _ = app.run_on_main_thread(restore_dock_icon);
+        // The Dock can build its tile late (at login, or when the window never takes focus), after both other calls; once
+        // more a moment later so the tile isn't left blank.
+        let app = app.clone();
+        std::thread::spawn(move || {
+            std::thread::sleep(std::time::Duration::from_millis(600));
+            let _ = app.run_on_main_thread(restore_dock_icon);
+        });
+    }
     // Built in the theme the popover already has (it follows Settings → Theme) so the splash comes up in the right colours.
     let theme = app.get_webview_window("main").and_then(|w| w.theme().ok());
     // The same native material as the popover (tauri.conf.json), so both read as one surface. It also fixes the white
