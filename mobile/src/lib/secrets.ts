@@ -9,8 +9,9 @@ const options: SecureStore.SecureStoreOptions = {
 const cache = new Map<string, string | null>();
 
 export const secrets = {
-  get: async (account: string) => {
-    if (cache.has(account)) return cache.get(account) ?? null;
+  // `fresh` skips the cache: another JS context (the background task) may have saved a newer token since.
+  get: async (account: string, fresh = false) => {
+    if (!fresh && cache.has(account)) return cache.get(account) ?? null;
     const value = await SecureStore.getItemAsync(account, options);
     cache.set(account, value);
     return value;

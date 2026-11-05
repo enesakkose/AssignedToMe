@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { ProviderError } from '../../errors';
 import type { Connection, Fetch, Provider, Task, Transition } from '../../types';
-import { beginMcpSignIn, callTool, finishMcpSignIn, MCP_FIELDS, refreshMcpToken, type McpAuth } from '../mcp';
+import { beginMcpSignIn, callTool, finishMcpSignIn, MCP_FIELDS, parseTool, refreshMcpToken, type McpAuth } from '../mcp';
 import { linear, PRIORITY_LEVEL, statusCategory } from '.';
 
 /**
@@ -18,7 +18,7 @@ const AUTH: McpAuth = { register: `${SERVER}/register`, authorize: `${SERVER}/au
 const MAX_PAGES = 10;
 
 const call = async (connection: Connection, fetch: Fetch, name: string, args: Record<string, unknown>) =>
-  JSON.parse(await callTool(fetch, MCP_URL, connection.values.accessToken ?? '', name, args)) as unknown;
+  parseTool(await callTool(fetch, MCP_URL, connection.values.accessToken ?? '', name, args));
 
 const issueSchema = z.object({
   id: z.string(),

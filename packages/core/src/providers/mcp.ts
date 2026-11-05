@@ -88,6 +88,15 @@ function session(fetch: Fetch, url: string, token: string): Promise<string | nul
   return s;
 }
 
+/** A tool's answer as JSON; anything else is an unexpected answer (and the text, which isn't ours, stays out of the error). */
+export function parseTool(text: string): unknown {
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new ProviderError('invalid_response', 'Unexpected answer from the server');
+  }
+}
+
 /** Calls a tool on the MCP server at `url` and returns its text. */
 export async function callTool(fetch: Fetch, url: string, token: string, name: string, args: Record<string, unknown>): Promise<string> {
   const id = ++nextId;

@@ -49,6 +49,29 @@ export function transferable(connection: Connection): Connection {
   return { ...connection, values: Object.fromEntries(Object.entries(connection.values).filter(([key]) => !drop.has(key))) };
 }
 
+/**
+ * Renews a signed-in board's credentials when they are about to end. The refresh token works once, so when two
+ * places renew at the same moment (the popover and the app window, the background task and the app) the loser is
+ * refused; `reload` then re-reads what the winner saved, and that is used instead of failing. `changed` says the
+ * returned values are new and still need saving.
+ */
+export async function renewConnection(
+  provider: Provider,
+  connection: Connection,
+  fetch: typeof globalThis.fetch,
+  reload: () => Promise<Connection>,
+): Promise<{ values: Record<string, string>; changed: boolean }> {
+  try {
+    const values = await provider.refreshCredentials?.(connection, fetch);
+    return values ? { values, changed: true } : { values: connection.values, changed: false };
+  } catch (error) {
+    const again = await reload();
+    if (again.values.refreshToken && again.values.refreshToken !== connection.values.refreshToken)
+      return { values: again.values, changed: false };
+    throw error;
+  }
+}
+
 /** A board that comes over again (same id) keeps this device's own sign-in state: the sender's copy has none. */
 export function mergeIncoming(have: Connection | undefined, incoming: Connection): Connection {
   return have && getProvider(incoming.providerId)?.signIn ? { ...incoming, values: { ...have.values, ...incoming.values } } : incoming;

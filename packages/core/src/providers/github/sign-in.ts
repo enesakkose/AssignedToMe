@@ -6,6 +6,7 @@ import { github, headers } from '.';
 // shortcut: the client id of the AssignedToMe OAuth app on GitHub (public, "Enable Device Flow" on, no secret
 // needed); empty hides the sign-in.
 const CLIENT_ID = 'Ov23liRJmKtprKBmgIYi';
+const DEVICE_URL = 'https://github.com/login/device';
 /** The same scopes the token guide asks for: issues in private repos, project Status, organizations. */
 const SCOPES = 'repo project read:org';
 
@@ -51,7 +52,8 @@ export const githubSignIn: Provider = {
           if (!parsed.success) throw new ProviderError('invalid_response', 'Unexpected GitHub response');
           const d = parsed.data;
           return {
-            url: d.verification_uri,
+            // Always GitHub's own page: the one the response names is not trusted to send someone to a typed code.
+            url: DEVICE_URL,
             code: d.user_code,
             pending: { deviceCode: d.device_code, interval: String(d.interval), until: String(Date.now() + d.expires_in * 1000) },
           };

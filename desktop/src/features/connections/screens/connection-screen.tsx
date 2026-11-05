@@ -303,7 +303,9 @@ function SignInWith({ provider, existing }: { provider: Provider; existing?: Sto
         const port = await invoke<number>('oauth_listen', { port: how.port ?? null });
         const { url, pending } = await how.begin(http, `http://localhost:${port}/callback`);
         await openExternal(url);
-        boards = await how.finish(http, pending, await invoke<string>('oauth_wait'));
+        // The page may only be answered by our own sign-in coming back: its `state` is in the authorize URL.
+        const state = new URL(url).searchParams.get('state') ?? '';
+        boards = await how.finish(http, pending, await invoke<string>('oauth_wait', { state }));
       } else {
         // The user types the code on the provider's site; it's shown here and copied for them.
         const { url, code, pending } = await how.begin(http);

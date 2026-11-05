@@ -1,4 +1,4 @@
-import { getProvider, splitSecrets, type Connection } from "@mytask/core";
+import { getProvider, renewConnection, splitSecrets, type Connection } from "@mytask/core";
 import { secrets } from "@/lib/secrets";
 import { mmkvStorage } from "@/lib/storage/mmkv-storage";
 import { create } from "zustand";
@@ -33,10 +33,10 @@ function secretFields(providerId: string) {
 export const newConnectionId = () =>
   `c${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
 
-async function read(connection: StoredConnection): Promise<Connection> {
+async function read(connection: StoredConnection, fresh = false): Promise<Connection> {
   const values = { ...connection.values };
   for (const key of secretFields(connection.providerId)) {
-    values[key] = (await secrets.get(account(connection.id, key))) ?? "";
+    values[key] = (await secrets.get(account(connection.id, key), fresh)) ?? "";
   }
   return { ...connection, values };
 }
@@ -54,10 +54,14 @@ export async function withSecrets(connection: StoredConnection): Promise<Connect
   let pending = renewing.get(connection.id);
   if (!pending) {
     pending = (async () => {
-      const full = await read(list().find((c) => c.id === connection.id) ?? connection);
-      const values = await provider.refreshCredentials!(full, fetch);
-      if (!values) return full;
-      await saveConnection({ ...full, values });
+      const stored = () => list().find((c) => c.id === connection.id) ?? connection;
+      const full = await read(stored());
+      // The background task may renew at the same moment; if it won, its saved tokens are used (read afresh, past the cache).
+      const { values, changed } = await renewConnection(provider, full, fetch, async () => {
+        await useConnectionsStore.persist.rehydrate();
+        return read(stored(), true);
+      });
+      if (changed) await saveConnection({ ...full, values });
       return { ...full, values };
     })().finally(() => renewing.delete(connection.id));
     renewing.set(connection.id, pending);

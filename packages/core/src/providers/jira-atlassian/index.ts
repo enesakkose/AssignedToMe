@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { ProviderError } from '../../errors';
 import type { Connection, Fetch, Provider } from '../../types';
 import { adfToText, createJira, jiraOrigin, textToAdf } from '../jira';
-import { beginMcpSignIn, callTool as callMcpTool, finishMcpSignIn, MCP_FIELDS, refreshMcpToken, type McpAuth } from '../mcp';
+import { beginMcpSignIn, callTool as callMcpTool, finishMcpSignIn, MCP_FIELDS, parseTool, refreshMcpToken, type McpAuth } from '../mcp';
 
 /**
  * Jira Cloud through Atlassian's remote MCP server: the user signs in in the browser (OAuth 2.1, dynamic client
@@ -35,7 +35,8 @@ export function mcpFetch(connection: Connection, fetch: Fetch): Fetch {
     const method = (init?.method ?? 'GET').toUpperCase();
     const path = url.pathname.replace(/^\/rest\/api\/3/, '');
     const q = url.searchParams;
-    const issue = /^\/issue\/([^/]+)(\/transitions|\/assignee|\/worklog|\/comment)?$/.exec(path);
+    // Keys and ids only ("AB-12", "10001"): nothing else is passed on as a tool argument.
+    const issue = /^\/issue\/([A-Za-z0-9_-]+)(\/transitions|\/assignee|\/worklog|\/comment)?$/.exec(path);
     const key = issue ? decodeURIComponent(issue[1]!) : '';
 
     if (method === 'GET' && path === '/search/jql') {
@@ -53,20 +54,20 @@ export function mcpFetch(connection: Connection, fetch: Fetch): Fetch {
     if (method === 'GET' && path === '/myself') {
       const me = z
         .object({ account_id: z.string(), name: z.string().optional(), email: z.string().optional() })
-        .safeParse(JSON.parse(await callTool(fetch, accessToken, 'atlassianUserInfo', {})));
+        .safeParse(parseTool(await callTool(fetch, accessToken, 'atlassianUserInfo', {})));
       if (!me.success) throw new ProviderError('invalid_response', 'Unexpected user info');
       return json(JSON.stringify({ accountId: me.data.account_id, displayName: me.data.name ?? '', emailAddress: me.data.email, active: true }));
     }
     // No tool lists the site's fields; one issue's field names and types say the same (sprint, story points).
     if (method === 'GET' && path === '/field') {
       const found = z.object({ issues: z.array(z.object({ key: z.string() })) }).safeParse(
-        JSON.parse(await call('searchJiraIssuesUsingJql', { jql: 'updated >= -365d ORDER BY updated DESC', maxResults: 50, fields: ['summary'] })),
+        parseTool(await call('searchJiraIssuesUsingJql', { jql: 'updated >= -365d ORDER BY updated DESC', maxResults: 50, fields: ['summary'] })),
       );
       const any = found.success ? found.data.issues[0]?.key : undefined;
       if (!any) return json('[]');
       const meta = z
         .object({ names: z.record(z.string(), z.string()).default({}), schema: z.record(z.string(), z.object({ custom: z.string().optional() })).default({}) })
-        .safeParse(JSON.parse(await call('getJiraIssue', { issueIdOrKey: any, fields: ['*all'], expand: 'names,schema' })));
+        .safeParse(parseTool(await call('getJiraIssue', { issueIdOrKey: any, fields: ['*all'], expand: 'names,schema' })));
       if (!meta.success) return json('[]');
       return json(JSON.stringify(Object.entries(meta.data.names).map(([id, name]) => ({ id, name, schema: meta.data.schema[id] }))));
     }
@@ -76,7 +77,7 @@ export function mcpFetch(connection: Connection, fetch: Fetch): Fetch {
       const field = issue[2] === '/worklog' ? 'worklog' : 'comment';
       const got = z
         .object({ fields: z.record(z.string(), z.unknown()) })
-        .safeParse(JSON.parse(await call('getJiraIssue', { issueIdOrKey: key, fields: [field] })));
+        .safeParse(parseTool(await call('getJiraIssue', { issueIdOrKey: key, fields: [field] })));
       const page = (got.success ? got.data.fields[field] : undefined) as { worklogs?: unknown[]; comments?: unknown[] } | undefined;
       const items = (field === 'worklog' ? page?.worklogs : page?.comments) ?? [];
       return json(JSON.stringify({ [field === 'worklog' ? 'worklogs' : 'comments']: items, total: items.length, startAt: 0 }));
@@ -99,7 +100,7 @@ export function mcpFetch(connection: Connection, fetch: Fetch): Fetch {
     if (issue?.[2] === '/transitions' && method === 'GET') return json(await call('getTransitionsForJiraIssue', { issueIdOrKey: key, expand: q.get('expand') ?? undefined }));
     if (issue?.[2] === '/transitions' && method === 'POST') {
       const body = JSON.parse(String(init?.body ?? '{}')) as Record<string, unknown>;
-      await call('transitionJiraIssue', { issueIdOrKey: key, ...body });
+      await call('transitionJiraIssue', { ...body, issueIdOrKey: key });
       return new Response(null, { status: 204 });
     }
     if (issue?.[2] === '/assignee' && method === 'PUT') {
@@ -115,7 +116,7 @@ export function mcpFetch(connection: Connection, fetch: Fetch): Fetch {
       if (Number(q.get('startAt') ?? 0) > 0) return json('[]');
       const found = z
         .object({ data: z.object({ users: z.object({ users: z.array(z.object({ accountId: z.string(), displayName: z.string() })) }) }) })
-        .safeParse(JSON.parse(await call('lookupJiraAccountId', { searchString: query })));
+        .safeParse(parseTool(await call('lookupJiraAccountId', { searchString: query })));
       if (!found.success) throw new ProviderError('invalid_response', 'Unexpected user search');
       return json(JSON.stringify(found.data.data.users.users.map((u) => ({ ...u, active: true }))));
     }
@@ -156,7 +157,7 @@ const sitesSchema = z.array(z.object({ id: z.string(), url: z.string(), name: z.
 /** Finishes the sign-in and returns one board per Jira site the account can reach. */
 async function finishAtlassianSignIn(fetch: Fetch, pending: Record<string, string>, redirectedTo: string) {
   const tokens = await finishMcpSignIn(fetch, AUTH, pending, redirectedTo);
-  const sites = sitesSchema.safeParse(JSON.parse(await callTool(fetch, tokens.accessToken, 'getAccessibleAtlassianResources', {})));
+  const sites = sitesSchema.safeParse(parseTool(await callTool(fetch, tokens.accessToken, 'getAccessibleAtlassianResources', {})));
   if (!sites.success) throw new ProviderError('invalid_response', 'Unexpected site list');
   // The list repeats a site once per product; keep the Jira ones.
   const jiraSites = [...new Map(sites.data.filter((s) => s.scopes.some((x) => x.includes('jira'))).map((s) => [s.id, s])).values()];

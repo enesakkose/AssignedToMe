@@ -1,4 +1,4 @@
-import { getProvider, splitSecrets, type Connection } from '@mytask/core';
+import { getProvider, renewConnection, splitSecrets, type Connection } from '@mytask/core';
 import { http } from '@/lib/http';
 import { secrets } from '@/lib/secrets';
 import { getStore } from '@/lib/store';
@@ -30,11 +30,11 @@ export async function withSecrets(connection: StoredConnection): Promise<Connect
   let pending = refreshing.get(connection.id);
   if (!pending) {
     pending = (async () => {
-      const latest = (await listConnections()).find((c) => c.id === connection.id) ?? connection;
-      const full = await read(latest);
-      const values = await provider.refreshCredentials!(full, http);
-      if (!values) return full;
-      await saveConnection({ ...full, values });
+      const stored = async () => (await listConnections()).find((c) => c.id === connection.id) ?? connection;
+      const full = await read(await stored());
+      // Another window may renew at the same moment; if it won, its saved tokens are used.
+      const { values, changed } = await renewConnection(provider, full, http, async () => read(await stored()));
+      if (changed) await saveConnection({ ...full, values });
       return { ...full, values };
     })().finally(() => refreshing.delete(connection.id));
     refreshing.set(connection.id, pending);

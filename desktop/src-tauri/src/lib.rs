@@ -295,8 +295,12 @@ fn oauth_cancel(cancelled: tauri::State<OAuthCancelled>) {
 
 /// Async so the wait runs off the main thread. Gives up after 5 minutes (the sign-in page was left open).
 #[tauri::command]
-async fn oauth_wait(app: AppHandle) -> Result<String, String> {
+async fn oauth_wait(app: AppHandle, state: String) -> Result<String, String> {
     use std::io::{Read, Write};
+    // Only the browser coming back from our own sign-in counts: the `state` we put in the authorize URL.
+    if state.is_empty() {
+        return Err("no state".to_string());
+    }
     let listener = app.state::<OAuthListener>().0.lock().unwrap().take().ok_or("not listening")?;
     let app = app.clone();
     tauri::async_runtime::spawn_blocking(move || {
@@ -317,7 +321,11 @@ async fn oauth_wait(app: AppHandle) -> Result<String, String> {
             let n = stream.read(&mut buf).unwrap_or(0);
             let head = String::from_utf8_lossy(&buf[..n]);
             let target = head.lines().next().and_then(|l| l.split(' ').nth(1)).unwrap_or("");
-            if !target.starts_with("/callback?") {
+            // Anything else on this port (another program, a web page probing localhost) is turned away and the wait goes on.
+            let ours = target
+                .strip_prefix("/callback?")
+                .is_some_and(|query| query.split('&').any(|kv| kv.strip_prefix("state").and_then(|v| v.strip_prefix('=')) == Some(state.as_str())));
+            if !ours {
                 let _ = stream.write_all(b"HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
                 continue;
             }
@@ -331,7 +339,7 @@ async fn oauth_wait(app: AppHandle) -> Result<String, String> {
                 .replace("{signal}", "oklch(50% 0.12 150)")
                 // Back to the app by itself once; the browser may ask first. The button stays for when it doesn't.
                 .replace("{script}", if done { "<script>setTimeout(()=>{location.href='assignedtome://open'},400)</script>" } else { "" });
-            let _ = stream.write_all(format!("HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{page}", page.len()).as_bytes());
+            let _ = stream.write_all(format!("HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\nCache-Control: no-store\r\nReferrer-Policy: no-referrer\r\nX-Content-Type-Options: nosniff\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{page}", page.len()).as_bytes());
             return Ok(format!("http://localhost:{port}{target}"));
         }
         Err("timed out".to_string())
