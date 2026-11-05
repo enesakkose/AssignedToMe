@@ -33,4 +33,5 @@ macOS menubar app. Tauri v2 + Vite + React + TypeScript. Read the root `AGENTS.m
 
 - `bun run tauri dev`: run the app (needs Rust: `source ~/.cargo/env`).
 - `bun run tauri build`: build `.app` and `.dmg`.
+- `scripts/build-local.sh`: a release `.app` to try on this Mac, signed with the Developer ID so the Keychain doesn't ask for the password on every read (an unsigned build does). `tauri dev` keeps secrets in a dev file instead.
 - `bunx tsc --noEmit`: typecheck. `cd src-tauri && cargo build`: Rust check.

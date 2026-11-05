@@ -1,4 +1,5 @@
 import { getProvider, splitSecrets, type Connection } from '@mytask/core';
+import { http } from '@/lib/http';
 import { secrets } from '@/lib/secrets';
 import { getStore } from '@/lib/store';
 
@@ -23,6 +24,27 @@ async function write(connections: StoredConnection[]) {
 
 /** Adds secrets from Keychain; only call right before talking to the provider. */
 export async function withSecrets(connection: StoredConnection): Promise<Connection> {
+  const provider = getProvider(connection.providerId);
+  if (!provider?.refreshCredentials) return read(connection);
+  // Signed-in boards renew their session first. One renewal at a time per board: the refresh token changes on each.
+  let pending = refreshing.get(connection.id);
+  if (!pending) {
+    pending = (async () => {
+      const latest = (await listConnections()).find((c) => c.id === connection.id) ?? connection;
+      const full = await read(latest);
+      const values = await provider.refreshCredentials!(full, http);
+      if (!values) return full;
+      await saveConnection({ ...full, values });
+      return { ...full, values };
+    })().finally(() => refreshing.delete(connection.id));
+    refreshing.set(connection.id, pending);
+  }
+  return { ...(await pending), name: connection.name };
+}
+
+const refreshing = new Map<string, Promise<Connection>>();
+
+async function read(connection: StoredConnection): Promise<Connection> {
   const values = { ...connection.values };
   for (const key of secretFields(connection.providerId)) {
     values[key] = (await secrets.get(account(connection.id, key))) ?? '';

@@ -44,8 +44,12 @@ function Qr({ text }: { text: string }) {
 }
 
 /** Desktop → phone: enter the code the phone shows, pick boards, show them as an encrypted QR. */
-export function SendToPhoneDialog({ boards, open, onOpenChange }: { boards: StoredConnection[]; open: boolean; onOpenChange: (open: boolean) => void }) {
+export function SendToPhoneDialog({ boards: all, open, onOpenChange }: { boards: StoredConnection[]; open: boolean; onOpenChange: (open: boolean) => void }) {
   const { t } = useTranslation();
+  // Signed-in boards renew their sign-in with a token that changes on every use; a copy on the phone would break the
+  // one here. The phone signs in by itself instead.
+  const boards = all.filter((b) => !getProvider(b.providerId)?.signIn);
+  const signedIn = all.length - boards.length;
   const [code, setCode] = useState('');
   const [picked, setPicked] = useState(() => new Set(boards.map((b) => b.id)));
   const [qr, setQr] = useState<string | null>(null);
@@ -124,6 +128,7 @@ export function SendToPhoneDialog({ boards, open, onOpenChange }: { boards: Stor
           </Field>
           <div className="flex flex-col gap-1.5">
             <span className="font-display text-sm font-medium text-ink-2">{t('transfer.boards')}</span>
+            {signedIn > 0 && <p className="text-sm text-muted">{t('transfer.signInNote', { count: signedIn })}</p>}
             {boards.map((b) => {
               const provider = getProvider(b.providerId);
               return (

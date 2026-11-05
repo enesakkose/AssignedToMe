@@ -238,6 +238,96 @@ fn focus_app_window(app: AppHandle) -> bool {
     focus_existing_app_window(&app)
 }
 
+/// The page the browser lands on after signing in, in the app's look (DESIGN.md tokens, light or dark with the system).
+/// It offers assignedtome:// to bring the app back; on success it tries that once by itself.
+const OAUTH_PAGE: &str = r#"<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AssignedToMe</title><meta name="description" content="AssignedToMe sign-in finished.">
+<style>
+/* Hallmark · scope: component · system: desktop/DESIGN.md (locked) · signature: the open-the-app action */
+/* critique: one panel, one action; tokens copied from the app, no hue but the success check */
+:root{color-scheme:light dark;--paper:oklch(97.3% 0.003 250);--panel:oklch(99.5% 0.002 250);--ink:oklch(21% 0.006 260);--ink-2:oklch(33% 0.006 260);--muted:oklch(46% 0.008 260);--rule:oklch(21% 0.006 260 / 0.1);--accent:oklch(26% 0.006 260);--accent-hover:oklch(33% 0.006 260);--accent-ink:oklch(97.5% 0.002 250);--focus:oklch(42% 0.01 260);--brand-tile:oklch(26% 0.006 260);--brand-mark:oklch(91% 0.003 250);--signal:{signal};--shadow:0 1px 2px oklch(21% 0.006 260 / 0.08),0 8px 24px -8px oklch(21% 0.006 260 / 0.22);--font:"Instrument Sans",-apple-system,BlinkMacSystemFont,system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root{--paper:oklch(17.5% 0.004 260);--panel:oklch(21% 0.005 260);--ink:oklch(94% 0.003 250);--ink-2:oklch(82% 0.004 250);--muted:oklch(68% 0.006 255);--rule:oklch(94% 0.003 250 / 0.1);--accent:oklch(91% 0.003 250);--accent-hover:oklch(84% 0.004 250);--accent-ink:oklch(19% 0.005 260);--focus:oklch(82% 0.008 255);--shadow:0 0 0 1px oklch(94% 0.003 250 / 0.06),0 12px 28px -8px oklch(0% 0 0 / 0.6)}}
+html,body{overflow-x:clip}
+body{margin:0;min-height:100vh;display:grid;place-items:center;padding:16px;box-sizing:border-box;background:var(--paper);color:var(--ink);font:13px/1.5 var(--font);-webkit-font-smoothing:antialiased}
+main{width:min(100%,340px);background:var(--panel);border:1px solid var(--rule);border-radius:10px 3px 10px 3px;box-shadow:var(--shadow)}
+header{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--rule);font-weight:600}
+header svg{width:20px;height:20px;flex:none}
+section{padding:20px 16px 16px}
+h1{margin:0 0 4px;font-size:17px;font-weight:600;letter-spacing:-0.02em;text-wrap:balance;display:flex;align-items:center;gap:8px;overflow-wrap:break-word;min-width:0}
+h1 svg{width:16px;height:16px;flex:none;color:var(--signal)}
+p{margin:0;color:var(--ink-2)}
+a.open{display:inline-flex;align-items:center;justify-content:center;height:32px;padding:0 16px;margin-top:16px;border-radius:999px;background:var(--accent);color:var(--accent-ink);font-weight:500;text-decoration:none;transition:background-color 120ms cubic-bezier(0.23,1,0.32,1),transform 120ms cubic-bezier(0.23,1,0.32,1)}
+a.open:hover{background:var(--accent-hover)}
+a.open:active{transform:scale(0.97)}
+a.open:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+small{display:block;margin-top:12px;color:var(--muted);font-size:12px}
+@media (prefers-reduced-motion:reduce){a.open{transition:none}a.open:active{transform:none}}
+</style></head>
+<body><main>
+<header><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="0.5" y="0.5" width="23" height="23" rx="5.5" fill="var(--brand-tile)" stroke="var(--rule)"/><g fill="var(--brand-mark)" transform="translate(12 12) scale(0.064) translate(-128 -128)"><rect x="24" y="24" width="152" height="56" rx="28"/><circle cx="53" cy="128" r="29"/><rect x="106" y="100" width="126" height="56" rx="28"/><rect x="24" y="176" width="152" height="56" rx="28"/></g></svg>AssignedToMe</header>
+<section><h1>{icon}{title}</h1><p>{text}</p>
+<a class="open" href="assignedtome://open">Open AssignedToMe</a>
+<small>You can close this tab.</small></section>
+</main>{script}</body></html>"#;
+const OAUTH_CHECK: &str = r#"<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M5 8.2l2 2 4-4.2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>"#;
+const OAUTH_DONE: &str = "Signed in|Your Jira boards are being added. They’re waiting in the app.";
+const OAUTH_CANCELLED: &str = "Sign-in didn’t finish|Nothing was added. Go back to the app to try again.";
+
+/// Browser sign-in (OAuth): the provider sends the browser back to http://localhost:<port>/callback. `oauth_listen`
+/// opens that port before the browser goes out; `oauth_wait` returns the URL the browser came back to.
+struct OAuthListener(Mutex<Option<std::net::TcpListener>>);
+
+#[tauri::command]
+fn oauth_listen(state: tauri::State<OAuthListener>, port: Option<u16>) -> Result<u16, String> {
+    // Loopback only: nothing off this Mac can reach it. A fixed port when the provider only accepts one callback URL.
+    let listener = std::net::TcpListener::bind(("127.0.0.1", port.unwrap_or(0))).map_err(|e| e.to_string())?;
+    let port = listener.local_addr().map_err(|e| e.to_string())?.port();
+    *state.0.lock().unwrap() = Some(listener);
+    Ok(port)
+}
+
+/// Async so the wait runs off the main thread. Gives up after 5 minutes (the sign-in page was left open).
+#[tauri::command]
+async fn oauth_wait(app: AppHandle) -> Result<String, String> {
+    use std::io::{Read, Write};
+    let listener = app.state::<OAuthListener>().0.lock().unwrap().take().ok_or("not listening")?;
+    tauri::async_runtime::spawn_blocking(move || {
+        let port = listener.local_addr().map_err(|e| e.to_string())?.port();
+        listener.set_nonblocking(true).map_err(|e| e.to_string())?;
+        let deadline = Instant::now() + Duration::from_secs(300);
+        while Instant::now() < deadline {
+            let Ok((mut stream, _)) = listener.accept() else {
+                std::thread::sleep(Duration::from_millis(100));
+                continue;
+            };
+            let _ = stream.set_nonblocking(false);
+            let _ = stream.set_read_timeout(Some(Duration::from_secs(5)));
+            let mut buf = [0u8; 8192];
+            let n = stream.read(&mut buf).unwrap_or(0);
+            let head = String::from_utf8_lossy(&buf[..n]);
+            let target = head.lines().next().and_then(|l| l.split(' ').nth(1)).unwrap_or("");
+            if !target.starts_with("/callback?") {
+                let _ = stream.write_all(b"HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
+                continue;
+            }
+            let page = if target.contains("code=") { OAUTH_DONE } else { OAUTH_CANCELLED };
+            let done = target.contains("code=");
+            let (title, text) = page.split_once('|').unwrap_or((page, ""));
+            let page = OAUTH_PAGE
+                .replace("{title}", title)
+                .replace("{text}", text)
+                .replace("{icon}", if done { OAUTH_CHECK } else { "" })
+                .replace("{signal}", "oklch(50% 0.12 150)")
+                // Back to the app by itself once; the browser may ask first. The button stays for when it doesn't.
+                .replace("{script}", if done { "<script>setTimeout(()=>{location.href='assignedtome://open'},400)</script>" } else { "" });
+            let _ = stream.write_all(format!("HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{page}", page.len()).as_bytes());
+            return Ok(format!("http://localhost:{port}{target}"));
+        }
+        Err("timed out".to_string())
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
 /// Launch at login starts out on: the first run of a packaged app registers it, once. From then on it's the user's
 /// switch in Settings, and turning it off is never undone. Not in `tauri dev`, which would register the debug binary.
 #[cfg(not(debug_assertions))]
@@ -449,6 +539,7 @@ pub fn run() {
     tauri::Builder::default()
         .manage(LastBlurHide(Mutex::new(None)))
         .manage(AllowedOrigins(Mutex::new(HashSet::new())))
+        .manage(OAuthListener(Mutex::new(None)))
         .plugin(tauri_plugin_autostart::Builder::new().arg("--autostart").build())
         .plugin(tauri_plugin_positioner::init())
         // In-app updates from GitHub Releases (latest.json), verified against the pubkey in tauri.conf.json.
@@ -469,7 +560,9 @@ pub fn run() {
             notify_task,
             show_popover,
             show_app_window,
-            focus_app_window
+            focus_app_window,
+            oauth_listen,
+            oauth_wait
         ])
         .setup(|app| {
             // Menubar-only app: no Dock icon, no app switcher entry.
@@ -565,6 +658,13 @@ pub fn run() {
             #[cfg(target_os = "macos")]
             if let tauri::RunEvent::Reopen { .. } = event {
                 open_app_window(app);
+            }
+            // assignedtome:// (the "Open AssignedToMe" button after a browser sign-in): just come forward.
+            #[cfg(target_os = "macos")]
+            if let tauri::RunEvent::Opened { urls } = &event {
+                if urls.iter().any(|u| u.scheme() == "assignedtome") {
+                    open_app_window(app);
+                }
             }
             #[cfg(not(target_os = "macos"))]
             let _ = (app, event);

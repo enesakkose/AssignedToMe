@@ -110,7 +110,7 @@ const fieldListSchema = z.array(
 type SiteFields = { sprint?: string; storyPoints: string[] };
 
 /** What differs between Jira Cloud and Jira Data Center/Server; everything else is shared. */
-type Flavor = {
+export type Flavor = {
   id: string;
   name: string;
   docsUrl: string;
@@ -364,7 +364,7 @@ export function jiraDateTime(date: Date): string {
 }
 
 /** Plain text to an Atlassian Document, one paragraph per line. */
-function textToAdf(text: string) {
+export function textToAdf(text: string) {
   return {
     type: 'doc',
     version: 1,
@@ -552,7 +552,7 @@ async function toTasks(ctx: Ctx, site: SiteFields, issues: Issue[]) {
 const LOGO =
   '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#0052CC" d="M11.571 11.513H0a5.218 5.218 0 0 0 5.232 5.215h2.13v2.057A5.215 5.215 0 0 0 12.575 24V12.518a1.005 1.005 0 0 0-1.005-1.005zm5.723-5.756H5.736a5.215 5.215 0 0 0 5.215 5.214h2.129v2.058a5.218 5.218 0 0 0 5.215 5.214V6.758a1.001 1.001 0 0 0-1.001-1.001zM23.013 0H11.455a5.215 5.215 0 0 0 5.215 5.215h2.129v2.057A5.215 5.215 0 0 0 24 12.483V1.005A1.001 1.001 0 0 0 23.013 0Z"/></svg>';
 
-function createJira(flavor: Flavor): Provider {
+export function createJira(flavor: Flavor): Provider {
   const ctxOf = (connection: Connection, fetch: Fetch) => context(flavor, connection, fetch);
   return {
     id: flavor.id,

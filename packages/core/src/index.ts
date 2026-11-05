@@ -2,6 +2,9 @@ import { azure } from './providers/azure';
 import { github } from './providers/github';
 import { gitlab } from './providers/gitlab';
 import { jira, jiraDataCenter } from './providers/jira';
+import { jiraAtlassian } from './providers/jira-atlassian';
+import { githubSignIn } from './providers/github/sign-in';
+import { linearSignIn } from './providers/linear/sign-in';
 import { linear } from './providers/linear';
 import type { Provider, Task } from './types';
 
@@ -17,8 +20,11 @@ export * from './transfer';
 /** Add a provider: create providers/<id>/index.ts and list it here. */
 export const providers: Provider[] = [jira, jiraDataCenter, linear, github, gitlab, azure];
 
+/** Offered inside another provider's screen (`signIn.for`), not in the list above. */
+export const signInProviders: Provider[] = [jiraAtlassian, linearSignIn, githubSignIn];
+
 export function getProvider(id: string): Provider | undefined {
-  return providers.find((p) => p.id === id);
+  return providers.find((p) => p.id === id) ?? signInProviders.find((p) => p.id === id);
 }
 
 /** Fills `{field}` placeholders in a guide `copy` value. */

@@ -123,6 +123,12 @@
     "showTabs": "Show tabs"
   },
   "connections": {
+    "signInApproval": "If {{app}} asks for an admin’s approval (a “Request” button) and you don’t want to wait, connect with the form above instead.",
+    "orSignInWith": "Or sign in with your {{app}} account, no token needed:",
+    "deviceCode": "Enter this code on {{app}} (it’s copied). This page adds the board once you have.",
+    "openSite": "Open {{app}}",
+    "signInWaiting": "Finish signing in in your browser, then come back here.",
+    "orSignIn": "Or sign in with your Atlassian account, no API token needed:",
     "add": "Connect a board",
     "edit": "Edit connection",
     "save": "Connect",
@@ -309,6 +315,8 @@
     "upToDate": "You're on the latest version."
   },
   "transfer": {
+    "signInNote_one": "{{count}} board added with Atlassian sign-in stays on this Mac. On the phone, add it with “Add with Atlassian” under Jira.",
+    "signInNote_other": "{{count}} boards added with Atlassian sign-in stay on this Mac. On the phone, add them with “Add with Atlassian” under Jira.",
     "send": "Send to phone",
     "sendHint": "Move your boards, keys included, to the AssignedToMe app on your phone.",
     "receive": "Receive from phone",

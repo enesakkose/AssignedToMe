@@ -52,14 +52,14 @@ const gql = (connection: Connection, fetch: Fetch, query: string, variables?: Re
   request(fetch, ENDPOINT, { method: 'POST', headers: headers(connection), body: JSON.stringify({ query, variables }) });
 
 // Linear's workflow-state types; `completed`/`canceled` are filtered out server-side, the rest are open.
-function statusCategory(type: string | undefined): StatusCategory {
+export function statusCategory(type: string | undefined): StatusCategory {
   if (type === 'completed' || type === 'canceled') return 'done';
   if (type === 'started') return 'in_progress';
   return 'todo';
 }
 
 // Linear priority: 0 none, 1 urgent, 2 high, 3 medium, 4 low → our 5..1 scale (urgent highest).
-const PRIORITY_LEVEL: Record<number, 5 | 4 | 3 | 2> = { 1: 5, 2: 4, 3: 3, 4: 2 };
+export const PRIORITY_LEVEL: Record<number, 5 | 4 | 3 | 2> = { 1: 5, 2: 4, 3: 3, 4: 2 };
 
 // Issues assigned to the signed-in user that aren't done; `viewer` is whoever the key belongs to. Paged by cursor.
 const ASSIGNED_QUERY = `query ($after: String) {

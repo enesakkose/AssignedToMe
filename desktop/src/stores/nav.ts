@@ -24,6 +24,8 @@ export const ALL_BOARDS = 'all';
 
 type NavState = {
   screen: Screen;
+  /** The screen `go` left, so a sub-screen's Back returns where it was opened from. */
+  from: Screen;
   board: string;
   /** The task whose detail page is open over the current screen (a snapshot; the page reads fresh data by id). */
   detail: Task | null;
@@ -52,6 +54,7 @@ type NavState = {
 
 export const useNav = create<NavState>((set) => ({
   screen: { name: 'tasks' },
+  from: { name: 'tasks' },
   board: ALL_BOARDS,
   detail: null,
   history: [],
@@ -81,7 +84,7 @@ export const useNav = create<NavState>((set) => ({
     set({ onboarded: true });
     persist(ONBOARDED, true);
   },
-  go: (screen) => set({ screen, detail: null, history: [] }),
+  go: (screen) => set(({ screen: from }) => ({ screen, from, detail: null, history: [] })),
   selectBoard: (board) => set({ board }),
   openTask: (task) =>
     set(({ detail, history }) => (detail?.id === task.id ? {} : { detail: task, history: detail ? [...history, detail] : [] })),

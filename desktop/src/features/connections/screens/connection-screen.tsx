@@ -1,7 +1,8 @@
-import { getProvider, providers, type Connection, type Provider } from '@mytask/core';
+import { getProvider, providers, signInProviders, type Connection, type Provider, type SignedInBoard } from '@mytask/core';
 import { useMutation, useQuery } from '@tanstack/react-query';
+import { invoke } from '@tauri-apps/api/core';
 import { ArrowLeft, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AppHeader } from '@/components/layout/app-header';
 import { Section } from '@/components/layout/section';
@@ -17,6 +18,7 @@ import { toast } from '@/components/ui/toaster';
 import { errorText } from '@/lib/errors';
 import { http } from '@/lib/http';
 import { locale } from '@/lib/i18n';
+import { openExternal } from '@/lib/open-external';
 import { ALL_BOARDS, useNav } from '@/stores/nav';
 import { withSecrets, type StoredConnection } from '../api/connections';
 import { ProviderGuide } from '../components/provider-guide';
@@ -50,7 +52,9 @@ export function ConnectionScreen({ id }: { id?: string }) {
     staleTime: 0,
   });
 
-  const back = () => go(id ? { name: 'settings' } : { name: 'tasks' });
+  const from = useNav((s) => s.from);
+  // Back to wherever it was opened from (settings, the board list, a board's menu).
+  const back = () => go(from.name === 'connection' ? { name: id ? 'settings' : 'tasks' } : from);
 
   return (
     <div className="flex h-full flex-col">
@@ -192,7 +196,9 @@ function ConnectionForm({
           <ProviderLogo provider={provider} />
           <span className="font-display text-lg font-semibold">{provider.name}</span>
         </div>
-        {provider.fields.map((f) => {
+        {/* A signed-in board has no form: what it stores comes from the sign-in. */}
+        {!provider.signIn &&
+          provider.fields.map((f) => {
           const props = {
             value: values[f.key] ?? '',
             onValueChange: (v: string) => setValues((prev) => ({ ...prev, [f.key]: v })),
@@ -213,7 +219,7 @@ function ConnectionForm({
               )}
             </Field>
           );
-        })}
+          })}
         <Field label={t('boards.name')} description={t('connections.nameHint')}>
           <Input value={name} onValueChange={setName} placeholder={provider.defaultName(values)} maxLength={60} />
         </Field>
@@ -236,11 +242,14 @@ function ConnectionForm({
             </Button>
           )}
         </div>
+        {!initial && signInFor(provider) && <SignInWith provider={signInFor(provider)!} />}
       </form>
 
-      <Section title={t('connections.guideTitle', { name: provider.name })}>
-        <ProviderGuide provider={provider} values={values} />
-      </Section>
+      {!provider.signIn && (
+        <Section title={t('connections.guideTitle', { name: provider.name })}>
+          <ProviderGuide provider={provider} values={values} />
+        </Section>
+      )}
 
       {initial && (
         <ConfirmDialog
@@ -262,5 +271,88 @@ function ConnectionForm({
         />
       )}
     </>
+  );
+}
+
+const signInFor = (provider: Provider) => signInProviders.find((p) => p.signIn?.for === provider.id);
+
+/** Adds boards by signing in in the browser instead of filling in the form (Atlassian, Linear, GitHub). */
+function SignInWith({ provider }: { provider: Provider }) {
+  const { t } = useTranslation();
+  const go = useNav((s) => s.go);
+  const selectBoard = useNav((s) => s.selectBoard);
+  const connections = useConnections();
+  const save = useSaveConnection();
+  const [device, setDevice] = useState<{ url: string; code: string } | null>(null);
+  const abort = useRef<AbortController | null>(null);
+  const signIn = useMutation({
+    mutationFn: async () => {
+      const how = provider.signIn!;
+      let boards: SignedInBoard[];
+      if (how.kind === 'redirect') {
+        const port = await invoke<number>('oauth_listen', { port: how.port ?? null });
+        const { url, pending } = await how.begin(http, `http://localhost:${port}/callback`);
+        await openExternal(url);
+        boards = await how.finish(http, pending, await invoke<string>('oauth_wait'));
+      } else {
+        // The user types the code on the provider's site; it's shown here and copied for them.
+        const { url, code, pending } = await how.begin(http);
+        setDevice({ url, code });
+        await navigator.clipboard.writeText(code).catch(() => undefined);
+        await openExternal(url);
+        abort.current = new AbortController();
+        boards = await how.finish(http, pending, abort.current.signal);
+      }
+      const saved: Connection[] = [];
+      for (const b of boards) {
+        // Signing in again to the same site or account renews that board instead of adding a second one.
+        const same = connections.data?.find(
+          (c) => c.providerId === provider.id && (b.values.domain ? c.values.domain === b.values.domain : c.name === b.name),
+        );
+        const c = { id: same?.id ?? crypto.randomUUID(), providerId: provider.id, name: same?.name ?? b.name, values: b.values };
+        await save.mutateAsync(c);
+        saved.push(c);
+      }
+      return saved;
+    },
+    onSettled: () => setDevice(null),
+    onSuccess: (saved) => {
+      // Back in front, also when the sign-in started from the menubar popover (no app window yet).
+      void invoke('show_app_window');
+      toast.success(t('connections.saved', { name: saved.map((c) => c.name).join(', ') }));
+      selectBoard(saved[0]!.id);
+      go({ name: 'tasks' });
+    },
+  });
+  useEffect(() => () => abort.current?.abort(), []);
+  return (
+    <div className="flex flex-col gap-2 border-t border-rule pt-3">
+      <p className="text-sm text-muted">{t(provider.signIn!.for === 'jira' ? 'connections.orSignIn' : 'connections.orSignInWith', { app: provider.appName })}</p>
+      <Button type="button" className="self-start" loading={signIn.isPending} onClick={() => signIn.mutate()}>
+        <ProviderLogo provider={provider} size="sm" />
+        {provider.signIn!.label[locale]}
+      </Button>
+      {device ? (
+        <div className="flex flex-col gap-1.5">
+          <p className="text-sm text-muted">{t('connections.deviceCode', { app: provider.appName })}</p>
+          <p data-selectable className="cut self-start border border-rule bg-paper-2 px-4 py-2 font-mono text-xl tracking-[0.15em] text-ink">
+            {device.code}
+          </p>
+          <div className="flex gap-2">
+            <Button type="button" size="sm" onClick={() => void openExternal(device.url)}>
+              {t('connections.openSite', { app: provider.appName })}
+            </Button>
+            <Button type="button" size="sm" variant="ghost" onClick={() => abort.current?.abort()}>
+              {t('ui.cancel')}
+            </Button>
+          </div>
+        </div>
+      ) : (
+        signIn.isPending && <p className="text-sm text-muted">{t('connections.signInWaiting')}</p>
+      )}
+      {signIn.isError && <ErrorState className="mx-0 my-0" title={t('connections.testFailed')} description={errorText(signIn.error, t, provider.appName)} />}
+      {/* Company accounts may need an admin to approve the app first; the token form above needs no approval. */}
+      <p className="text-sm text-muted">{t('connections.signInApproval', { app: provider.appName })}</p>
+    </div>
   );
 }

@@ -183,6 +183,9 @@ export type Comment = {
 /** Platform fetch (Tauri plugin-http, Next proxy, React Native). */
 export type Fetch = typeof globalThis.fetch;
 
+/** A board a browser sign-in produced: its name and the values to store (secrets included). */
+export type SignedInBoard = { name: string; values: Record<string, string> };
+
 export type Provider = {
   id: string;
   name: string;
@@ -194,6 +197,29 @@ export type Provider = {
   fields: ProviderField[];
   guide: GuideStep[];
   defaultName: (values: Record<string, string>) => string;
+  /**
+   * Optional: signs in through the browser instead of a form (`fields` then only describe what is stored). Not listed
+   * among the providers; offered inside the screen of the provider `for`.
+   */
+  signIn?: { for: string; label: Localized } & (
+    | {
+        /** The browser comes back to http://localhost:<port>/callback (any free port unless `port` is set). */
+        kind: 'redirect';
+        port?: number;
+        /** Returns the page to open; `pending` comes back to `finish` with the URL the browser was sent to. */
+        begin: (fetch: Fetch, redirectUri: string) => Promise<{ url: string; pending: Record<string, string> }>;
+        /** One board per site the account can reach. */
+        finish: (fetch: Fetch, pending: Record<string, string>, redirectedTo: string) => Promise<SignedInBoard[]>;
+      }
+    | {
+        /** The app shows `code`; the user enters it at `url`. `finish` waits until they have. */
+        kind: 'device';
+        begin: (fetch: Fetch) => Promise<{ url: string; code: string; pending: Record<string, string> }>;
+        finish: (fetch: Fetch, pending: Record<string, string>, signal?: AbortSignal) => Promise<SignedInBoard[]>;
+      }
+  );
+  /** Optional: new credentials when the stored ones are about to expire (an OAuth access token); undefined when still fine. Store what it returns. */
+  refreshCredentials?: (connection: Connection, fetch: Fetch) => Promise<Record<string, string> | undefined>;
   /** Resolves when the credentials work, throws ProviderError otherwise. */
   validate: (connection: Connection, fetch: Fetch) => Promise<void>;
   fetchMyTasks: (connection: Connection, fetch: Fetch) => Promise<Task[]>;

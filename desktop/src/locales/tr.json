@@ -123,6 +123,12 @@
     "showTabs": "Sekmeleri göster"
   },
   "connections": {
+    "signInApproval": "{{app}} yönetici onayı isterse (“Request” butonu çıkarsa) ve beklemek istemiyorsan, board’u yukarıdaki formla klasik yoldan ekle.",
+    "orSignInWith": "Ya da {{app}} hesabınla giriş yap, token gerekmez:",
+    "deviceCode": "Bu kodu {{app}}’da gir (kopyalandı). Girince board buraya eklenir.",
+    "openSite": "{{app}}’ı aç",
+    "signInWaiting": "Tarayıcıda girişi tamamla, sonra buraya dön.",
+    "orSignIn": "Ya da Atlassian hesabınla giriş yap, API token gerekmez:",
     "add": "Board bağla",
     "edit": "Bağlantıyı düzenle",
     "save": "Bağla",
@@ -308,6 +314,8 @@
     "upToDate": "En güncel sürümü kullanıyorsun."
   },
   "transfer": {
+    "signInNote_one": "Atlassian girişiyle eklenen {{count}} board bu Mac’te kalır. Telefonda Jira altındaki “Atlassian ile ekle” ile ekle.",
+    "signInNote_other": "Atlassian girişiyle eklenen {{count}} board bu Mac’te kalır. Telefonda Jira altındaki “Atlassian ile ekle” ile ekle.",
     "send": "Telefona aktar",
     "sendHint": "Board'larını, anahtarlarıyla birlikte telefondaki AssignedToMe uygulamasına taşı.",
     "receive": "Telefondan al",

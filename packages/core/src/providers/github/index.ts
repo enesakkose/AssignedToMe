@@ -72,7 +72,7 @@ function statusOptionCategory(name: string): StatusCategory {
   return 'todo';
 }
 
-const headers = (connection: Connection): HeadersInit => ({
+export const headers = (connection: Connection): HeadersInit => ({
   Authorization: `Bearer ${connection.values.token ?? ''}`,
   Accept: 'application/vnd.github+json',
   'X-GitHub-Api-Version': '2022-11-28',
