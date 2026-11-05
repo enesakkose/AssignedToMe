@@ -236,13 +236,15 @@ function ConnectionForm({
             {t('connections.test')}
           </Button>
           {initial && (
-            <Button type="button" variant="ghost" className="ml-auto text-error" onClick={() => setRemoving(true)}>
+            <Button type="button" variant="danger" className="ml-auto" onClick={() => setRemoving(true)}>
               <Trash2 />
               {t('connections.remove')}
             </Button>
           )}
         </div>
         {!initial && signInFor(provider) && <SignInWith provider={signInFor(provider)!} />}
+        {/* A signed-in board has no form; when its sign-in has ended (or came over by QR), sign in again here. */}
+        {initial && provider.signIn && <SignInWith provider={provider} existing={initial} />}
       </form>
 
       {!provider.signIn && (
@@ -277,7 +279,7 @@ function ConnectionForm({
 const signInFor = (provider: Provider) => signInProviders.find((p) => p.signIn?.for === provider.id);
 
 /** Adds boards by signing in in the browser instead of filling in the form (Atlassian, Linear, GitHub). */
-function SignInWith({ provider }: { provider: Provider }) {
+function SignInWith({ provider, existing }: { provider: Provider; existing?: StoredConnection }) {
   const { t } = useTranslation();
   const go = useNav((s) => s.go);
   const selectBoard = useNav((s) => s.selectBoard);
@@ -285,8 +287,16 @@ function SignInWith({ provider }: { provider: Provider }) {
   const save = useSaveConnection();
   const [device, setDevice] = useState<{ url: string; code: string } | null>(null);
   const abort = useRef<AbortController | null>(null);
+  // Cancel is the person's choice, not a failure: no error for it.
+  const cancelled = useRef(false);
+  const cancel = () => {
+    cancelled.current = true;
+    abort.current?.abort();
+    if (provider.signIn!.kind === 'redirect') void invoke('oauth_cancel');
+  };
   const signIn = useMutation({
     mutationFn: async () => {
+      cancelled.current = false;
       const how = provider.signIn!;
       let boards: SignedInBoard[];
       if (how.kind === 'redirect') {
@@ -306,9 +316,11 @@ function SignInWith({ provider }: { provider: Provider }) {
       const saved: Connection[] = [];
       for (const b of boards) {
         // Signing in again to the same site or account renews that board instead of adding a second one.
-        const same = connections.data?.find(
-          (c) => c.providerId === provider.id && (b.values.domain ? c.values.domain === b.values.domain : c.name === b.name),
-        );
+        const same =
+          (boards.length === 1 && existing) ||
+          connections.data?.find(
+            (c) => c.providerId === provider.id && (b.values.domain ? c.values.domain === b.values.domain : c.name === b.name),
+          );
         const c = { id: same?.id ?? crypto.randomUUID(), providerId: provider.id, name: same?.name ?? b.name, values: b.values };
         await save.mutateAsync(c);
         saved.push(c);
@@ -327,7 +339,9 @@ function SignInWith({ provider }: { provider: Provider }) {
   useEffect(() => () => abort.current?.abort(), []);
   return (
     <div className="flex flex-col gap-2 border-t border-rule pt-3">
-      <p className="text-sm text-muted">{t(provider.signIn!.for === 'jira' ? 'connections.orSignIn' : 'connections.orSignInWith', { app: provider.appName })}</p>
+      <p className="text-sm text-muted">
+        {existing ? t('connections.signInAgain') : t(provider.signIn!.for === 'jira' ? 'connections.orSignIn' : 'connections.orSignInWith', { app: provider.appName })}
+      </p>
       <Button type="button" className="self-start" loading={signIn.isPending} onClick={() => signIn.mutate()}>
         <ProviderLogo provider={provider} size="sm" />
         {provider.signIn!.label[locale]}
@@ -335,22 +349,29 @@ function SignInWith({ provider }: { provider: Provider }) {
       {device ? (
         <div className="flex flex-col gap-1.5">
           <p className="text-sm text-muted">{t('connections.deviceCode', { app: provider.appName })}</p>
-          <p data-selectable className="cut self-start border border-rule bg-paper-2 px-4 py-2 font-mono text-xl tracking-[0.15em] text-ink">
+          <p data-selectable aria-live="polite" className="cut self-start border border-rule bg-paper-2 px-4 py-2 font-mono text-xl tracking-[0.15em] text-ink">
             {device.code}
           </p>
           <div className="flex gap-2">
             <Button type="button" size="sm" onClick={() => void openExternal(device.url)}>
               {t('connections.openSite', { app: provider.appName })}
             </Button>
-            <Button type="button" size="sm" variant="ghost" onClick={() => abort.current?.abort()}>
+            <Button type="button" size="sm" variant="ghost" onClick={cancel}>
               {t('ui.cancel')}
             </Button>
           </div>
         </div>
       ) : (
-        signIn.isPending && <p className="text-sm text-muted">{t('connections.signInWaiting')}</p>
+        signIn.isPending && (
+          <div className="flex items-center gap-2">
+            <p className="text-sm text-muted">{t('connections.signInWaiting')}</p>
+            <Button type="button" size="sm" variant="ghost" onClick={cancel}>
+              {t('ui.cancel')}
+            </Button>
+          </div>
+        )
       )}
-      {signIn.isError && <ErrorState className="mx-0 my-0" title={t('connections.testFailed')} description={errorText(signIn.error, t, provider.appName)} />}
+      {signIn.isError && !cancelled.current && <ErrorState className="mx-0 my-0" title={t('connections.testFailed')} description={errorText(signIn.error, t, provider.appName)} />}
       {/* Company accounts may need an admin to approve the app first; the token form above needs no approval. */}
       <p className="text-sm text-muted">{t('connections.signInApproval', { app: provider.appName })}</p>
     </div>

@@ -24,6 +24,7 @@ import { ProviderLogo } from "@/features/connections/components/provider-logo";
 import { providerErrorText } from "@/lib/errors";
 import { timeAgo } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { hapticLight } from "@/lib/utils/haptics";
 import { router } from "expo-router";
 import { Plus, QrCode } from "lucide-react-native";
 import { useState, type ReactNode } from "react";
@@ -60,20 +61,31 @@ function Tab({
   onLongPress?: () => void;
   icon?: ReactNode;
 }) {
+  const { t } = useTranslation();
   return (
     <Pressable
+      accessibilityHint={onLongPress ? t("boards.renameHint") : undefined}
       accessibilityRole="tab"
       accessibilityState={{ selected }}
       className={cn(
         "h-9 flex-row items-center gap-1.5 rounded-full px-3.5 active:scale-[0.97]",
         selected ? "bg-primary" : "bg-paper-3",
       )}
-      onLongPress={onLongPress}
+      // 36pt pill, 44pt touch.
+      hitSlop={{ bottom: 4, top: 4 }}
+      onLongPress={
+        onLongPress
+          ? () => {
+              void hapticLight();
+              onLongPress();
+            }
+          : undefined
+      }
       onPress={onPress}
     >
       {icon}
       <Text
-        className={cn("text-sm font-medium", selected && "text-primary-foreground")}
+        className={cn("max-w-40 shrink text-sm font-medium", selected && "text-primary-foreground")}
         numberOfLines={1}
       >
         {label}
@@ -250,14 +262,33 @@ export function TasksScreen() {
       header={header}
       refreshControl={<RefreshControl onRefresh={() => void refresh()} refreshing={refreshing} />}
     >
-      {failed.map(({ board: b, result }) => (
-        <ErrorState
-          className="mx-5 mt-4"
-          description={providerErrorText(result.error, t, getProvider(b.providerId)?.appName)}
-          key={b.id}
-          title={t("tasks.errorTitle", { name: b.name })}
-        />
-      ))}
+      {failed.map(({ board: b, result }) => {
+        const provider = getProvider(b.providerId);
+        // A board added by signing in whose sign-in ended (or that came over by QR and never signed in here).
+        const signedOut =
+          !!provider?.signIn && (result.error as { code?: string } | null)?.code === "unauthorized";
+        return (
+          <View className="mx-5 mt-4 gap-2" key={b.id}>
+            <ErrorState
+              description={
+                signedOut
+                  ? t("tasks.signInAgain")
+                  : providerErrorText(result.error, t, provider?.appName)
+              }
+              title={t("tasks.errorTitle", { name: b.name })}
+            />
+            {signedOut ? (
+              <Button
+                className="self-start"
+                onPress={() => router.push({ params: { id: b.id }, pathname: "/connection" })}
+                variant="secondary"
+              >
+                <Text>{t("tasks.signIn")}</Text>
+              </Button>
+            ) : null}
+          </View>
+        );
+      })}
       {loading && !allTasks.length ? (
         <>
           <RowSkeleton />

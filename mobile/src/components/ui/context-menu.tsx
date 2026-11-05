@@ -143,13 +143,15 @@ function ContextMenuItem({
   return (
     <TextClassContext.Provider
       value={cn(
-        "select-none text-sm text-popover-foreground group-active:text-popover-foreground",
+        "select-none text-popover-foreground group-active:text-popover-foreground",
+        Platform.select({ native: "text-base", web: "text-sm" }),
         variant === "destructive" && "text-destructive group-active:text-destructive",
       )}
     >
       <ContextMenuPrimitive.Item
         className={cn(
-          "active:bg-accent group relative flex flex-row items-center gap-2 rounded-sm px-2 py-2 sm:py-1.5",
+          "active:bg-accent group relative flex flex-row items-center gap-2 rounded-sm px-2",
+          Platform.select({ native: "min-h-11 py-2.5", web: "py-1.5" }),
           Platform.select({
             web: cn(
               "focus:bg-accent focus:text-accent-foreground cursor-default outline-none data-[disabled]:pointer-events-none",

@@ -1,7 +1,7 @@
 import { getProvider } from '@mytask/core';
 import { Check, Eye, EyeOff, LayoutList } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Button } from '@/components/ui/button';
+import { IconButton } from '@/components/ui/button';
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from '@/components/ui/menu';
 import { ProviderLogo } from '@/components/ui/provider-logo';
 import type { StoredConnection } from '@/features/connections/api/connections';
@@ -29,7 +29,7 @@ export function BoardSwitcher({ boards, counts, total, active }: Props) {
 
   return (
     <Menu>
-      <MenuTrigger render={<Button variant="ghost" size="icon" aria-label={t('boards.switch')} title={t('boards.switch')} />}>
+      <MenuTrigger render={<IconButton label={t('boards.switch')} />}>
         <LayoutList />
       </MenuTrigger>
       <MenuContent className="w-64">

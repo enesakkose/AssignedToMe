@@ -33,7 +33,7 @@ export function SegmentedControl<T extends string>({
           className={cn(
             'flex h-6 items-center gap-1 rounded-control px-2.5 font-display text-sm font-medium text-muted',
             'transition-colors duration-[var(--dur-micro)] hover:text-ink',
-            'data-[pressed]:bg-paper data-[pressed]:text-ink [&_svg]:size-3.5',
+            'data-[pressed]:bg-paper data-[pressed]:text-ink dark:data-[pressed]:bg-accent-wash [&_svg]:size-3.5',
           )}
         >
           {o.icon}

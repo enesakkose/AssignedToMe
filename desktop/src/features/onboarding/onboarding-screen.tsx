@@ -43,7 +43,7 @@ export function OnboardingScreen() {
               {providers.map((p, n) => (
                 <div
                   key={p.id}
-                  className="onboard-item flex min-w-0 items-center gap-2.5 rounded-input border border-rule bg-paper p-2 text-left"
+                  className="onboard-item cut flex min-w-0 items-center gap-2.5 border border-rule bg-paper p-2 text-left"
                   style={{ animationDelay: `${40 + n * 45}ms` }}
                 >
                   <ProviderLogo provider={p} />
@@ -52,12 +52,12 @@ export function OnboardingScreen() {
               ))}
             </div>
           ) : Icon ? (
-            <div className="onboard-item mb-5 flex size-16 items-center justify-center rounded-2xl bg-brand-tile text-brand-mark shadow-float">
+            <div className="onboard-item mb-5 flex size-16 items-center justify-center rounded-card bg-brand-tile text-brand-mark">
               <Icon className="size-7" aria-hidden />
             </div>
           ) : (
             // The app mark already is a tile, so it fills the box edge to edge instead of sitting inside another box.
-            <AppLogo className="onboard-item mb-5 size-16 rounded-2xl shadow-float" />
+            <AppLogo className="onboard-item mb-5 size-16 rounded-card" />
           )}
           <h1 className="onboard-item font-display text-xl font-semibold text-ink [animation-delay:60ms]">{t(`onboarding.${step.key}.title`)}</h1>
           <p className="onboard-item mt-2 text-md leading-relaxed text-ink-2 [animation-delay:120ms]">{t(`onboarding.${step.key}.body`)}</p>
@@ -78,6 +78,7 @@ export function OnboardingScreen() {
       </div>
 
       <div className="flex shrink-0 flex-col gap-4 px-8 pb-7">
+        <span className="sr-only">{t('onboarding.step', { n: i + 1, total: STEPS.length })}</span>
         <div className="flex items-center justify-center gap-1.5" aria-hidden>
           {STEPS.map((s, n) => (
             <span

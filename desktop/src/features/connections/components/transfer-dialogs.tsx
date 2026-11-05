@@ -4,8 +4,11 @@ import {
   formatTransferCode,
   getProvider,
   isTransferCode,
+  mergeIncoming,
   newTransferCode,
+  transferable,
   providers,
+  signInProviders,
   TRANSFER_QR_LIMIT,
   TransferError,
 } from '@mytask/core';
@@ -20,7 +23,7 @@ import { ProviderLogo } from '@/components/ui/provider-logo';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/toaster';
-import { saveConnection, withSecrets, type StoredConnection } from '../api/connections';
+import { listConnections, saveConnection, withSecrets, type StoredConnection } from '../api/connections';
 import { connectionsKey } from '../hooks/use-connections';
 import { qrShape } from '../lib/qr-shape';
 
@@ -34,8 +37,8 @@ const transferErrorKey = (e: unknown) =>
 function Qr({ text }: { text: string }) {
   const shape = useMemo(() => qrShape(text), [text]);
   return (
-    <div className="cut self-center border border-rule bg-[#F5F6F8] p-4">
-      <svg viewBox={`-3 -3 ${shape.size + 6} ${shape.size + 6}`} className="block size-80" role="img" aria-label="QR">
+    <div className="cut w-full max-w-80 self-center border border-rule bg-[#F5F6F8] p-4">
+      <svg viewBox={`-3 -3 ${shape.size + 6} ${shape.size + 6}`} className="block aspect-square w-full" role="img" aria-label="QR">
         <path d={shape.dots} fill="#2B2D31" />
         <path d={shape.eyes} fill="#2B2D31" fillRule="evenodd" />
       </svg>
@@ -44,16 +47,16 @@ function Qr({ text }: { text: string }) {
 }
 
 /** Desktop → phone: enter the code the phone shows, pick boards, show them as an encrypted QR. */
-export function SendToPhoneDialog({ boards: all, open, onOpenChange }: { boards: StoredConnection[]; open: boolean; onOpenChange: (open: boolean) => void }) {
+export function SendToPhoneDialog({ boards, open, onOpenChange }: { boards: StoredConnection[]; open: boolean; onOpenChange: (open: boolean) => void }) {
   const { t } = useTranslation();
-  // Signed-in boards renew their sign-in with a token that changes on every use; a copy on the phone would break the
-  // one here. The phone signs in by itself instead.
-  const boards = all.filter((b) => !getProvider(b.providerId)?.signIn);
-  const signedIn = all.length - boards.length;
+  // Signed-in boards go without their sign-in (see `transferable`): the phone signs in by itself, once.
+  const signedIn = boards.filter((b) => getProvider(b.providerId)?.signIn).length;
   const [code, setCode] = useState('');
   const [picked, setPicked] = useState(() => new Set(boards.map((b) => b.id)));
   const [qr, setQr] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Too many boards for one QR is about the board choice, not the code: shown under the boards.
+  const [boardsError, setBoardsError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   const close = (next: boolean) => {
@@ -62,6 +65,7 @@ export function SendToPhoneDialog({ boards: all, open, onOpenChange }: { boards:
     setQr(null);
     setCode('');
     setError(null);
+    setBoardsError(null);
     onOpenChange(false);
   };
 
@@ -69,11 +73,12 @@ export function SendToPhoneDialog({ boards: all, open, onOpenChange }: { boards:
     if (!isTransferCode(code)) return setError(t('transfer.codeInvalid'));
     setBusy(true);
     setError(null);
+    setBoardsError(null);
     try {
       // Secrets are read from Keychain only for this, and leave the app only inside the encrypted text.
-      const full = await Promise.all(boards.filter((b) => picked.has(b.id)).map(withSecrets));
+      const full = await Promise.all(boards.filter((b) => picked.has(b.id)).map(async (b) => transferable(await withSecrets(b))));
       const sealed = await encryptTransfer(full, code);
-      if (sealed.length > TRANSFER_QR_LIMIT) setError(t('transfer.tooMany'));
+      if (sealed.length > TRANSFER_QR_LIMIT) setBoardsError(t('transfer.tooMany'));
       else setQr(sealed);
     } catch (e) {
       setError(t(transferErrorKey(e)));
@@ -149,6 +154,11 @@ export function SendToPhoneDialog({ boards: all, open, onOpenChange }: { boards:
                 </label>
               );
             })}
+            {boardsError && (
+              <p role="alert" className="text-sm text-error">
+                {boardsError}
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -178,10 +188,11 @@ export function ReceiveFromPhoneDialog({ open, onOpenChange }: { open: boolean; 
     setBusy(true);
     setError(null);
     try {
-      const incoming = await decryptTransfer(text, code, providers);
+      const incoming = await decryptTransfer(text, code, [...providers, ...signInProviders]);
       if (!incoming.length) return setError(t('transfer.noBoards'));
       // The same board sent again replaces the saved one (same id); new ones are added. Secrets go to Keychain.
-      for (const c of incoming) await saveConnection(c);
+      const have = await listConnections();
+      for (const c of incoming) await saveConnection(mergeIncoming(have.find((h) => h.id === c.id), c));
       await qc.invalidateQueries({ queryKey: connectionsKey });
       for (const c of incoming) void qc.invalidateQueries({ queryKey: ['tasks', c.id] });
       toast.success(t('transfer.imported', { count: incoming.length }));
@@ -211,7 +222,7 @@ export function ReceiveFromPhoneDialog({ open, onOpenChange }: { open: boolean; 
       }
     >
       <div className="flex flex-col gap-3">
-        <p data-selectable className="cut self-center border border-rule bg-paper-2 px-5 py-3 font-mono text-2xl tracking-[0.2em] text-ink">
+        <p data-selectable className="cut self-center border border-rule bg-paper-2 px-5 py-3 font-mono text-xl tracking-[0.2em] text-ink">
           {formatTransferCode(code)}
         </p>
         <Field label={t('transfer.paste')} error={error ?? undefined}>

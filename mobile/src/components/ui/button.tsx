@@ -1,7 +1,9 @@
 import { TextClassContext } from "@/components/ui/text";
 import { cn, type HapticFeedback, withHapticFeedback } from "@/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
-import { Platform, Pressable } from "react-native";
+import { useAppTheme } from "@/hooks/use-app-theme";
+import type { ReactNode } from "react";
+import { ActivityIndicator, Platform, Pressable, View } from "react-native";
 
 const buttonVariants = cva(
   cn(
@@ -92,27 +94,59 @@ type ButtonProps = React.ComponentProps<typeof Pressable> &
   React.RefAttributes<typeof Pressable> &
   VariantProps<typeof buttonVariants> & {
     haptic?: HapticFeedback | false;
+    /** Shows a spinner in the label's colour instead of the children and blocks presses. */
+    loading?: boolean;
   };
 
 function Button({
   accessibilityState,
   className,
   haptic = "selection",
+  loading,
   onPress,
   size,
   variant,
+  children,
   ...props
 }: ButtonProps) {
+  const theme = useAppTheme();
+  // The graphite fill's label colour is the page colour; a default grey spinner would vanish on it.
+  const spinner =
+    !variant || variant === "default"
+      ? theme.tokens.background
+      : variant === "destructive"
+        ? "white"
+        : theme.tokens.foreground;
+  const disabled = Boolean(props.disabled || loading);
   return (
     <TextClassContext.Provider value={buttonTextVariants({ variant, size })}>
       <Pressable
         accessibilityRole="button"
-        accessibilityState={{ ...accessibilityState, disabled: Boolean(props.disabled) }}
+        accessibilityState={{ ...accessibilityState, disabled, busy: Boolean(loading) }}
         className={cn(props.disabled && "opacity-50", buttonVariants({ variant, size }), className)}
-        onPress={props.disabled ? undefined : withHapticFeedback(onPress, haptic)}
+        onPress={disabled ? undefined : withHapticFeedback(onPress, haptic)}
         role="button"
         {...props}
-      />
+        disabled={disabled}
+      >
+        {loading ? (
+          <>
+            {/* The label stays (invisible) so the button keeps its width while it spins. */}
+            <View
+              accessibilityElementsHidden
+              className="flex-row items-center gap-2 opacity-0"
+              importantForAccessibility="no-hide-descendants"
+            >
+              {children as ReactNode}
+            </View>
+            <View className="absolute inset-0 items-center justify-center">
+              <ActivityIndicator color={spinner} size="small" />
+            </View>
+          </>
+        ) : (
+          children
+        )}
+      </Pressable>
     </TextClassContext.Provider>
   );
 }

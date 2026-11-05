@@ -275,14 +275,22 @@ const OAUTH_CANCELLED: &str = "Sign-in didn’t finish|Nothing was added. Go bac
 /// Browser sign-in (OAuth): the provider sends the browser back to http://localhost:<port>/callback. `oauth_listen`
 /// opens that port before the browser goes out; `oauth_wait` returns the URL the browser came back to.
 struct OAuthListener(Mutex<Option<std::net::TcpListener>>);
+/// Set by `oauth_cancel` (the person pressed Cancel); the wait checks it between accepts.
+struct OAuthCancelled(std::sync::atomic::AtomicBool);
 
 #[tauri::command]
-fn oauth_listen(state: tauri::State<OAuthListener>, port: Option<u16>) -> Result<u16, String> {
+fn oauth_listen(state: tauri::State<OAuthListener>, cancelled: tauri::State<OAuthCancelled>, port: Option<u16>) -> Result<u16, String> {
     // Loopback only: nothing off this Mac can reach it. A fixed port when the provider only accepts one callback URL.
     let listener = std::net::TcpListener::bind(("127.0.0.1", port.unwrap_or(0))).map_err(|e| e.to_string())?;
     let port = listener.local_addr().map_err(|e| e.to_string())?.port();
     *state.0.lock().unwrap() = Some(listener);
+    cancelled.0.store(false, std::sync::atomic::Ordering::SeqCst);
     Ok(port)
+}
+
+#[tauri::command]
+fn oauth_cancel(cancelled: tauri::State<OAuthCancelled>) {
+    cancelled.0.store(true, std::sync::atomic::Ordering::SeqCst);
 }
 
 /// Async so the wait runs off the main thread. Gives up after 5 minutes (the sign-in page was left open).
@@ -290,11 +298,15 @@ fn oauth_listen(state: tauri::State<OAuthListener>, port: Option<u16>) -> Result
 async fn oauth_wait(app: AppHandle) -> Result<String, String> {
     use std::io::{Read, Write};
     let listener = app.state::<OAuthListener>().0.lock().unwrap().take().ok_or("not listening")?;
+    let app = app.clone();
     tauri::async_runtime::spawn_blocking(move || {
         let port = listener.local_addr().map_err(|e| e.to_string())?.port();
         listener.set_nonblocking(true).map_err(|e| e.to_string())?;
         let deadline = Instant::now() + Duration::from_secs(300);
         while Instant::now() < deadline {
+            if app.state::<OAuthCancelled>().0.load(std::sync::atomic::Ordering::SeqCst) {
+                return Err("cancelled".to_string());
+            }
             let Ok((mut stream, _)) = listener.accept() else {
                 std::thread::sleep(Duration::from_millis(100));
                 continue;
@@ -540,6 +552,7 @@ pub fn run() {
         .manage(LastBlurHide(Mutex::new(None)))
         .manage(AllowedOrigins(Mutex::new(HashSet::new())))
         .manage(OAuthListener(Mutex::new(None)))
+        .manage(OAuthCancelled(std::sync::atomic::AtomicBool::new(false)))
         .plugin(tauri_plugin_autostart::Builder::new().arg("--autostart").build())
         .plugin(tauri_plugin_positioner::init())
         // In-app updates from GitHub Releases (latest.json), verified against the pubkey in tauri.conf.json.
@@ -562,7 +575,8 @@ pub fn run() {
             show_app_window,
             focus_app_window,
             oauth_listen,
-            oauth_wait
+            oauth_wait,
+            oauth_cancel
         ])
         .setup(|app| {
             // Menubar-only app: no Dock icon, no app switcher entry.

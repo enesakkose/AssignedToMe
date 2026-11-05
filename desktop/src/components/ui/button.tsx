@@ -18,7 +18,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         primary: 'bg-accent text-accent-ink hover:bg-accent-hover',
-        secondary: 'bg-paper-3 text-ink hover:bg-rule',
+        secondary: 'bg-paper-3 text-ink hover:bg-rule-2',
         ghost: 'text-ink-2 hover:bg-paper-3 hover:text-ink',
         danger: 'bg-error-wash text-error hover:bg-[color-mix(in_oklab,var(--color-error)_16%,var(--color-paper))]',
       },

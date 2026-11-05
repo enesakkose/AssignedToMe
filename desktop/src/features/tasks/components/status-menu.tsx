@@ -106,17 +106,26 @@ export function StatusMenu({ connectionId, taskKey, status, category, url, onOpe
             transitions.data.map((tr) => (
               <MenuItem
                 key={tr.id}
-                disabled={tr.needsInput}
                 icon={<StatusDot category={tr.to.category} status={tr.to.name} />}
                 shortcut={
                   tr.needsInput ? (
-                    <span className="text-xs text-muted">{t('tasks.needsSource', { app: appName })}</span>
+                    <span className="inline-flex items-center gap-1 text-xs text-muted">
+                      {t('tasks.needsSource', { app: appName })}
+                      <ExternalLink className="size-3" aria-hidden />
+                    </span>
                   ) : tr.fields.length ? (
                     <FileInput className="size-3 shrink-0 text-muted" aria-label={t('tasks.hasForm')} />
                   ) : undefined
                 }
                 // Transitions with a screen (e.g. "Estimated Budget Effort") open a form first.
-                onClick={() => (tr.fields.length ? setFormFor(tr) : move(tr))}
+                // One the app can't fill in opens the task in the source instead of sitting there disabled.
+                onClick={() => {
+                  if (tr.needsInput) {
+                    markForRefresh(connectionId, taskKey);
+                    onOpen(url);
+                  } else if (tr.fields.length) setFormFor(tr);
+                  else move(tr);
+                }}
               >
                 {/* Workflows often name the action ("Send Code Review"); show it like Jira does, with the target status. */}
                 {tr.name.trim().toLocaleLowerCase() === tr.to.name.trim().toLocaleLowerCase() ? (

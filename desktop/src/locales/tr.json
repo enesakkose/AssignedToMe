@@ -14,6 +14,8 @@
     "close": "Kapat"
   },
   "tasks": {
+    "signInAgain": "Bu girişin süresi bitti ya da bu Mac’te henüz giriş yapılmadı. Görevleri görmek için giriş yap.",
+    "signIn": "Giriş yap",
     "all": "Tümü",
     "refresh": "Yenile",
     "openIn": "{{name}}'da aç",
@@ -123,6 +125,7 @@
     "showTabs": "Sekmeleri göster"
   },
   "connections": {
+    "signInAgain": "Çıkış mı yapıldı, ya da bu Mac’te hiç giriş yapılmadı mı? Giriş yap:",
     "signInApproval": "{{app}} yönetici onayı isterse (“Request” butonu çıkarsa) ve beklemek istemiyorsan, board’u yukarıdaki formla klasik yoldan ekle.",
     "orSignInWith": "Ya da {{app}} hesabınla giriş yap, token gerekmez:",
     "deviceCode": "Bu kodu {{app}}’da gir (kopyalandı). Girince board buraya eklenir.",
@@ -154,7 +157,7 @@
     "title": "Ayarlar",
     "launchAtLogin": "Oturum açılınca başlat",
     "boards": "Board'lar",
-    "boardsHint": "Bağlı araçlar. Düzenlemek için birine dokun.",
+    "boardsHint": "Bağlı araçlar. Düzenlemek için birine tıkla.",
     "general": "Genel",
     "refreshHint": "Görevler saatte bir ve uygulama açıldığında yenilenir.",
     "developer": "Geliştirici",
@@ -273,6 +276,7 @@
     "assignedMany": "{{count}} yeni task atandı"
   },
   "onboarding": {
+    "step": "Adım {{n}} / {{total}}",
     "skip": "Geç",
     "next": "İleri",
     "start": "Başla",
@@ -314,8 +318,8 @@
     "upToDate": "En güncel sürümü kullanıyorsun."
   },
   "transfer": {
-    "signInNote_one": "Atlassian girişiyle eklenen {{count}} board bu Mac’te kalır. Telefonda Jira altındaki “Atlassian ile ekle” ile ekle.",
-    "signInNote_other": "Atlassian girişiyle eklenen {{count}} board bu Mac’te kalır. Telefonda Jira altındaki “Atlassian ile ekle” ile ekle.",
+    "signInNote_one": "Giriş yaparak eklenen {{count}} board girişi olmadan gider; telefon bir kez giriş yapmanı ister.",
+    "signInNote_other": "Giriş yaparak eklenen {{count}} board girişi olmadan gider; telefon bir kez giriş yapmanı ister.",
     "send": "Telefona aktar",
     "sendHint": "Board'larını, anahtarlarıyla birlikte telefondaki AssignedToMe uygulamasına taşı.",
     "receive": "Telefondan al",

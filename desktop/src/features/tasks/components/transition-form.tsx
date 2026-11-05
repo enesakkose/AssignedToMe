@@ -58,7 +58,7 @@ export function TransitionForm({ taskKey, transition, pending, error, onSubmit, 
       }
     >
       <form
-        className="flex max-h-[55vh] flex-col gap-3 overflow-y-auto"
+        className="-mx-1 flex max-h-[55vh] flex-col gap-3 overflow-y-auto px-1"
         onSubmit={(e) => {
           e.preventDefault();
           submit();
@@ -94,13 +94,14 @@ export function TransitionForm({ taskKey, transition, pending, error, onSubmit, 
             <Textarea value={comment} onChange={(e) => setComment(e.target.value)} />
           </Field>
         )}
-        {error && (
-          <p role="alert" className="text-sm text-error">
-            {error}
-          </p>
-        )}
         <button type="submit" hidden />
       </form>
+      {/* Outside the scroller, so a long form can't hide the server's answer. */}
+      {error && (
+        <p role="alert" className="text-sm text-error">
+          {error}
+        </p>
+      )}
     </Dialog>
   );
 }

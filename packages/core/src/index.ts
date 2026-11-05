@@ -6,7 +6,7 @@ import { jiraAtlassian } from './providers/jira-atlassian';
 import { githubSignIn } from './providers/github/sign-in';
 import { linearSignIn } from './providers/linear/sign-in';
 import { linear } from './providers/linear';
-import type { Provider, Task } from './types';
+import type { Connection, Provider, Task } from './types';
 
 export * from './types';
 export * from './errors';
@@ -36,6 +36,22 @@ export function fillGuide(template: string, values: Record<string, string>): str
     if (scheme) value = value.replace(/^https?:\/\//i, '').replace(/\/+$/, '');
     return (scheme ?? '') + value;
   });
+}
+
+/**
+ * What may leave this device for another. A board added by signing in goes without its sign-in (tokens and this
+ * device's session state): tokens that renew can't be shared between two devices, so the other one signs in itself.
+ */
+export function transferable(connection: Connection): Connection {
+  const provider = getProvider(connection.providerId);
+  if (!provider?.signIn) return connection;
+  const drop = new Set(provider.fields.filter((f) => f.type === 'secret' || f.session).map((f) => f.key));
+  return { ...connection, values: Object.fromEntries(Object.entries(connection.values).filter(([key]) => !drop.has(key))) };
+}
+
+/** A board that comes over again (same id) keeps this device's own sign-in state: the sender's copy has none. */
+export function mergeIncoming(have: Connection | undefined, incoming: Connection): Connection {
+  return have && getProvider(incoming.providerId)?.signIn ? { ...incoming, values: { ...have.values, ...incoming.values } } : incoming;
 }
 
 /** Splits form values into what may be stored plainly and what must go to the platform's secret store. */

@@ -10,6 +10,7 @@ import { Text } from "@/components/ui/text";
 import { ProviderLogo } from "@/features/connections/components/provider-logo";
 import { timeAgo } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { hapticLight } from "@/lib/utils/haptics";
 import { router } from "expo-router";
 import {
   ArrowUpRight,
@@ -199,7 +200,8 @@ function TaskMenu({
 }) {
   const { t } = useTranslation();
   return (
-    <ContextMenu>
+    // A light tick when the menu opens, like iOS's own long-press menus.
+    <ContextMenu onOpenChange={(open) => open && void hapticLight()}>
       {/* asChild: the row's own Pressable takes the long press, so taps still open the task. */}
       <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
       <ContextMenuContent className="min-w-52">
@@ -224,6 +226,46 @@ function TaskMenu({
   );
 }
 
+/**
+ * VoiceOver reads a row as one button (its key, title and status), so the controls inside it can't be focused on
+ * their own; they're offered as actions on the row instead, with the long-press menu's.
+ */
+function useRowActions(connectionId: string) {
+  const { t } = useTranslation();
+  const canStatus = useCanChangeStatus(connectionId);
+  const canAssign = useCanAssign(connectionId);
+  const canLog = useCanLogWork(connectionId);
+  return (task: Task | Subtask, leavesList?: boolean) => {
+    const actions = [
+      canStatus && { label: t("tasks.changeStatus", { status: task.status }), name: "status" },
+      canAssign && {
+        label: t("tasks.changeAssignee", { name: task.assignee?.name ?? "-" }),
+        name: "assignee",
+      },
+      canLog && { label: t("tasks.logWork"), name: "log" },
+      { label: t("tasks.openSource"), name: "source" },
+      { label: t("tasks.copyLink"), name: "link" },
+      { label: t("tasks.copyId"), name: "id" },
+    ].filter((a): a is { label: string; name: string } => !!a);
+    return {
+      accessibilityActions: actions,
+      accessibilityLabel: `${task.key}, ${task.title}, ${task.status}`,
+      accessibilityRole: "button" as const,
+      onAccessibilityAction: ({ nativeEvent }: { nativeEvent: { actionName: string } }) => {
+        const name = nativeEvent.actionName;
+        if (name === "status" || name === "log")
+          openTaskSheet(name, sheetTarget(task, connectionId));
+        else if (name === "assignee")
+          openTaskSheet("assignee", sheetTarget(task, connectionId, leavesList));
+        else if (name === "source")
+          void openInSource(connectionId, task.url).catch(() => toast.error(t("errors.openLink")));
+        else if (name === "link") copyText(task.url, t("tasks.linkCopied"));
+        else if (name === "id") copyText(task.key, t("tasks.idCopied"));
+      },
+    };
+  };
+}
+
 /** Desktop's queue row: provider, key, sprint, type and age; the title; status, priority, assignee; points, time, sub-tasks. */
 export function TaskRow({ task, provider }: { task: Task; provider?: Provider }) {
   const { t } = useTranslation();
@@ -241,11 +283,13 @@ export function TaskRow({ task, provider }: { task: Task; provider?: Provider })
   const openLabel = provider
     ? t("tasks.openIn", { name: provider.appName })
     : t("tasks.openSource");
+  const rowActions = useRowActions(task.connectionId)(task, true);
 
   return (
     <View className="border-b border-rule">
       <TaskMenu connectionId={task.connectionId} openLabel={openLabel} task={task}>
         <Pressable
+          {...rowActions}
           accessibilityHint={t("tasks.viewDetails")}
           className="flex-row gap-2.5 px-5 py-3.5 active:bg-paper-2"
           onPress={() => openTask(task)}
@@ -268,7 +312,7 @@ export function TaskRow({ task, provider }: { task: Task; provider?: Provider })
               ) : null}
               {task.type ? (
                 <Text
-                  className="rounded-sm bg-paper-3 px-1.5 py-px text-xs font-medium text-ink-2"
+                  className="max-w-28 shrink rounded-sm bg-paper-3 px-1.5 py-px text-xs font-medium text-ink-2"
                   numberOfLines={1}
                 >
                   {task.type}
@@ -276,7 +320,7 @@ export function TaskRow({ task, provider }: { task: Task; provider?: Provider })
               ) : null}
               {/* Worth seeing from the list: something unfinished is blocking this task. */}
               {blocked ? (
-                <Text className="rounded-sm bg-error-wash px-1.5 py-px text-xs font-medium text-error">
+                <Text className="shrink-0 rounded-sm bg-error-wash px-1.5 py-px text-xs font-medium text-error">
                   {t("tasks.blocked")}
                 </Text>
               ) : null}
@@ -351,6 +395,7 @@ export function SubtaskList({ task, provider }: { task: Task; provider?: Provide
   const openLabel = provider
     ? t("tasks.openIn", { name: provider.appName })
     : t("tasks.openSource");
+  const actionsFor = useRowActions(task.connectionId);
   return (
     <View className="cut overflow-hidden border border-rule bg-background">
       {[...subtasks]
@@ -362,6 +407,8 @@ export function SubtaskList({ task, provider }: { task: Task; provider?: Provide
               <TaskMenu connectionId={task.connectionId} openLabel={openLabel} task={s}>
                 {/* Your own sub-tasks carry an accent edge. */}
                 <Pressable
+                  {...actionsFor(s)}
+                  accessibilityHint={t("tasks.viewDetails")}
                   className={cn(
                     "gap-1.5 px-3 py-2.5 active:bg-paper-2",
                     mine && "border-l-2 border-progress bg-paper-2",

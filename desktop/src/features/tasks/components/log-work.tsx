@@ -137,7 +137,7 @@ export function LogWork({ connectionId, taskKey, logged = 0, estimate, children,
           </Field>
           <div className="-mt-1 flex flex-wrap gap-1">
             {QUICK.map((q) => (
-              <Button key={q} type="button" size="sm" variant="ghost" className="h-6 px-2 font-mono text-xs" onClick={() => setText(q)}>
+              <Button key={q} type="button" size="sm" variant="ghost" className="px-2 font-mono" onClick={() => setText(q)}>
                 {q}
               </Button>
             ))}

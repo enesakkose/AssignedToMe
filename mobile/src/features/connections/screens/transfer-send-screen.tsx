@@ -1,4 +1,4 @@
-import { encryptTransfer, getProvider, isTransferCode } from "@mytask/core";
+import { encryptTransfer, getProvider, isTransferCode, transferable } from "@mytask/core";
 import { AppHeader } from "@/components/layout/app-header";
 import { Screen } from "@/components/layout/screen";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import { router } from "expo-router";
 import { ArrowLeft, Copy } from "lucide-react-native";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ActivityIndicator, View } from "react-native";
+import { Pressable, View } from "react-native";
 import { toast } from "sonner-native";
 import { useConnectionsStore, withSecrets } from "../api/connections";
 import { ProviderLogo } from "../components/provider-logo";
@@ -30,13 +30,18 @@ export function TransferSendScreen() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
+  // Boards added with a sign-in go without it (see `transferable`): the Mac signs in by itself, once.
+  const signedIn = boards.filter((b) => getProvider(b.providerId)?.signIn).length;
+
   const copy = async () => {
     if (!isTransferCode(code)) return setError(t("transfer.codeInvalid"));
     setBusy(true);
     setError(null);
     try {
       // Secrets are read from the Keychain only for this, and leave the app only inside the encrypted text.
-      const full = await Promise.all(boards.filter((b) => picked.has(b.id)).map(withSecrets));
+      const full = await Promise.all(
+        boards.filter((b) => picked.has(b.id)).map(async (b) => transferable(await withSecrets(b))),
+      );
       await Clipboard.setStringAsync(await encryptTransfer(full, code));
       toast.success(t("transfer.copied"));
       router.back();
@@ -46,6 +51,14 @@ export function TransferSendScreen() {
       setBusy(false);
     }
   };
+
+  const toggle = (id: string, on: boolean) =>
+    setPicked((s) => {
+      const next = new Set(s);
+      if (on) next.add(id);
+      else next.delete(id);
+      return next;
+    });
 
   return (
     <Screen
@@ -70,6 +83,7 @@ export function TransferSendScreen() {
         <View className="gap-2">
           <Text className="text-sm font-medium">{t("transfer.code")}</Text>
           <Input
+            accessibilityLabel={t("transfer.code")}
             autoCapitalize="characters"
             autoComplete="off"
             autoCorrect={false}
@@ -84,40 +98,38 @@ export function TransferSendScreen() {
         </View>
         <View className="gap-1">
           <Text className="text-sm font-medium">{t("transfer.boards")}</Text>
+          {signedIn > 0 ? (
+            <Text className="text-sm" variant="muted">
+              {t("transfer.signInNote", { count: signedIn })}
+            </Text>
+          ) : null}
           {boards.map((b) => {
             const provider = getProvider(b.providerId);
             return (
-              <View className="min-h-12 flex-row items-center gap-3" key={b.id}>
+              // The whole row toggles, not only the small switch.
+              <Pressable
+                accessibilityLabel={b.name}
+                accessibilityRole="switch"
+                accessibilityState={{ checked: picked.has(b.id) }}
+                className="min-h-12 flex-row items-center gap-3"
+                key={b.id}
+                onPress={() => toggle(b.id, !picked.has(b.id))}
+              >
                 {provider ? <ProviderLogo provider={provider} /> : null}
                 <Text className="min-w-0 flex-1" numberOfLines={1}>
                   {b.name}
                 </Text>
-                <Switch
-                  accessibilityLabel={b.name}
-                  checked={picked.has(b.id)}
-                  onCheckedChange={(on) =>
-                    setPicked((s) => {
-                      const next = new Set(s);
-                      if (on) next.add(b.id);
-                      else next.delete(b.id);
-                      return next;
-                    })
-                  }
-                />
-              </View>
+                <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+                  <Switch checked={picked.has(b.id)} onCheckedChange={(on) => toggle(b.id, on)} />
+                </View>
+              </Pressable>
             );
           })}
         </View>
         {error ? <ErrorState title={error} /> : null}
-        <Button disabled={busy || !picked.size} onPress={() => void copy()}>
-          {busy ? (
-            <ActivityIndicator size="small" />
-          ) : (
-            <>
-              <Icon as={Copy} className="text-primary-foreground" size={16} />
-              <Text>{t("transfer.copy")}</Text>
-            </>
-          )}
+        <Button disabled={!picked.size} loading={busy} onPress={() => void copy()}>
+          <Icon as={Copy} className="text-primary-foreground" size={16} />
+          <Text>{t("transfer.copy")}</Text>
         </Button>
       </View>
     </Screen>

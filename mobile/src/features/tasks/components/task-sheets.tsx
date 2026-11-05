@@ -24,16 +24,25 @@ import { providerErrorText } from "@/lib/errors";
 import { duration } from "@/lib/format";
 import { APP_FONT_FAMILY } from "@/lib/theme";
 import { cn } from "@/lib/utils";
+import { hapticSuccess } from "@/lib/utils/haptics";
 import {
   BottomSheetFlatList,
   BottomSheetScrollView,
   BottomSheetTextInput,
 } from "@gorhom/bottom-sheet";
-import { Check, ExternalLink, FileInput, Trash2, UserMinus } from "lucide-react-native";
+import {
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  ExternalLink,
+  FileInput,
+  Trash2,
+  UserMinus,
+} from "lucide-react-native";
 import { cssInterop } from "nativewind";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { ActivityIndicator, Pressable, ScrollView, useWindowDimensions, View } from "react-native";
+import { ActivityIndicator, Pressable, View } from "react-native";
 import { toast } from "sonner-native";
 import { create } from "zustand";
 import { openInSource } from "../api/open-in-source";
@@ -126,15 +135,13 @@ function SheetRow({
     <Pressable
       accessibilityRole="button"
       accessibilityState={{ disabled }}
-      className={cn(
-        "min-h-12 flex-row items-center gap-3 rounded-md px-2 active:bg-paper-3",
-        disabled && "opacity-50",
-      )}
+      className={cn("min-h-12 flex-row items-center gap-3 rounded-md px-2 active:bg-paper-3")}
       disabled={disabled}
       onPress={onPress}
     >
       {icon}
-      <View className="min-w-0 flex-1">{children}</View>
+      {/* Only the label dims; a trailing reason ("Needs Jira") stays readable. */}
+      <View className={cn("min-w-0 flex-1", disabled && "opacity-50")}>{children}</View>
       {trailing}
     </Pressable>
   );
@@ -186,6 +193,8 @@ function StatusSheet({ target, onDone }: { target: SheetTarget; onDone: () => vo
       { input, taskKey, transition },
       {
         onSuccess: () => {
+          // The commit is felt as well as seen: one haptic per change, never per tap (animate-expo).
+          void hapticSuccess();
           onDone();
           announce(transition, undoable);
         },
@@ -217,14 +226,14 @@ function StatusSheet({ target, onDone }: { target: SheetTarget; onDone: () => vo
   const needsSource = transitions.isError || transitions.data?.some((tr) => tr.needsInput);
 
   return (
-    <BottomSheetScrollView contentContainerClassName="gap-1 px-4 pb-10">
+    <BottomSheetScrollView contentContainerClassName="gap-1 px-3 pb-10">
       <View className="px-2">
         <SheetTitle subtitle={taskKey} title={t("tasks.moveTo")} />
       </View>
       {transitions.isPending ? (
         <View className="gap-2 p-2">
-          <Skeleton className="h-6 w-full rounded-sm" />
-          <Skeleton className="h-6 w-4/5 rounded-sm" />
+          <Skeleton className="h-12 w-full rounded-md" />
+          <Skeleton className="h-12 w-4/5 rounded-md" />
         </View>
       ) : transitions.isError ? (
         <Text className="px-2 text-sm text-error">
@@ -281,39 +290,96 @@ function StatusSheet({ target, onDone }: { target: SheetTarget; onDone: () => vo
   );
 }
 
-/** A field's choices as a dropdown, so a long list (Jira projects, components) stays one row tall. */
-function OptionSelect({
+/** A choice field: a pill that opens the choices as a list in the sheet (a dropdown floating over a sheet isn't native). */
+function OptionField({
+  label,
+  picked,
+  onPress,
+}: {
+  label: string;
+  picked?: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      accessibilityLabel={label}
+      accessibilityRole="button"
+      accessibilityValue={picked ? { text: picked } : undefined}
+      className="h-11 flex-row items-center gap-2 rounded-full border border-input bg-background px-4 active:bg-paper-3"
+      onPress={onPress}
+    >
+      <Text
+        className={cn("min-w-0 flex-1 text-base", !picked && "text-muted-foreground")}
+        numberOfLines={1}
+      >
+        {picked ?? label}
+      </Text>
+      <Icon as={ChevronRight} className="text-muted-foreground" size={16} />
+    </Pressable>
+  );
+}
+
+/** The choices of one field, in place of the form; a filter appears when the list is long. */
+function OptionList({
   label,
   options,
   value,
-  onChange,
+  required,
+  onPick,
 }: {
   label: string;
   options: { id: string; name: string }[];
   value?: string;
-  onChange: (id: string) => void;
+  required: boolean;
+  onPick: (id: string | undefined) => void;
 }) {
-  const { width, height } = useWindowDimensions();
-  const picked = options.find((o) => o.id === value);
+  const { t } = useTranslation();
+  const [query, setQuery] = useState("");
+  const shown = query.trim()
+    ? options.filter((o) => o.name.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()))
+    : options;
   return (
-    <Select
-      onValueChange={(o) => o && onChange(o.value)}
-      value={picked ? { label: picked.name, value: picked.id } : undefined}
+    <BottomSheetScrollView
+      contentContainerClassName="gap-1 px-3 pb-10"
+      keyboardShouldPersistTaps="handled"
     >
-      <SelectTrigger className="h-11 w-full rounded-full border-input bg-background px-4 shadow-none">
-        <SelectValue className="text-base" placeholder={label} />
-      </SelectTrigger>
-      {/* Trigger width (the sheet's 20 pt sides); the list scrolls instead of running off screen. */}
-      <SelectContent style={{ width: width - 40 }}>
-        <ScrollView bounces={false} style={{ maxHeight: height * 0.4 }}>
-          {options.map((o) => (
-            <SelectItem key={o.id} label={o.name} value={o.id}>
-              <Text>{o.name}</Text>
-            </SelectItem>
-          ))}
-        </ScrollView>
-      </SelectContent>
-    </Select>
+      <View className="px-2">
+        <SheetTitle title={label} />
+      </View>
+      {options.length > 8 ? (
+        <View className="px-2 pb-1">
+          <SheetInput
+            accessibilityLabel={t("ui.search")}
+            onChangeText={setQuery}
+            placeholder={t("ui.search")}
+            value={query}
+          />
+        </View>
+      ) : null}
+      <SheetRow
+        icon={<Icon as={ChevronLeft} className="text-muted-foreground" size={16} />}
+        onPress={() => onPick(value)}
+      >
+        <Text>{t("ui.back")}</Text>
+      </SheetRow>
+      {!required ? (
+        <SheetRow
+          onPress={() => onPick(undefined)}
+          trailing={!value ? <Icon as={Check} size={16} /> : null}
+        >
+          <Text variant="muted">{t("tasks.noChoice")}</Text>
+        </SheetRow>
+      ) : null}
+      {shown.map((o) => (
+        <SheetRow
+          key={o.id}
+          onPress={() => onPick(o.id)}
+          trailing={value === o.id ? <Icon as={Check} size={16} /> : null}
+        >
+          <Text>{o.name}</Text>
+        </SheetRow>
+      ))}
+    </BottomSheetScrollView>
   );
 }
 
@@ -337,6 +403,7 @@ function TransitionForm({
   const [values, setValues] = useState<Record<string, string>>({});
   const [comment, setComment] = useState("");
   const [touched, setTouched] = useState(false);
+  const [picking, setPicking] = useState<string | null>(null);
   const set = (key: string, value: string) => setValues((v) => ({ ...v, [key]: value }));
 
   const problems: Record<string, string> = {};
@@ -351,6 +418,21 @@ function TransitionForm({
     if (Object.keys(problems).length) return;
     onSubmit({ comment: comment.trim() || undefined, values });
   };
+
+  const pickingField = transition.fields.find((f) => f.key === picking);
+  if (pickingField)
+    return (
+      <OptionList
+        label={pickingField.name}
+        onPick={(id) => {
+          set(pickingField.key, id ?? "");
+          setPicking(null);
+        }}
+        options={pickingField.options ?? []}
+        required={pickingField.required}
+        value={values[pickingField.key] || undefined}
+      />
+    );
 
   return (
     <BottomSheetScrollView
@@ -369,14 +451,14 @@ function TransitionForm({
             {f.required ? f.name : t("tasks.optionalField", { name: f.name })}
           </Text>
           {f.kind === "select" ? (
-            <OptionSelect
+            <OptionField
               label={f.name}
-              onChange={(id) => set(f.key, id)}
-              options={f.options ?? []}
-              value={values[f.key]}
+              onPress={() => setPicking(f.key)}
+              picked={f.options?.find((o) => o.id === values[f.key])?.name}
             />
           ) : (
             <SheetInput
+              accessibilityLabel={f.name}
               className={f.kind === "textarea" ? "h-24 rounded-md py-3" : undefined}
               keyboardType={f.kind === "number" ? "decimal-pad" : "default"}
               multiline={f.kind === "textarea"}
@@ -387,7 +469,13 @@ function TransitionForm({
             />
           )}
           {touched && problems[f.key] ? (
-            <Text className="text-sm text-error">{problems[f.key]}</Text>
+            <Text
+              accessibilityLiveRegion="polite"
+              accessibilityRole="alert"
+              className="text-sm text-error"
+            >
+              {problems[f.key]}
+            </Text>
           ) : null}
         </View>
       ))}
@@ -397,6 +485,7 @@ function TransitionForm({
             {t("tasks.optionalField", { name: t("tasks.workComment") })}
           </Text>
           <SheetInput
+            accessibilityLabel={t("tasks.workComment")}
             className="h-24 rounded-md py-3"
             multiline
             onChangeText={setComment}
@@ -414,12 +503,8 @@ function TransitionForm({
         <Button className="flex-1" disabled={pending} onPress={onCancel} variant="secondary">
           <Text>{t("ui.cancel")}</Text>
         </Button>
-        <Button className="flex-1" disabled={pending} onPress={submit}>
-          {pending ? (
-            <ActivityIndicator size="small" />
-          ) : (
-            <Text numberOfLines={1}>{transition.name}</Text>
-          )}
+        <Button className="flex-1" loading={pending} onPress={submit}>
+          <Text numberOfLines={1}>{transition.name}</Text>
         </Button>
       </View>
     </BottomSheetScrollView>
@@ -449,6 +534,7 @@ function AssigneeSheet({ target, onDone }: { target: SheetTarget; onDone: () => 
             description: providerErrorText(error, t, appName),
           }),
         onSuccess: () => {
+          void hapticSuccess();
           const leaves = target.leavesListWhenReassigned && person?.id !== me.data?.id;
           toast.success(
             person
@@ -507,8 +593,8 @@ function AssigneeSheet({ target, onDone }: { target: SheetTarget; onDone: () => 
       ListEmptyComponent={
         people.isPending ? (
           <View className="gap-2 p-2">
-            <Skeleton className="h-6 w-full rounded-sm" />
-            <Skeleton className="h-6 w-4/5 rounded-sm" />
+            <Skeleton className="h-12 w-full rounded-md" />
+            <Skeleton className="h-12 w-4/5 rounded-md" />
           </View>
         ) : people.isError ? (
           <Text className="px-2 text-sm text-error">
@@ -530,7 +616,7 @@ function AssigneeSheet({ target, onDone }: { target: SheetTarget; onDone: () => 
         ) : null
       }
       ListHeaderComponent={header}
-      contentContainerClassName="px-4 pb-10"
+      contentContainerClassName="px-3 pb-10"
       data={people.isPending || people.isError ? [] : results}
       keyExtractor={(p: Person) => p.id}
       keyboardShouldPersistTaps="handled"
@@ -585,6 +671,7 @@ function LogWorkSheet({ target, onDone }: { target: SheetTarget; onDone: () => v
       { entry, taskKey },
       {
         onSuccess: (workLogId) => {
+          void hapticSuccess();
           onDone();
           toast.success(t("tasks.logged", { key: taskKey, time: duration(seconds) }), {
             action: {
@@ -616,6 +703,7 @@ function LogWorkSheet({ target, onDone }: { target: SheetTarget; onDone: () => v
       <View className="gap-2">
         <Text className="text-sm font-medium">{t("tasks.timeSpent")}</Text>
         <SheetInput
+          accessibilityLabel={t("tasks.timeSpent")}
           autoCapitalize="none"
           autoCorrect={false}
           onBlur={() => text && setTouched(true)}
@@ -625,7 +713,15 @@ function LogWorkSheet({ target, onDone }: { target: SheetTarget; onDone: () => v
           returnKeyType="done"
           value={text}
         />
-        {invalid ? <Text className="text-sm text-error">{t("tasks.durationHint")}</Text> : null}
+        {invalid ? (
+          <Text
+            accessibilityLiveRegion="polite"
+            accessibilityRole="alert"
+            className="text-sm text-error"
+          >
+            {t("tasks.durationHint")}
+          </Text>
+        ) : null}
         <View className="flex-row flex-wrap gap-1.5">
           {QUICK.map((q) => (
             <Pressable
@@ -634,6 +730,7 @@ function LogWorkSheet({ target, onDone }: { target: SheetTarget; onDone: () => v
                 "h-9 justify-center rounded-full px-3",
                 text === q ? "bg-primary" : "bg-paper-3",
               )}
+              hitSlop={{ bottom: 4, top: 4 }}
               key={q}
               onPress={() => setText(q)}
             >
@@ -654,6 +751,7 @@ function LogWorkSheet({ target, onDone }: { target: SheetTarget; onDone: () => v
       <View className="gap-2">
         <Text className="text-sm font-medium">{t("tasks.workComment")}</Text>
         <SheetInput
+          accessibilityLabel={t("tasks.workComment")}
           maxLength={500}
           onChangeText={setComment}
           placeholder={t("tasks.workCommentPlaceholder")}
@@ -676,8 +774,8 @@ function LogWorkSheet({ target, onDone }: { target: SheetTarget; onDone: () => v
         </Text>
       ) : null}
 
-      <Button disabled={!text.trim() || log.isPending} onPress={submit}>
-        {log.isPending ? <ActivityIndicator size="small" /> : <Text>{t("tasks.logIt")}</Text>}
+      <Button disabled={!text.trim()} loading={log.isPending} onPress={submit}>
+        <Text>{t("tasks.logIt")}</Text>
       </Button>
 
       <WorkLogList connectionId={connectionId} onDeleted={onDone} taskKey={taskKey} />

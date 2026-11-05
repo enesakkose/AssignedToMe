@@ -14,6 +14,8 @@
     "close": "Close"
   },
   "tasks": {
+    "signInAgain": "This sign-in has ended, or hasn’t happened on this Mac yet. Sign in to see its tasks.",
+    "signIn": "Sign in",
     "all": "All",
     "refresh": "Refresh",
     "openIn": "Open in {{name}}",
@@ -123,6 +125,7 @@
     "showTabs": "Show tabs"
   },
   "connections": {
+    "signInAgain": "Signed out, or never signed in on this Mac? Sign in:",
     "signInApproval": "If {{app}} asks for an admin’s approval (a “Request” button) and you don’t want to wait, connect with the form above instead.",
     "orSignInWith": "Or sign in with your {{app}} account, no token needed:",
     "deviceCode": "Enter this code on {{app}} (it’s copied). This page adds the board once you have.",
@@ -154,7 +157,7 @@
     "title": "Settings",
     "launchAtLogin": "Launch at login",
     "boards": "Boards",
-    "boardsHint": "Connected tools. Tap one to edit it.",
+    "boardsHint": "Connected tools. Click one to edit it.",
     "general": "General",
     "refreshHint": "Tasks refresh every hour and when the app opens.",
     "developer": "Developer",
@@ -274,6 +277,7 @@
     "assignedMany": "{{count}} new tasks assigned"
   },
   "onboarding": {
+    "step": "Step {{n}} of {{total}}",
     "skip": "Skip",
     "next": "Next",
     "start": "Get started",
@@ -315,8 +319,8 @@
     "upToDate": "You're on the latest version."
   },
   "transfer": {
-    "signInNote_one": "{{count}} board added with Atlassian sign-in stays on this Mac. On the phone, add it with “Add with Atlassian” under Jira.",
-    "signInNote_other": "{{count}} boards added with Atlassian sign-in stay on this Mac. On the phone, add them with “Add with Atlassian” under Jira.",
+    "signInNote_one": "{{count}} board was added with a sign-in. It goes without it, and the phone asks you to sign in once.",
+    "signInNote_other": "{{count}} boards were added with a sign-in. They go without it, and the phone asks you to sign in once.",
     "send": "Send to phone",
     "sendHint": "Move your boards, keys included, to the AssignedToMe app on your phone.",
     "receive": "Receive from phone",

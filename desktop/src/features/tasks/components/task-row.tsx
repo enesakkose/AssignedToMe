@@ -75,9 +75,24 @@ export function TaskRow({ task, provider, onOpen }: TaskRowProps) {
   const hasPlanning = canLog || task.storyPoints != null || !!task.estimateSeconds || !!task.loggedSeconds || subtasks.length > 0;
 
   const openLabel = provider ? t('tasks.openIn', { name: provider.appName }) : t('tasks.openSource');
+  // Text, not just ↗, so it reads as "open in the source" at a glance. It ends the last row (its width varies by
+  // app name, "Open in Azure DevOps" is long), so it never covers the row's own content.
+  const openButton = (
+    <Button
+      size="sm"
+      variant="ghost"
+      aria-label={openLabel}
+      onClick={() => openInSource(task.connectionId, task.key, task.url, onOpen)}
+      className="relative z-10 -my-1 ml-auto gap-1 px-2"
+    >
+      {openLabel}
+      <ArrowUpRight className="size-3.5" />
+    </Button>
+  );
   const content = (
     <>
-      <span className="flex items-center gap-2 text-sm text-muted">
+      {/* min-w-0 + shrinking badges: a long sprint, type or "Blocked" never pushes the age under the arrow. */}
+      <span className="flex min-w-0 items-center gap-2 text-sm text-muted">
         <TaskKey taskKey={task.key} label={openLabel} onOpen={() => openInSource(task.connectionId, task.key, task.url, onOpen)} className="max-w-36 text-ink-2" />
         {task.sprint && (
           <span className="inline-flex min-w-0 shrink items-center gap-1 text-xs text-ink-2" title={task.sprint}>
@@ -85,7 +100,7 @@ export function TaskRow({ task, provider, onOpen }: TaskRowProps) {
             <span className="truncate">{task.sprint}</span>
           </span>
         )}
-        {task.type && <Badge className="max-w-24">{task.type}</Badge>}
+        {task.type && <Badge className="max-w-24 min-w-0 shrink">{task.type}</Badge>}
         {/* Worth seeing from the list: something unfinished is blocking this task. */}
         {task.links?.some((l) => l.blocksThis && l.statusCategory !== 'done') && <Badge tone="error">{t('tasks.blocked')}</Badge>}
         <span className="num ml-auto shrink-0 text-xs">{timeAgo(task.updatedAt)}</span>
@@ -98,7 +113,7 @@ export function TaskRow({ task, provider, onOpen }: TaskRowProps) {
       >
         {task.title}
       </button>
-      <span className={cn('flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1', !hasPlanning && 'pr-28')}>
+      <span className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
         <StatusMenu
           connectionId={task.connectionId}
           taskKey={task.key}
@@ -110,9 +125,10 @@ export function TaskRow({ task, provider, onOpen }: TaskRowProps) {
         {/* Medium is the default on almost every task; only an unusual priority is worth the space. */}
         {task.priority && task.priorityLevel !== 3 && <Priority level={task.priorityLevel} label={task.priority} />}
         <AssigneeMenu connectionId={task.connectionId} taskKey={task.key} assignee={task.assignee} leavesListWhenReassigned />
+        {!hasPlanning && openButton}
       </span>
       {hasPlanning && (
-        <span className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 pr-28 text-sm text-ink-2">
+        <span className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-2">
           {task.storyPoints != null && (
             <Meta icon={<Gauge />}>
               <span className="num">{t('tasks.points', { count: task.storyPoints })}</span>
@@ -142,6 +158,7 @@ export function TaskRow({ task, provider, onOpen }: TaskRowProps) {
               />
             </button>
           )}
+          {openButton}
         </span>
       )}
     </>
@@ -154,7 +171,7 @@ export function TaskRow({ task, provider, onOpen }: TaskRowProps) {
         taskKey={task.key}
         openLabel={openLabel}
         onOpenSource={() => openInSource(task.connectionId, task.key, task.url, onOpen)}
-        className="relative flex items-start gap-2.5 px-3 py-3"
+        className="relative flex items-start gap-2.5 px-3 py-3 transition-colors duration-[var(--dur-micro)] hover:bg-paper-2"
       >
         <div className="mt-px w-4 shrink-0">{provider && <ProviderLogo provider={provider} size="sm" />}</div>
         <div className="flex min-w-0 flex-1 flex-col gap-1.5">{content}</div>
@@ -164,17 +181,6 @@ export function TaskRow({ task, provider, onOpen }: TaskRowProps) {
             <ArrowRight />
           </IconButton>
         </div>
-        {/* Text, not just ↗, so it reads as "open in the source" at a glance; the full name is in the label. */}
-        <Button
-          size="sm"
-          variant="ghost"
-          aria-label={openLabel}
-          onClick={() => openInSource(task.connectionId, task.key, task.url, onOpen)}
-          className="absolute right-2 bottom-2 z-10 gap-1 px-2"
-        >
-          {openLabel}
-          <ArrowUpRight className="size-3.5" />
-        </Button>
       </TaskMenu>
       {expanded && subtasks.length > 0 && (
         <div id={subtasksId} className="bg-paper-2 py-3 pr-3 pl-9.5">
@@ -230,7 +236,7 @@ function SubtaskRow({ subtask: s, mine, connectionId, openLabel, onOpen }: Subta
         taskKey={s.key}
         openLabel={openLabel}
         onOpenSource={() => openInSource(connectionId, s.key, s.url, onOpen)}
-        className={cn('relative flex flex-col gap-1.5 px-2.5 py-2.5', mine && 'bg-paper-2 shadow-[inset_2px_0_0_var(--color-progress)]')}
+        className={cn('relative flex flex-col gap-1.5 px-2.5 py-2.5', mine && 'bg-paper-2 shadow-[inset_2px_0_0_var(--color-accent)]')}
       >
         <span className="flex min-w-0 items-center gap-2">
           <StatusDot category={s.statusCategory} status={s.status} />

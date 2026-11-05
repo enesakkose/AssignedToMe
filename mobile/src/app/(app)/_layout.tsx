@@ -65,6 +65,8 @@ function TabItem({
           <View className="absolute right-[30%] top-2 size-2 rounded-full bg-progress" />
         ) : null}
         <RNText
+          // The dock is a fixed 62pt bar; one deliberate cap keeps big Dynamic Type from clipping its labels.
+          maxFontSizeMultiplier={1.3}
           style={{
             color,
             fontFamily: isFocused ? APP_FONT_FAMILY.semiBold : APP_FONT_FAMILY.medium,

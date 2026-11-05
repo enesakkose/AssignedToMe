@@ -70,7 +70,7 @@ export function OnboardingScreen() {
             <View className="mb-6 w-full flex-row flex-wrap gap-2">
               {providers.map((p) => (
                 <View
-                  className="grow basis-[45%] flex-row items-center gap-2.5 rounded-lg border border-border bg-background p-2"
+                  className="cut grow basis-[45%] flex-row items-center gap-2.5 border border-rule bg-background p-2"
                   key={p.id}
                 >
                   <ProviderLogo provider={p} />
@@ -112,7 +112,12 @@ export function OnboardingScreen() {
       </View>
 
       <View className="gap-5 px-6 pb-4">
-        <View accessibilityElementsHidden className="flex-row items-center justify-center gap-1.5">
+        {/* The dots are a picture of progress; VoiceOver hears it as words instead. */}
+        <View
+          accessibilityLabel={t("onboarding.step", { n: i + 1, total: STEPS.length })}
+          accessible
+          className="flex-row items-center justify-center gap-1.5"
+        >
           {STEPS.map((s, n) => (
             <View
               className={cn("h-1.5 rounded-full", n === i ? "w-5 bg-primary" : "w-1.5 bg-border")}

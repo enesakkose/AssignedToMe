@@ -67,4 +67,12 @@ describe('jira-atlassian', () => {
     expect(sent).toContain('grant_type=refresh_token');
     expect(values).toMatchObject({ accessToken: 'new', refreshToken: 'r1', cloudId: 'cloud-1' });
   });
+
+  test('a board that came over by QR has no token yet: it reads as signed out, not as a broken board', async () => {
+    const noSignIn = connection({ accessToken: '' });
+    const server = (async () => new Response('', { status: 401 })) as unknown as Fetch;
+    await expect(jiraAtlassian.fetchMyTasks(noSignIn, server)).rejects.toMatchObject({ code: 'unauthorized' });
+    // And nothing is renewed without a refresh token.
+    expect(await jiraAtlassian.refreshCredentials!(noSignIn, server)).toBeUndefined();
+  });
 });

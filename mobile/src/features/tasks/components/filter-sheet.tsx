@@ -90,6 +90,7 @@ function Chip({ label, on, onPress }: { label: string; on: boolean; onPress: () 
         "h-9 justify-center rounded-full px-3.5 active:scale-[0.97]",
         on ? "bg-primary" : "bg-paper-3",
       )}
+      hitSlop={{ bottom: 4, top: 4 }}
       onPress={onPress}
     >
       <Text className={cn("text-sm font-medium", on && "text-primary-foreground")}>{label}</Text>
@@ -173,6 +174,7 @@ export function ActiveFilters({ filters, onChange, options }: Props) {
           accessibilityLabel={t("filters.remove", { name: a.label })}
           accessibilityRole="button"
           className="h-8 flex-row items-center gap-1 rounded-full bg-paper-3 pl-3 pr-2"
+          hitSlop={{ bottom: 6, top: 6 }}
           key={`${a.group}:${a.value}`}
           onPress={() => onChange(toggle(filters, a.group, a.value))}
         >

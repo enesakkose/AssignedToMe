@@ -423,7 +423,9 @@ function RelatedRow({ task: r, assignee, onClick }: { task: RelatedTask; assigne
         {r.statusCategory && <StatusDot category={r.statusCategory} status={r.status ?? ''} />}
         <TypeIcon type={r.type} />
         <span className="shrink-0 font-mono text-xs text-muted">{r.key}</span>
-        <span className={cn('min-w-0 flex-1 truncate text-ink', r.statusCategory === 'done' && 'text-muted line-through')}>{r.title}</span>
+        <span className={cn('min-w-0 flex-1 truncate text-ink', r.statusCategory === 'done' && 'text-muted line-through')} title={r.title}>
+          {r.title}
+        </span>
         {assignee ? <Avatar name={assignee} /> : r.status && <span className="shrink-0 text-xs text-muted">{r.status}</span>}
       </button>
     </li>

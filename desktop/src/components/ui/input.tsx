@@ -10,6 +10,8 @@ export const inputClass = cn(
   'hover:border-muted/60',
   'focus-visible:outline-none focus-visible:border-accent focus-visible:shadow-[0_0_0_3px_color-mix(in_oklab,var(--color-accent)_18%,transparent)]',
   'data-[invalid]:border-error aria-[invalid=true]:border-error',
+  // An invalid field still shows focus, in the error colour.
+  'aria-[invalid=true]:focus-visible:shadow-[0_0_0_3px_color-mix(in_oklab,var(--color-error)_22%,transparent)] data-[invalid]:focus-visible:shadow-[0_0_0_3px_color-mix(in_oklab,var(--color-error)_22%,transparent)]',
   'disabled:cursor-not-allowed disabled:bg-paper-2 disabled:text-muted',
 );
 

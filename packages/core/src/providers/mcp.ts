@@ -174,8 +174,8 @@ export async function refreshMcpToken(fetch: Fetch, auth: McpAuth, values: Recor
 
 /** What a signed-in MCP board stores: secrets go to the platform's secret store like any token. */
 export const MCP_FIELDS = [
-  { key: 'clientId', type: 'text', label: { tr: 'İstemci kimliği', en: 'Client id' } },
-  { key: 'expiresAt', type: 'text', label: { tr: 'Oturum bitişi', en: 'Session expiry' } },
+  { key: 'clientId', type: 'text', session: true, label: { tr: 'İstemci kimliği', en: 'Client id' } },
+  { key: 'expiresAt', type: 'text', session: true, label: { tr: 'Oturum bitişi', en: 'Session expiry' } },
   { key: 'accessToken', type: 'secret', label: { tr: 'Erişim token’ı', en: 'Access token' } },
   { key: 'refreshToken', type: 'secret', label: { tr: 'Yenileme token’ı', en: 'Refresh token' } },
 ] as const;

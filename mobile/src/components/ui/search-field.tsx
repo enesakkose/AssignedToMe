@@ -24,7 +24,7 @@ export function SearchField({
         accessibilityLabel={label}
         autoCapitalize="none"
         autoCorrect={false}
-        className="border-0 bg-paper-3 pl-10 pr-11"
+        className="border-0 bg-paper-3 pl-10 pr-11 dark:bg-paper-3"
         clearButtonMode="never"
         onChangeText={onChangeText}
         placeholder={label}

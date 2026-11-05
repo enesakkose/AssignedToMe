@@ -148,7 +148,7 @@ export function SettingsScreen() {
             onValueChange={(option) => option && setRefreshMinutes(Number(option.value))}
             value={refreshOptions.find((o) => o.value === String(refreshMinutes))}
           >
-            <SelectTrigger className="h-9 border-0 bg-paper-3 shadow-none">
+            <SelectTrigger className="h-11 border-0 bg-paper-3 shadow-none">
               <SelectValue
                 className="text-sm font-medium"
                 placeholder={t("settings.refreshEvery")}

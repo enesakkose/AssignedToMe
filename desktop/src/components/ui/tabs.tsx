@@ -5,7 +5,7 @@ import { cn } from '@/lib/cn';
 export const Tabs = BaseTabs.Root;
 export const TabsPanel = BaseTabs.Panel;
 
-/** Horizontally scrolling tab strip with a sliding cobalt underline. */
+/** Horizontally scrolling tab strip with a sliding graphite underline. */
 export function TabsList({ className, children, ...props }: ComponentProps<typeof BaseTabs.List>) {
   return (
     <BaseTabs.List
@@ -41,7 +41,9 @@ export function Tab({ className, children, count, icon, ...props }: TabProps) {
       {...props}
     >
       {icon}
-      <span className="max-w-32 truncate">{children}</span>
+      <span className="max-w-32 truncate" title={typeof children === 'string' ? children : undefined}>
+        {children}
+      </span>
       {count !== undefined && (
         <span className="num rounded-sm bg-paper-3 px-1 text-xs text-muted group-data-[active]:bg-accent-wash group-data-[active]:text-accent-text">
           {count}

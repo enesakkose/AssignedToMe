@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'bun:test';
+import { signInProviders, transferable } from './index';
 import type { Connection } from './types';
 import {
   decryptTransfer,
@@ -68,5 +69,21 @@ describe('transfer', () => {
     const sealed = await encryptTransfer([{ ...board, id: '../evil:id' }], code);
     const error = await decryptTransfer(sealed, code, known).catch((e: unknown) => e);
     expect((error as TransferError).code).toBe('invalid');
+  });
+
+  test('a signed-in board travels without its sign-in; the other device signs in itself', async () => {
+    const atlassian: Connection = {
+      id: 'c2',
+      providerId: 'jira-atlassian',
+      name: 'acme',
+      values: { domain: 'https://acme.atlassian.net', cloudId: 'cloud-1', clientId: 'cid', expiresAt: '1', accessToken: 'at_secret', refreshToken: 'rt_secret' },
+    };
+    expect(transferable(atlassian).values).toEqual({ domain: 'https://acme.atlassian.net', cloudId: 'cloud-1' });
+    // A sender that forgot transferable() still can't hand over a token: the receiver drops it.
+    const sealed = await encryptTransfer([atlassian], '7K2M9QXD');
+    const [received] = await decryptTransfer(sealed, '7K2M9QXD', signInProviders);
+    expect(received!.values).toEqual({ domain: 'https://acme.atlassian.net', cloudId: 'cloud-1' });
+    // A board that isn't signed-in keeps its secret.
+    expect(transferable(board)).toBe(board);
   });
 });

@@ -14,7 +14,9 @@ export function Status({ category, label, className }: { category: StatusCategor
   return (
     <span className={cn('inline-flex min-w-0 items-center gap-1 text-sm font-medium', tone, className)}>
       <Icon className="size-3 shrink-0" aria-hidden />
-      <span className="truncate">{label}</span>
+      <span className="truncate" title={label}>
+        {label}
+      </span>
     </span>
   );
 }

@@ -30,7 +30,7 @@ const list = (v: string | null) => (v ? v.split(',').filter(Boolean) : undefined
 export function mcpFetch(connection: Connection, fetch: Fetch): Fetch {
   const { accessToken = '', cloudId = '' } = connection.values;
   const call = (name: string, args: Record<string, unknown>) => callTool(fetch, accessToken, name, { cloudId, ...args });
-  return (async (input: string | URL | Request, init?: RequestInit) => {
+  const route = async (input: string | URL | Request, init?: RequestInit) => {
     const url = new URL(input instanceof Request ? input.url : String(input));
     const method = (init?.method ?? 'GET').toUpperCase();
     const path = url.pathname.replace(/^\/rest\/api\/3/, '');
@@ -122,6 +122,18 @@ export function mcpFetch(connection: Connection, fetch: Fetch): Fetch {
     if (issue && !issue[2] && method === 'GET')
       return json(await call('getJiraIssue', { issueIdOrKey: key, fields: list(q.get('fields')), expand: q.get('expand') ?? undefined }));
     return json('{"errorMessages":["Not available through the Atlassian MCP server"]}', 501);
+  };
+  // The Jira code reads a thrown error as "network", so an answer the server gave (signed out, not found, rate limit)
+  // goes back as the HTTP status it stands for; only a real network failure is thrown.
+  return (async (input: string | URL | Request, init?: RequestInit) => {
+    try {
+      return await route(input, init);
+    } catch (error) {
+      if (!(error instanceof ProviderError) || error.code === 'network') throw error;
+      const status =
+        error.code === 'unauthorized' ? 401 : error.code === 'not_found' ? 404 : error.code === 'rate_limited' ? 429 : error.status && error.status >= 400 ? error.status : 502;
+      return json(JSON.stringify({ errorMessages: [error.message] }), status);
+    }
   }) as Fetch;
 }
 

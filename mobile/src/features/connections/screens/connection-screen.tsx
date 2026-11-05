@@ -12,7 +12,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import { SecretInput } from "@/components/ui/secret-input";
@@ -32,6 +32,7 @@ import { toast } from "sonner-native";
 import {
   newConnectionId,
   removeConnection,
+  renameConnection,
   saveConnection,
   useConnectionsStore,
   withSecrets,
@@ -39,6 +40,7 @@ import {
 } from "../api/connections";
 import { ProviderGuide } from "../components/provider-guide";
 import { ProviderLogo } from "../components/provider-logo";
+import { SignInPanel, signInFor } from "../components/sign-in-panel";
 import { forgetTasks } from "@/features/tasks/api/task-cache";
 import { clearHalted } from "@/features/tasks/background-refresh";
 
@@ -207,12 +209,18 @@ function ConnectionForm({
     },
   });
 
+  // A board added by signing in has no form: its sign-in is renewed, not typed, so there is nothing to check.
   const onTest = () => {
-    if (!check()) return;
+    if (!provider.signIn && !check()) return;
     test.mutate(connection(), { onSuccess: () => toast.success(t("connections.testOk")) });
   };
 
   const onSave = () => {
+    if (provider.signIn && initial) {
+      renameConnection(initial.id, name.trim() || initial.name);
+      toast.success(t("connections.saved", { name: name.trim() || initial.name }));
+      return router.back();
+    }
     if (!check()) return;
     const c = connection();
     test.mutate(c, {
@@ -236,7 +244,7 @@ function ConnectionForm({
           <ProviderLogo provider={provider} />
           <Text className="text-[17px] font-semibold">{provider.name}</Text>
         </View>
-        {provider.fields.map((f) => (
+        {(provider.signIn ? [] : provider.fields).map((f) => (
           <View className="gap-2" key={f.key}>
             <Label className="text-sm" nativeID={`field-${f.key}`}>
               {f.label[locale]}
@@ -299,13 +307,16 @@ function ConnectionForm({
         ) : null}
 
         <View className="flex-row gap-2 pt-1">
-          <Button className="flex-1" disabled={busy} onPress={onSave}>
+          <Button className="flex-1" loading={busy} onPress={onSave}>
             <Text>{initial ? t("ui.save") : t("connections.save")}</Text>
           </Button>
           <Button className="flex-1" disabled={busy} onPress={onTest} variant="secondary">
             <Text>{t("connections.test")}</Text>
           </Button>
         </View>
+        {/* Add: sign in instead of pasting a token. Edit of a signed-in board: sign in again when it has ended. */}
+        {!initial && signInFor(provider) ? <SignInPanel provider={signInFor(provider)!} /> : null}
+        {initial && provider.signIn ? <SignInPanel existing={initial} provider={provider} /> : null}
         {initial ? (
           <Button className="self-center" onPress={() => setRemoving(true)} variant="ghost">
             <Icon as={Trash2} className="text-error" size={16} />
@@ -314,9 +325,11 @@ function ConnectionForm({
         ) : null}
       </View>
 
-      <Section title={t("connections.guideTitle", { name: provider.name })}>
-        <ProviderGuide provider={provider} values={values} />
-      </Section>
+      {provider.signIn ? null : (
+        <Section title={t("connections.guideTitle", { name: provider.name })}>
+          <ProviderGuide provider={provider} values={values} />
+        </Section>
+      )}
 
       {initial ? (
         <AlertDialog onOpenChange={setRemoving} open={removing}>
@@ -332,6 +345,7 @@ function ConnectionForm({
                 <Text>{t("ui.cancel")}</Text>
               </AlertDialogCancel>
               <AlertDialogAction
+                className={buttonVariants({ variant: "destructive" })}
                 onPress={() =>
                   remove.mutate(initial.id, {
                     onSuccess: () => {
@@ -342,7 +356,7 @@ function ConnectionForm({
                   })
                 }
               >
-                <Text>{t("connections.remove")}</Text>
+                <Text className="text-white">{t("connections.remove")}</Text>
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

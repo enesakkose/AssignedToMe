@@ -2,6 +2,7 @@ import { getProvider, type RelatedTask, type Task } from "@mytask/core";
 import { AppHeader } from "@/components/layout/app-header";
 import { Screen } from "@/components/layout/screen";
 import { Button } from "@/components/ui/button";
+import { ErrorState } from "@/components/ui/state";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -155,9 +156,19 @@ export function TaskDetailScreen({
     return (
       <Screen header={header}>
         {single.isError ? (
-          <Text className="p-5 text-sm text-error">
-            {providerErrorText(single.error, t, provider?.appName)}
-          </Text>
+          <View className="gap-3 p-5">
+            <ErrorState
+              description={providerErrorText(single.error, t, provider?.appName)}
+              title={t("detail.loadFailed")}
+            />
+            <Button
+              className="self-start"
+              onPress={() => void single.refetch()}
+              variant="secondary"
+            >
+              <Text>{t("ui.retry")}</Text>
+            </Button>
+          </View>
         ) : (
           // The page's shape while a task outside your list loads, so nothing jumps when it arrives.
           <View className="gap-4 p-5">
@@ -234,7 +245,14 @@ export function TaskDetailScreen({
               <Icon as={Ban} className="text-error" size={14} />
               <Text className="text-sm font-medium text-error">{t("detail.blockedBy")}</Text>
               {blockers.map((b) => (
-                <Pressable accessibilityRole="link" key={b.key} onPress={() => goTo(b)}>
+                <Pressable
+                  accessibilityLabel={`${b.key} ${b.title ?? ""}`.trim()}
+                  accessibilityRole="link"
+                  className="min-h-8 justify-center px-1"
+                  hitSlop={{ bottom: 6, top: 6 }}
+                  key={b.key}
+                  onPress={() => goTo(b)}
+                >
                   <Text className="font-mono text-xs text-error underline">{b.key}</Text>
                 </Pressable>
               ))}
@@ -275,9 +293,7 @@ export function TaskDetailScreen({
           ) : null}
           {task.sprint ? (
             <Field label={t("detail.sprint")}>
-              <Text className="text-sm" numberOfLines={1}>
-                {task.sprint}
-              </Text>
+              <Text className="text-sm">{task.sprint}</Text>
             </Field>
           ) : null}
           {task.updatedAt ? (
@@ -338,9 +354,10 @@ export function TaskDetailScreen({
                 <Skeleton className="h-11 w-full rounded-sm" />
               </View>
             ) : children.isError ? (
-              <Text className="text-sm text-error">
-                {providerErrorText(children.error, t, provider?.appName)}
-              </Text>
+              <ErrorState
+                description={providerErrorText(children.error, t, provider?.appName)}
+                title={t("detail.loadFailed")}
+              />
             ) : !children.data.length ? (
               <Text className="text-sm" variant="muted">
                 {t("detail.epicEmpty")}

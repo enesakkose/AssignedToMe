@@ -212,14 +212,19 @@ export function TasksScreen() {
               <ErrorState
                 key={b.id}
                 title={t('tasks.errorTitle', { name: showTabs ? b.name : (getProvider(b.providerId)?.name ?? '') })}
-                description={errorText(result.error, t, getProvider(b.providerId)?.appName)}
+                description={
+                  // A board added by signing in whose sign-in has ended (or that came over by QR and never signed in here).
+                  getProvider(b.providerId)?.signIn && (result.error as { code?: string } | null)?.code === 'unauthorized'
+                    ? t('tasks.signInAgain')
+                    : errorText(result.error, t, getProvider(b.providerId)?.appName)
+                }
                 action={
                   <div className="flex gap-1.5">
                     <Button size="sm" onClick={() => result.refetch()}>
                       {t('ui.retry')}
                     </Button>
                     <Button size="sm" variant="ghost" onClick={() => go({ name: 'connection', id: b.id })}>
-                      {t('connections.edit')}
+                      {getProvider(b.providerId)?.signIn ? t('tasks.signIn') : t('connections.edit')}
                     </Button>
                   </div>
                 }

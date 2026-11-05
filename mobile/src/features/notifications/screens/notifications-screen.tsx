@@ -14,6 +14,7 @@ import { useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, View } from "react-native";
+import { toast } from "sonner-native";
 
 /** The new-task alerts this device raised, newest first; tap one to open its task. */
 export function NotificationsScreen() {
@@ -35,7 +36,21 @@ export function NotificationsScreen() {
         <AppHeader
           actions={
             items.length ? (
-              <Button onPress={clear} size="sm" variant="ghost">
+              <Button
+                onPress={() => {
+                  // Clearing is one tap with no confirm, so it can be taken back.
+                  const kept = items;
+                  clear();
+                  toast(t("notifications.cleared"), {
+                    action: {
+                      label: t("ui.undo"),
+                      onClick: () => useNotificationHistory.setState({ items: kept }),
+                    },
+                  });
+                }}
+                size="sm"
+                variant="ghost"
+              >
                 <Text>{t("notifications.clear")}</Text>
               </Button>
             ) : null
@@ -58,7 +73,10 @@ export function NotificationsScreen() {
             <Pressable
               accessibilityHint={t("tasks.viewDetails")}
               accessibilityRole="button"
-              className="flex-row gap-2.5 border-b border-rule px-5 py-3.5 active:bg-paper-2"
+              className={cn(
+                "flex-row gap-2.5 border-b border-rule px-5 py-3.5 active:bg-paper-2",
+                !connection && "opacity-50",
+              )}
               // A board removed since then has nothing to open.
               disabled={!connection}
               key={n.id}
@@ -72,10 +90,15 @@ export function NotificationsScreen() {
               <View className="min-w-0 flex-1 gap-1">
                 <View className="flex-row items-center gap-2">
                   {fresh ? (
-                    <View accessibilityLabel="new" className="size-2 rounded-full bg-progress" />
+                    <View
+                      accessibilityLabel={t("notifications.new")}
+                      className="size-2 rounded-full bg-progress"
+                    />
                   ) : null}
                   <Text className="shrink text-sm" numberOfLines={1} variant="muted">
-                    {t("notifications.assigned", { board: n.board })}
+                    {connection
+                      ? t("notifications.assigned", { board: n.board })
+                      : t("notifications.boardRemoved")}
                   </Text>
                   <Text className="ml-auto text-xs" variant="muted">
                     {timeAgo(new Date(n.at).toISOString())}

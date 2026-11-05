@@ -114,6 +114,8 @@ export type ProviderField = {
   type: 'text' | 'email' | 'url' | 'secret';
   /** May be left empty (e.g. a username that only a password sign-in needs). */
   optional?: boolean;
+  /** This device's sign-in state (session expiry, client id), not part of the board: never moved to another device. */
+  session?: boolean;
 };
 
 export type GuideStep = {

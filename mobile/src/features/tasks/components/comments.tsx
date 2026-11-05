@@ -9,7 +9,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -79,7 +79,7 @@ export function Comments({
           {hidden > 0 ? (
             <Pressable
               accessibilityRole="button"
-              className="min-h-8 justify-center self-start"
+              className="min-h-11 justify-center self-start"
               onPress={() => setAll(true)}
             >
               <Text className="text-sm font-medium">
@@ -113,6 +113,7 @@ export function Comments({
                         accessibilityLabel={t("comments.delete")}
                         accessibilityRole="button"
                         className="-my-2 ml-auto size-9 items-center justify-center rounded-full active:bg-paper-3"
+                        hitSlop={4}
                         disabled={remove.mutation.isPending}
                         onPress={() => setConfirming(c.id)}
                       >
@@ -154,6 +155,7 @@ export function Comments({
               <Text>{t("ui.cancel")}</Text>
             </AlertDialogCancel>
             <AlertDialogAction
+              className={buttonVariants({ variant: "destructive" })}
               onPress={() =>
                 confirming &&
                 remove.mutation.mutate(confirming, {
@@ -165,7 +167,7 @@ export function Comments({
                 })
               }
             >
-              <Text>{t("comments.delete")}</Text>
+              <Text className="text-white">{t("comments.delete")}</Text>
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -199,8 +201,14 @@ function Composer({ connectionId, taskKey }: { connectionId: string; taskKey: st
       ) : null}
       {/* Send appears once there's something to send. */}
       {text.trim() || add.isPending ? (
-        <Button className="self-end" disabled={!canSend} onPress={send} size="sm">
-          {add.isPending ? <ActivityIndicator size="small" /> : <Text>{t("comments.send")}</Text>}
+        <Button
+          className="self-end"
+          disabled={!canSend}
+          loading={add.isPending}
+          onPress={send}
+          size="sm"
+        >
+          <Text>{t("comments.send")}</Text>
         </Button>
       ) : null}
     </View>

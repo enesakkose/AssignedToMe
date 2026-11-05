@@ -68,8 +68,8 @@ function SidebarItem({ active, onClick, icon, label, count }: { active: boolean;
         onClick={onClick}
         aria-current={active ? 'page' : undefined}
         className={cn(
-          'flex h-8 w-full min-w-0 items-center gap-2 rounded-sm px-2 text-left text-md text-ink-2 transition-colors hover:bg-paper-3',
-          active && 'bg-paper-3 text-ink',
+          'flex h-8 w-full min-w-0 items-center gap-2 rounded-sm px-2 text-left text-md text-ink-2 transition-colors hover:bg-paper-2 focus-visible:outline-offset-[-2px]',
+          active && 'bg-paper-3 font-medium text-ink',
         )}
       >
         <span className="flex w-4 shrink-0 justify-center">{icon}</span>

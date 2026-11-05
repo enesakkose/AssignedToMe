@@ -1,5 +1,6 @@
 {
   "ui": {
+    "search": "Ara",
     "cancel": "Vazgeç",
     "save": "Kaydet",
     "back": "Geri",
@@ -35,6 +36,11 @@
     "version": "Sürüm {{version}}"
   },
   "connections": {
+    "orSignIn": "Ya da {{account}} hesabınla giriş yap, token gerekmez:",
+    "signInAgain": "Çıkış mı yapıldı, ya da bu telefonda hiç giriş yapılmadı mı? Giriş yap:",
+    "signInApproval": "{{app}} yönetici onayı isterse (“Request” butonu çıkarsa) ve beklemek istemiyorsan, yukarıdaki API token ile bağlan.",
+    "deviceCode": "Bu kodu {{app}}’da gir (kopyalandı). Girince board eklenir.",
+    "openSite": "{{app}}’ı aç",
     "add": "Board bağla",
     "edit": "Bağlantıyı düzenle",
     "save": "Bağla",
@@ -71,6 +77,7 @@
     "keychain": "iOS Anahtar Zinciri'ne erişilemedi. Cihazın kilidini açıp tekrar dene."
   },
   "onboarding": {
+    "step": "Adım {{n}} / {{total}}",
     "skip": "Geç",
     "next": "İleri",
     "start": "Başla",
@@ -79,6 +86,7 @@
       "body": "Tüm board'larındaki sana atanmış task'lar tek bir yerde."
     },
     "boards": {
+      "renameHint": "Yeniden adlandırmak için basılı tut",
       "title": "Board'larını bağla",
       "body": "Bağladığın her araç bir board olur ve task'ların otomatik yenilenir; ne sıklıkla, Ayarlar'dan seçersin."
     },
@@ -101,6 +109,9 @@
     }
   },
   "notifications": {
+    "new": "yeni",
+    "boardRemoved": "Board kaldırıldı",
+    "cleared": "Bildirimler temizlendi",
     "assigned": "Yeni task atandı · {{board}}",
     "assignedMany": "{{count}} yeni task atandı",
     "title": "Bildirimler",
@@ -119,6 +130,9 @@
     "notifications": "Bildirimler"
   },
   "tasks": {
+    "signIn": "Giriş yap",
+    "signInAgain": "Bu girişin süresi bitti ya da bu telefonda henüz giriş yapılmadı. Görevleri görmek için giriş yap.",
+    "noChoice": "Seçim yok",
     "all": "Tümü",
     "refresh": "Yenile",
     "openIn": "{{name}}'da aç",
@@ -235,6 +249,7 @@
     "noMatchHint": "Bir filtreyi kaldır ya da hepsini temizle."
   },
   "detail": {
+    "loadFailed": "Bu görev yüklenemedi",
     "status": "Durum",
     "assignee": "Atanan",
     "priority": "Öncelik",
@@ -267,6 +282,9 @@
     "deleteFailed": "Yorum silinemedi"
   },
   "transfer": {
+    "signInNeeded": "Giriş yaparak eklenen board’larda bu telefonda giriş yapman gerekir: board’un sekmesini aç.",
+    "signInNote_one": "Giriş yaparak eklenen {{count}} board girişi olmadan gider; Mac bir kez giriş yapmanı ister.",
+    "signInNote_other": "Giriş yaparak eklenen {{count}} board girişi olmadan gider; Mac bir kez giriş yapmanı ister.",
     "receive": "Desktop'tan al",
     "send": "Desktop'a gönder",
     "receiveTitle": "Desktop'tan al",

@@ -33,13 +33,36 @@ function secretFields(providerId: string) {
 export const newConnectionId = () =>
   `c${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
 
-/** Adds secrets from SecureStore; only call right before talking to the provider. */
-export async function withSecrets(connection: StoredConnection): Promise<Connection> {
+async function read(connection: StoredConnection): Promise<Connection> {
   const values = { ...connection.values };
   for (const key of secretFields(connection.providerId)) {
     values[key] = (await secrets.get(account(connection.id, key))) ?? "";
   }
   return { ...connection, values };
+}
+
+// One renewal at a time per board: the refresh token changes on each, so two at once would spend the same one twice.
+const renewing = new Map<string, Promise<Connection>>();
+
+/**
+ * Adds secrets from SecureStore; only call right before talking to the provider. A board added by signing in renews
+ * its access token here first when it is about to expire, so every caller (and the background refresh) gets a live one.
+ */
+export async function withSecrets(connection: StoredConnection): Promise<Connection> {
+  const provider = getProvider(connection.providerId);
+  if (!provider?.refreshCredentials) return read(connection);
+  let pending = renewing.get(connection.id);
+  if (!pending) {
+    pending = (async () => {
+      const full = await read(list().find((c) => c.id === connection.id) ?? connection);
+      const values = await provider.refreshCredentials!(full, fetch);
+      if (!values) return full;
+      await saveConnection({ ...full, values });
+      return { ...full, values };
+    })().finally(() => renewing.delete(connection.id));
+    renewing.set(connection.id, pending);
+  }
+  return { ...(await pending), name: connection.name };
 }
 
 export async function saveConnection(connection: Connection) {

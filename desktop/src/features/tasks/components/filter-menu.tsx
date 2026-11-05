@@ -85,7 +85,7 @@ export function FilterMenu({ filters, onChange, options }: Props) {
         <ListFilter className="size-3.5" aria-hidden />
         {count > 0 && (
           <span
-            className="num absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-semibold text-accent-ink"
+            className="num absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-xs font-semibold text-accent-ink"
             aria-hidden
           >
             {count}
@@ -95,7 +95,7 @@ export function FilterMenu({ filters, onChange, options }: Props) {
       <PopoverContent align="end" className="flex w-72 max-w-[calc(100vw-24px)] flex-col gap-3">
         <PopoverHeader title={t('filters.title')}>
           {count > 0 && (
-            <Button size="sm" variant="ghost" className="-my-1 h-6 px-2 text-xs" onClick={() => onChange(emptyFilters())}>
+            <Button size="sm" variant="ghost" className="-my-1 px-2" onClick={() => onChange(emptyFilters())}>
               {t('filters.clear')}
             </Button>
           )}

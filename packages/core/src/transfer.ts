@@ -99,7 +99,7 @@ export async function encryptTransfer(connections: Connection[], code: string, n
 export async function decryptTransfer(
   input: string,
   code: string,
-  known: Pick<Provider, 'id' | 'fields'>[],
+  known: (Pick<Provider, 'id' | 'fields'> & Partial<Pick<Provider, 'signIn'>>)[],
   now = Date.now(),
 ): Promise<Connection[]> {
   const trimmed = input.trim();
@@ -132,7 +132,9 @@ export async function decryptTransfer(
   return parsed.data.connections.flatMap((c) => {
     const provider = known.find((p) => p.id === c.providerId);
     if (!provider) return [];
-    const values = Object.fromEntries(provider.fields.flatMap((f) => (f.key in c.values ? [[f.key, c.values[f.key]!]] : [])));
+    // A signed-in board arrives without a sign-in even if the sender included one: this device signs in itself.
+    const own = provider.fields.filter((f) => !provider.signIn || (f.type !== 'secret' && !f.session));
+    const values = Object.fromEntries(own.flatMap((f) => (f.key in c.values ? [[f.key, c.values[f.key]!]] : [])));
     return [{ ...c, values }];
   });
 }

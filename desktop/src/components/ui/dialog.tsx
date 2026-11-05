@@ -37,11 +37,9 @@ export function Dialog({ open, onOpenChange, title, description, children, foote
         <BaseDialog.Popup className={popupClass}>
           <div className="flex items-start justify-between gap-2">
             <BaseDialog.Title className={titleClass}>{title}</BaseDialog.Title>
-            <BaseDialog.Close
-              aria-label={t('ui.close')}
-              className="-mt-0.5 -mr-1 grid size-6 shrink-0 place-items-center rounded-sm text-muted transition-colors hover:bg-paper-3 hover:text-ink"
-            >
-              <X className="size-3.5" />
+            {/* The house icon button, like the popover's close. */}
+            <BaseDialog.Close render={<Button variant="ghost" size="icon" aria-label={t('ui.close')} className="-mt-1 -mr-1.5 shrink-0" />}>
+              <X />
             </BaseDialog.Close>
           </div>
           {description && <BaseDialog.Description className={descriptionClass}>{description}</BaseDialog.Description>}
@@ -72,7 +70,7 @@ export function ConfirmDialog({ open, onOpenChange, title, description, confirmL
             <BaseAlertDialog.Description className={descriptionClass}>{description}</BaseAlertDialog.Description>
           )}
           <div className="mt-1 flex justify-end gap-2">
-            <BaseAlertDialog.Close render={<Button size="sm" />}>{t('ui.cancel')}</BaseAlertDialog.Close>
+            <BaseAlertDialog.Close render={<Button size="sm" variant="ghost" />}>{t('ui.cancel')}</BaseAlertDialog.Close>
             <Button
               size="sm"
               variant={tone === 'danger' ? 'danger' : 'primary'}

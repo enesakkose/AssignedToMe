@@ -157,7 +157,9 @@ function SelectItem({
   return (
     <SelectPrimitive.Item
       className={cn(
-        "active:bg-accent group relative flex w-full flex-row items-center gap-2 rounded-sm py-2 pl-2 pr-8 sm:py-1.5",
+        "active:bg-accent group relative flex w-full flex-row items-center gap-2 rounded-sm pl-2 pr-8",
+        // 44 pt rows on a phone; the web build keeps the dense desktop size.
+        Platform.select({ native: "min-h-11 py-2.5", web: "py-1.5" }),
         Platform.select({
           web: "focus:bg-accent focus:text-accent-foreground *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2 cursor-default outline-none data-[disabled]:pointer-events-none [&_svg]:pointer-events-none",
         }),
@@ -171,7 +173,12 @@ function SelectItem({
           <Icon as={Check} className="text-muted-foreground size-4 shrink-0" />
         </SelectPrimitive.ItemIndicator>
       </View>
-      <SelectPrimitive.ItemText className="text-foreground group-active:text-accent-foreground select-none text-sm" />
+      <SelectPrimitive.ItemText
+        className={cn(
+          "text-foreground group-active:text-accent-foreground select-none",
+          Platform.select({ native: "text-base", web: "text-sm" }),
+        )}
+      />
     </SelectPrimitive.Item>
   );
 }

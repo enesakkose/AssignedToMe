@@ -1,8 +1,11 @@
 import {
   decryptTransfer,
   formatTransferCode,
+  getProvider,
+  mergeIncoming,
   newTransferCode,
   providers,
+  signInProviders,
   TransferError,
 } from "@mytask/core";
 import { AppHeader } from "@/components/layout/app-header";
@@ -20,7 +23,7 @@ import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ActivityIndicator, View } from "react-native";
 import { toast } from "sonner-native";
-import { saveConnection } from "../api/connections";
+import { saveConnection, useConnectionsStore } from "../api/connections";
 
 export const transferErrorKey = (e: unknown) =>
   e instanceof TransferError
@@ -52,15 +55,27 @@ export function TransferReceiveScreen() {
     handling.current = true;
     setBusy(true);
     try {
-      const incoming = await decryptTransfer(data, code, providers);
+      const incoming = await decryptTransfer(data, code, [...providers, ...signInProviders]);
       if (!incoming.length) throw new Error("none");
       // The same board sent again replaces the saved one (same id). Secrets go to the Keychain.
+      const have = useConnectionsStore.getState().connections;
       for (const c of incoming) {
-        await saveConnection(c);
+        await saveConnection(
+          mergeIncoming(
+            have.find((h) => h.id === c.id),
+            c,
+          ),
+        );
         clearHalted(c.id);
         void qc.invalidateQueries({ queryKey: ["tasks", c.id] });
       }
-      toast.success(t("transfer.imported", { count: incoming.length }));
+      // Boards added with a sign-in come without it: the phone signs in itself, from the board's tab.
+      const signInNeeded = incoming.some(
+        (c) => getProvider(c.providerId)?.signIn && !have.some((h) => h.id === c.id),
+      );
+      toast.success(t("transfer.imported", { count: incoming.length }), {
+        description: signInNeeded ? t("transfer.signInNeeded") : undefined,
+      });
       router.back();
     } catch (e) {
       setError(
