@@ -1,4 +1,4 @@
-import type { Provider, Subtask, Task } from "@mytask/core";
+import { taskTypeKind, type Provider, type Subtask, type Task } from "@mytask/core";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -31,6 +31,19 @@ import { useCanChangeStatus } from "../hooks/use-transitions";
 import { useCanLogWork } from "../hooks/use-worklog";
 import { Status } from "./status";
 import { Avatar, Priority, StatusDot, TimeTracking } from "./task-bits";
+
+// One pill tint per issue-type kind (shared categorizer); unknown types stay neutral. Sub-task shares the task tint.
+const TYPE_TINTS = {
+  bug: "bg-error/15 text-error",
+  story: "bg-success/15 text-success",
+  epic: "bg-warning/15 text-warning",
+  task: "bg-progress/15 text-progress",
+  subtask: "bg-progress/15 text-progress",
+} as const;
+const typeTint = (type: string | undefined) => {
+  const kind = taskTypeKind(type);
+  return kind ? TYPE_TINTS[kind] : "bg-paper-3 text-ink-2";
+};
 import { openTaskSheet, type SheetTarget } from "./task-sheets";
 
 /** Opens a task's detail page; the page finds it in its board (or loads it) by key. */
@@ -312,7 +325,10 @@ export function TaskRow({ task, provider }: { task: Task; provider?: Provider })
               ) : null}
               {task.type ? (
                 <Text
-                  className="max-w-28 shrink rounded-sm bg-paper-3 px-1.5 py-px text-xs font-medium text-ink-2"
+                  className={cn(
+                    "max-w-28 shrink rounded-sm px-1.5 py-px text-xs font-medium",
+                    typeTint(task.type),
+                  )}
                   numberOfLines={1}
                 >
                   {task.type}

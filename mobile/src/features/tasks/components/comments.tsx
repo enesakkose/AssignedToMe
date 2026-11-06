@@ -1,15 +1,6 @@
 import type { Attachment } from "@mytask/core";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
+import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -142,36 +133,28 @@ export function Comments({
         </>
       )}
 
-      <AlertDialog onOpenChange={(open) => !open && setConfirming(null)} open={!!confirming}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t("comments.deleteTitle")}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t("comments.deleteDescription", { app: appName })}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>
-              <Text>{t("ui.cancel")}</Text>
-            </AlertDialogCancel>
-            <AlertDialogAction
-              className={buttonVariants({ variant: "destructive" })}
-              onPress={() =>
-                confirming &&
-                remove.mutation.mutate(confirming, {
-                  onError: (error) =>
-                    toast.error(t("comments.deleteFailed"), {
-                      description: providerErrorText(error, t, appName),
-                    }),
-                  onSuccess: () => toast.success(t("comments.deleted")),
-                })
-              }
-            >
-              <Text className="text-white">{t("comments.delete")}</Text>
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmSheet
+        open={!!confirming}
+        onOpenChange={(open) => !open && setConfirming(null)}
+        title={t("comments.deleteTitle")}
+        description={t("comments.deleteDescription", { app: appName })}
+        confirmLabel={t("comments.delete")}
+        cancelLabel={t("ui.cancel")}
+        destructive
+        pending={remove.mutation.isPending}
+        onConfirm={() => {
+          if (!confirming) return;
+          const id = confirming;
+          setConfirming(null);
+          remove.mutation.mutate(id, {
+            onError: (error) =>
+              toast.error(t("comments.deleteFailed"), {
+                description: providerErrorText(error, t, appName),
+              }),
+            onSuccess: () => toast.success(t("comments.deleted")),
+          });
+        }}
+      />
     </View>
   );
 }

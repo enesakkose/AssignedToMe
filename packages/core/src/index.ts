@@ -11,6 +11,7 @@ import type { Connection, Provider, Task } from './types';
 export * from './types';
 export * from './errors';
 export * from './priority';
+export * from './task-type';
 export * from './status';
 export * from './duration';
 export * from './search';

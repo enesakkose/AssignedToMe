@@ -55,8 +55,6 @@ export function SendToPhoneDialog({ boards, open, onOpenChange }: { boards: Stor
   const [picked, setPicked] = useState(() => new Set(boards.map((b) => b.id)));
   const [qr, setQr] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  // Too many boards for one QR is about the board choice, not the code: shown under the boards.
-  const [boardsError, setBoardsError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   const close = (next: boolean) => {
@@ -65,7 +63,6 @@ export function SendToPhoneDialog({ boards, open, onOpenChange }: { boards: Stor
     setQr(null);
     setCode('');
     setError(null);
-    setBoardsError(null);
     onOpenChange(false);
   };
 
@@ -73,13 +70,10 @@ export function SendToPhoneDialog({ boards, open, onOpenChange }: { boards: Stor
     if (!isTransferCode(code)) return setError(t('transfer.codeInvalid'));
     setBusy(true);
     setError(null);
-    setBoardsError(null);
     try {
       // Secrets are read from Keychain only for this, and leave the app only inside the encrypted text.
       const full = await Promise.all(boards.filter((b) => picked.has(b.id)).map(async (b) => transferable(await withSecrets(b))));
-      const sealed = await encryptTransfer(full, code);
-      if (sealed.length > TRANSFER_QR_LIMIT) setBoardsError(t('transfer.tooMany'));
-      else setQr(sealed);
+      setQr(await encryptTransfer(full, code));
     } catch (e) {
       setError(t(transferErrorKey(e)));
     } finally {
@@ -95,9 +89,14 @@ export function SendToPhoneDialog({ boards, open, onOpenChange }: { boards: Stor
       description={qr ? t('transfer.scan') : t('transfer.sendStep')}
       footer={
         qr ? (
-          <Button size="sm" onClick={() => close(false)}>
-            {t('ui.close')}
-          </Button>
+          <>
+            <Button size="sm" variant="ghost" onClick={() => void navigator.clipboard.writeText(qr).then(() => toast.success(t('transfer.copied')))}>
+              {t('transfer.copyText')}
+            </Button>
+            <Button size="sm" onClick={() => close(false)}>
+              {t('ui.close')}
+            </Button>
+          </>
         ) : (
           <>
             <Button size="sm" variant="ghost" onClick={() => close(false)}>
@@ -112,8 +111,9 @@ export function SendToPhoneDialog({ boards, open, onOpenChange }: { boards: Stor
     >
       {qr ? (
         <div className="flex flex-col gap-3">
-          <Qr text={qr} />
-          {/* The phone can't tell the Mac it's done (nothing travels back), so the person closes it. */}
+          {/* A QR only when it fits; a longer transfer still travels by Copy text to a device that pastes. */}
+          {qr.length <= TRANSFER_QR_LIMIT ? <Qr text={qr} /> : <p className="text-center text-sm text-muted">{t('transfer.tooManyForQr')}</p>}
+          {/* The other device can't tell this one it's done (nothing travels back), so the person closes it. */}
           <p className="text-center text-sm text-muted">{t('transfer.closeWhenDone')}</p>
         </div>
       ) : (
@@ -154,11 +154,6 @@ export function SendToPhoneDialog({ boards, open, onOpenChange }: { boards: Stor
                 </label>
               );
             })}
-            {boardsError && (
-              <p role="alert" className="text-sm text-error">
-                {boardsError}
-              </p>
-            )}
           </div>
         </div>
       )}

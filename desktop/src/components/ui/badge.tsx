@@ -10,6 +10,7 @@ const badgeVariants = cva(
         neutral: 'bg-paper-3 text-ink-2',
         progress: 'bg-progress/15 text-progress',
         success: 'bg-success/15 text-success',
+        warning: 'bg-warning/15 text-warning',
         error: 'bg-error/15 text-error',
       },
     },

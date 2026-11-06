@@ -1,4 +1,4 @@
-import type { Provider, Subtask, Task } from '@mytask/core';
+import { taskTypeKind, type Provider, type Subtask, type Task } from '@mytask/core';
 import { ContextMenu } from '@base-ui/react/context-menu';
 import { ArrowRight, ArrowUpRight, ChevronDown, Clock3, Gauge, Hash, IterationCw, Link2, ListTree } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
@@ -18,6 +18,13 @@ import { AssigneeMenu } from './assignee-menu';
 import { markForRefresh } from '@/lib/query';
 import { useNav } from '@/stores/nav';
 import { LogWork } from './log-work';
+
+// One badge tint per issue-type kind (shared categorizer); unknown types stay neutral. Sub-task shares the task tint.
+const TYPE_TONES = { bug: 'error', story: 'success', epic: 'warning', task: 'progress', subtask: 'progress' } as const;
+const typeTone = (type: string | undefined) => {
+  const kind = taskTypeKind(type);
+  return kind ? TYPE_TONES[kind] : 'neutral';
+};
 import { StatusMenu } from './status-menu';
 
 /** Opens a task in its source and marks its board to refetch on return, so a change made there shows up here. */
@@ -101,7 +108,11 @@ export function TaskRow({ task, provider, onOpen }: TaskRowProps) {
             <span className="truncate">{task.sprint}</span>
           </span>
         )}
-        {task.type && <Badge className="max-w-24 min-w-0 shrink">{task.type}</Badge>}
+        {task.type && (
+          <Badge tone={typeTone(task.type)} className="max-w-24 min-w-0 shrink">
+            {task.type}
+          </Badge>
+        )}
         {/* Worth seeing from the list: something unfinished is blocking this task. */}
         {task.links?.some((l) => l.blocksThis && l.statusCategory !== 'done') && <Badge tone="error">{t('tasks.blocked')}</Badge>}
         <span className="num ml-auto shrink-0 text-xs">{timeAgo(task.updatedAt)}</span>

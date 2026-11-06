@@ -2,17 +2,8 @@ import { getProvider, providers, type Connection, type Provider } from "@mytask/
 import { AppHeader } from "@/components/layout/app-header";
 import { Section } from "@/components/layout/section";
 import { Screen } from "@/components/layout/screen";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
+import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import { SecretInput } from "@/components/ui/secret-input";
@@ -332,35 +323,26 @@ function ConnectionForm({
       )}
 
       {initial ? (
-        <AlertDialog onOpenChange={setRemoving} open={removing}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>
-                {t("connections.removeTitle", { name: initial.name })}
-              </AlertDialogTitle>
-              <AlertDialogDescription>{t("connections.removeDescription")}</AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>
-                <Text>{t("ui.cancel")}</Text>
-              </AlertDialogCancel>
-              <AlertDialogAction
-                className={buttonVariants({ variant: "destructive" })}
-                onPress={() =>
-                  remove.mutate(initial.id, {
-                    onSuccess: () => {
-                      toast.success(t("connections.removed"));
-                      router.back();
-                    },
-                    onError: () => toast.error(t("errors.generic")),
-                  })
-                }
-              >
-                <Text className="text-white">{t("connections.remove")}</Text>
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <ConfirmSheet
+          open={removing}
+          onOpenChange={setRemoving}
+          title={t("connections.removeTitle", { name: initial.name })}
+          description={t("connections.removeDescription")}
+          confirmLabel={t("connections.remove")}
+          cancelLabel={t("ui.cancel")}
+          destructive
+          pending={remove.isPending}
+          onConfirm={() => {
+            setRemoving(false);
+            remove.mutate(initial.id, {
+              onSuccess: () => {
+                toast.success(t("connections.removed"));
+                router.back();
+              },
+              onError: () => toast.error(t("errors.generic")),
+            });
+          }}
+        />
       ) : null}
     </>
   );
