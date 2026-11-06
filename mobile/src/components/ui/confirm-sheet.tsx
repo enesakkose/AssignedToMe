@@ -36,15 +36,16 @@ export function ConfirmSheet({
 }) {
   const ref = useRef<BottomSheetModalRef>(null);
   useEffect(() => {
-    if (open) ref.current?.present();
-    else ref.current?.dismiss();
+    if (!open) {
+      ref.current?.dismiss();
+      return;
+    }
+    // present() right after the state-change commit is swallowed; defer it to the next frame.
+    const id = requestAnimationFrame(() => ref.current?.present());
+    return () => cancelAnimationFrame(id);
   }, [open]);
   return (
-    <BottomSheetModal
-      ref={ref}
-      enableDynamicSizing
-      onDismiss={() => onOpenChange(false)}
-    >
+    <BottomSheetModal ref={ref} enableDynamicSizing onDismiss={() => onOpenChange(false)}>
       <BottomSheetContent className="gap-5">
         <BottomSheetHeader title={title} description={description} />
         <View className="gap-2.5">
