@@ -1,5 +1,9 @@
 {
   "name": "mytask",
   "private": true,
-  "workspaces": ["packages/*", "desktop"]
+  "workspaces": [
+    "packages/*",
+    "desktop",
+    "web"
+  ]
 }

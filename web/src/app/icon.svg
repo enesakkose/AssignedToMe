@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <!-- The app icon's graphite tile and silver mark (desktop/design/logo), full bleed for a tab. -->
+  <rect width="256" height="256" rx="58" fill="#2b2d31"/>
+  <g fill="#e4e5e7" transform="translate(128 128) scale(0.78) translate(-128 -128)">
+    <rect x="24" y="24" width="152" height="56" rx="28"/>
+    <circle cx="53" cy="128" r="29"/>
+    <rect x="106" y="100" width="126" height="56" rx="28"/>
+    <rect x="24" y="176" width="152" height="56" rx="28"/>
+  </g>
+</svg>

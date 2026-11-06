@@ -1,0 +1,471 @@
+/* Hallmark · shape: scene landing at / (job: try): the five sources' lines merge into the app window rising from the hero's foot; the app screen at /app · hero: Stage, the app window rising from the foot past the fold · genre: modern-minimal · theme: desktop/DESIGN.md, the locked system (no deal), web-scaled, unslopped · v2.0.0
+ * nav: a wordmark and three links on the landing; a 240px sidebar of boards in the app (a sheet under 1024px) · signature: the pulled bar marks the open task · states: loading, empty, error, full
+ * axes: light+dark/grotesk-sans/achromatic · posture: restrained · contrast: pass */
+/* Hallmark · pre-emit critique: P4 H- E3 S4 R4 V- · weakest: E, the first screen is demo data until a board is connected; kept every figure to what the Task type holds */
+/* Hallmark · waive 23 · the accent token is graphite ink, the same achromatic tone as the text · only the provider marks and status icons carry colour on this page */
+/* Hallmark · waive 72 · the hero and detail figures are pictures of the app · their rows truncate at the panel edge exactly as the app does */
+/* Hallmark · waive 80 · the hero lines are a diagram, each starting at a labelled provider mark and ending on the app window · they draw the product's one idea, five sources merging into one list */
+/* Hallmark · waive 77 · the Keychain section carries the sign-in buttons that replace the key; the close is the download set as a short band · both are the job's own content, kept short on purpose */
+/* Hallmark · waive 44c · the hero is the headline and the app window rising from its foot past the fold, Stage posture · the window is the product itself, so the first screen ends inside it */
+/* Hallmark · waive 79 · the hero is the headline with the sources' marks set in it, centred in the first screen with equal space above and below · a type-only hero, no picture under it by choice */
+/* Hallmark · waive 26b · button-variants.ts carries active:scale-[0.97] and data-[disabled] styles · the states live in Tailwind classes on the components, not in this stylesheet */
+@import "tailwindcss";
+@import "@fontsource-variable/instrument-sans/wght.css";
+@import "@fontsource-variable/jetbrains-mono/wght.css";
+
+/* One source for the visual language, the same roles as desktop/src/styles/globals.css. Sizes are web-scaled one step
+   up from desktop's menubar density; colours, radii, motion and the cut corner are identical. */
+:root {
+  color-scheme: light;
+
+  --color-paper: oklch(97.3% 0.003 250);
+  --color-paper-2: oklch(21% 0.006 260 / 0.04);
+  --color-paper-3: oklch(21% 0.006 260 / 0.07);
+  --color-ink: oklch(21% 0.006 260);
+  --color-ink-2: oklch(33% 0.006 260);
+  --color-muted: oklch(46% 0.008 260);
+  --color-rule: oklch(21% 0.006 260 / 0.06);
+  --color-rule-2: oklch(21% 0.006 260 / 0.1);
+  /* Glass, as desktop's window over the macOS blur: chrome that content scrolls under. */
+  --color-surface: oklch(97.3% 0.003 250 / 0.72);
+  /* The landing header: nearly opaque, so what scrolls under it never turns it grey. */
+  --color-bar: oklch(98.5% 0.002 250 / 0.9);
+  --color-bar-glint: oklch(100% 0 0 / 0.9);
+  /* Titanium: achromatic tone shifts for the landing's metal details (text, fill, edge, rule). */
+  --color-ti-text-hi: oklch(42% 0.008 258);
+  --color-ti-text-lo: oklch(17% 0.006 260);
+  --color-ti-fill-hi: oklch(40% 0.008 258);
+  --color-ti-fill-lo: oklch(19% 0.006 260);
+  --color-ti-glint: oklch(100% 0 0 / 0.18);
+  --color-ti-edge: oklch(21% 0.006 260 / 0.28);
+  /* A field's edge: 3:1 against the page, which the hairlines above are not meant to be. */
+  --color-edge: oklch(60% 0.008 260);
+  /* The sidebar and the list's group bands: a step off the page, opaque so sticky bands hide what scrolls under. */
+  --color-band: color-mix(in oklab, var(--color-ink) 3%, var(--color-paper));
+  /* Dims the page behind the phone's sidebar sheet. */
+  --color-scrim: oklch(0% 0 0 / 0.32);
+
+  --color-accent: oklch(26% 0.006 260);
+  --color-accent-hover: oklch(33% 0.006 260);
+  --color-accent-text: oklch(42% 0.01 260);
+  --color-accent-wash: oklch(92.5% 0.004 250);
+  --color-accent-ink: oklch(97.5% 0.002 250);
+  --color-focus: oklch(42% 0.01 260);
+
+  --color-error: oklch(52% 0.19 27);
+  --color-error-wash: oklch(96% 0.02 27);
+  --color-success: oklch(50% 0.12 150);
+  /* Status and priority are the only hues in the UI. */
+  --color-progress: oklch(55% 0.1 190);
+  --color-warning: oklch(62% 0.15 65);
+
+  --color-graphite: oklch(21% 0.006 260);
+  --color-graphite-ink: oklch(95% 0.003 250);
+  --color-track: oklch(85% 0.004 250);
+  /* Brand mark: the same graphite tile and silver glyph in both themes, like the app icon. */
+  --color-brand-tile: oklch(26% 0.006 260);
+  --color-brand-mark: oklch(91% 0.003 250);
+  --shadow-float:
+    0 1px 2px oklch(21% 0.006 260 / 0.08), 0 8px 24px -8px oklch(21% 0.006 260 / 0.22);
+  /* A window of the Mac app on the page: a hairline ring, a lit top edge, and a long soft drop. */
+  --shadow-window:
+    0 0 0 1px oklch(21% 0.006 260 / 0.08), inset 0 1px 0 oklch(100% 0 0 / 0.7),
+    0 24px 48px -16px oklch(21% 0.006 260 / 0.18);
+
+  /* One family; display and body differ by weight and tracking only. */
+  --font-display: "Instrument Sans Variable", system-ui, sans-serif;
+  --font-body: "Instrument Sans Variable", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
+  --tracking-display: -0.02em;
+
+  /* 1.125 ratio */
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-md: 14px;
+  --text-title: 15px;
+  --text-lg: 16px;
+  --text-xl: 18px;
+  --text-2xl: 22px;
+  /* Landing page only: the hero head, section heads and the one line under a head. */
+  --text-display: clamp(2.5rem, 1.5rem + 3.4vw, 4.5rem);
+  --text-section: clamp(2rem, 1.4rem + 1.9vw, 3rem);
+  --text-lead: clamp(1.0625rem, 1rem + 0.3vw, 1.25rem);
+
+  --radius-sm: 4px;
+  --radius-input: 8px;
+  --radius-control: 999px;
+  --radius-card: 10px;
+  --radius-window: 12px;
+  --cut: 8px;
+
+  --control-sm: 30px;
+  --control-md: 36px;
+
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --dur-micro: 120ms;
+  --dur-short: 200ms;
+}
+
+/* Touch screens get 44px controls. */
+@media (pointer: coarse) {
+  :root {
+    --control-sm: 44px;
+    --control-md: 44px;
+  }
+}
+
+/* Dark: with the system by default (no script needed), or when the theme switch says so. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+
+    --color-paper: oklch(17.5% 0.004 260);
+    --color-paper-2: oklch(94% 0.003 250 / 0.05);
+    --color-paper-3: oklch(94% 0.003 250 / 0.09);
+    --color-ink: oklch(94% 0.003 250);
+    --color-ink-2: oklch(82% 0.004 250);
+    --color-muted: oklch(68% 0.006 255);
+    --color-rule: oklch(94% 0.003 250 / 0.06);
+    --color-rule-2: oklch(94% 0.003 250 / 0.1);
+    --color-surface: oklch(17.5% 0.004 260 / 0.62);
+    --color-bar: oklch(20% 0.004 260 / 0.9);
+    --color-bar-glint: oklch(100% 0 0 / 0.06);
+    --color-ti-text-hi: oklch(98% 0.002 250);
+    --color-ti-text-lo: oklch(68% 0.008 255);
+    --color-ti-fill-hi: oklch(96% 0.003 250);
+    --color-ti-fill-lo: oklch(76% 0.008 255);
+    --color-ti-glint: oklch(100% 0 0 / 0.75);
+    --color-ti-edge: oklch(94% 0.003 250 / 0.38);
+    --color-ti-text-hi: oklch(98% 0.002 250);
+    --color-ti-text-lo: oklch(68% 0.008 255);
+    --color-ti-fill-hi: oklch(96% 0.003 250);
+    --color-ti-fill-lo: oklch(76% 0.008 255);
+    --color-ti-glint: oklch(100% 0 0 / 0.75);
+    --color-ti-edge: oklch(94% 0.003 250 / 0.38);
+    --color-edge: oklch(52% 0.008 255);
+
+    --color-accent: oklch(91% 0.003 250);
+    --color-accent-hover: oklch(84% 0.004 250);
+    --color-accent-text: oklch(82% 0.008 255);
+    --color-accent-wash: oklch(29% 0.006 260);
+    --color-accent-ink: oklch(19% 0.005 260);
+    --color-focus: oklch(82% 0.008 255);
+
+    --color-error: oklch(72% 0.16 27);
+    --color-error-wash: oklch(27% 0.05 27);
+    --color-success: oklch(74% 0.13 150);
+    --color-progress: oklch(76% 0.11 190);
+    --color-warning: oklch(80% 0.14 75);
+
+    --color-graphite: oklch(94% 0.003 250);
+    --color-graphite-ink: oklch(19% 0.005 260);
+    --color-track: oklch(36% 0.006 260);
+    --shadow-float: 0 0 0 1px var(--color-rule-2), 0 12px 28px -8px oklch(0% 0 0 / 0.6);
+    --shadow-window:
+      0 0 0 1px oklch(94% 0.003 250 / 0.1), inset 0 1px 0 oklch(100% 0 0 / 0.06),
+      0 32px 64px -24px oklch(0% 0 0 / 0.7);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-paper: oklch(17.5% 0.004 260);
+  --color-paper-2: oklch(94% 0.003 250 / 0.05);
+  --color-paper-3: oklch(94% 0.003 250 / 0.09);
+  --color-ink: oklch(94% 0.003 250);
+  --color-ink-2: oklch(82% 0.004 250);
+  --color-muted: oklch(68% 0.006 255);
+  --color-rule: oklch(94% 0.003 250 / 0.06);
+  --color-rule-2: oklch(94% 0.003 250 / 0.1);
+  --color-surface: oklch(17.5% 0.004 260 / 0.62);
+  --color-edge: oklch(52% 0.008 255);
+
+  --color-accent: oklch(91% 0.003 250);
+  --color-accent-hover: oklch(84% 0.004 250);
+  --color-accent-text: oklch(82% 0.008 255);
+  --color-accent-wash: oklch(29% 0.006 260);
+  --color-accent-ink: oklch(19% 0.005 260);
+  --color-focus: oklch(82% 0.008 255);
+
+  --color-error: oklch(72% 0.16 27);
+  --color-error-wash: oklch(27% 0.05 27);
+  --color-success: oklch(74% 0.13 150);
+  --color-progress: oklch(76% 0.11 190);
+  --color-warning: oklch(80% 0.14 75);
+
+  --color-graphite: oklch(94% 0.003 250);
+  --color-graphite-ink: oklch(19% 0.005 260);
+  --color-track: oklch(36% 0.006 260);
+  --shadow-float: 0 0 0 1px var(--color-rule-2), 0 12px 28px -8px oklch(0% 0 0 / 0.6);
+  --shadow-window:
+    0 0 0 1px oklch(94% 0.003 250 / 0.1), inset 0 1px 0 oklch(100% 0 0 / 0.06),
+    0 32px 64px -24px oklch(0% 0 0 / 0.7);
+  --color-ti-text-hi: oklch(98% 0.002 250);
+  --color-ti-text-lo: oklch(68% 0.008 255);
+  --color-ti-fill-hi: oklch(96% 0.003 250);
+  --color-ti-fill-lo: oklch(76% 0.008 255);
+  --color-ti-glint: oklch(100% 0 0 / 0.75);
+  --color-ti-edge: oklch(94% 0.003 250 / 0.38);
+  --color-bar: oklch(20% 0.004 260 / 0.9);
+  --color-bar-glint: oklch(100% 0 0 / 0.06);
+}
+
+@theme inline {
+  --color-paper: var(--color-paper);
+  --color-paper-2: var(--color-paper-2);
+  --color-paper-3: var(--color-paper-3);
+  --color-ink: var(--color-ink);
+  --color-ink-2: var(--color-ink-2);
+  --color-muted: var(--color-muted);
+  --color-rule: var(--color-rule);
+  --color-rule-2: var(--color-rule-2);
+  --color-surface: var(--color-surface);
+  --color-edge: var(--color-edge);
+  --color-band: var(--color-band);
+  --color-scrim: var(--color-scrim);
+  --color-accent: var(--color-accent);
+  --color-accent-hover: var(--color-accent-hover);
+  --color-accent-text: var(--color-accent-text);
+  --color-accent-wash: var(--color-accent-wash);
+  --color-accent-ink: var(--color-accent-ink);
+  --color-error: var(--color-error);
+  --color-error-wash: var(--color-error-wash);
+  --color-success: var(--color-success);
+  --color-progress: var(--color-progress);
+  --color-warning: var(--color-warning);
+  --color-graphite: var(--color-graphite);
+  --color-graphite-ink: var(--color-graphite-ink);
+  --color-track: var(--color-track);
+  --color-brand-tile: var(--color-brand-tile);
+  --color-brand-mark: var(--color-brand-mark);
+
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+  --font-mono: var(--font-mono);
+
+  --text-xs: var(--text-xs);
+  --text-sm: var(--text-sm);
+  --text-md: var(--text-md);
+  --text-title: var(--text-title);
+  --text-lg: var(--text-lg);
+  --text-xl: var(--text-xl);
+  --text-2xl: var(--text-2xl);
+  --text-display: var(--text-display);
+  --text-section: var(--text-section);
+  --text-lead: var(--text-lead);
+
+  --radius-sm: var(--radius-sm);
+  --radius-input: var(--radius-input);
+  --radius-control: var(--radius-control);
+  --radius-card: var(--radius-card);
+  --radius-window: var(--radius-window);
+  --shadow-float: var(--shadow-float);
+  --shadow-window: var(--shadow-window);
+
+  --ease-out: var(--ease-out);
+}
+
+@layer base {
+  html,
+  body {
+    overflow-x: clip;
+    min-height: 100%;
+  }
+  html {
+    scrollbar-color: var(--color-rule-2) transparent;
+  }
+  body {
+    margin: 0;
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    font-size: var(--text-md);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    caret-color: var(--color-accent);
+  }
+  ::selection {
+    background: color-mix(in oklab, var(--color-accent) 22%, transparent);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+  h1,
+  h2,
+  h3 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: var(--tracking-display);
+    line-height: 1.2;
+    overflow-wrap: break-word;
+    min-width: 0;
+    text-wrap: balance;
+  }
+  p {
+    margin: 0;
+  }
+  /* iOS zooms into any input under 16px. */
+  @media (max-width: 640px) {
+    input {
+      font-size: 16px;
+    }
+  }
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Glass: the desktop window's translucency, for sticky chrome and floating panels only. Opaque when asked. */
+@utility glass {
+  background: var(--color-surface);
+  backdrop-filter: blur(20px) saturate(1.6);
+  @media (prefers-reduced-transparency: reduce) {
+    background: var(--color-paper);
+    backdrop-filter: none;
+  }
+}
+
+/* Titanium, for the landing only. Every one is a tone shift inside the graphite ramp, never a hue. */
+@utility metal-text {
+  background: linear-gradient(180deg, var(--color-ti-text-hi) 10%, var(--color-ti-text-lo) 95%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+/* Sits on a primary button: the brushed fill is an image over its colour, so its text and states stay the button's. */
+@utility metal-fill {
+  background-image: linear-gradient(180deg, var(--color-ti-fill-hi), var(--color-ti-fill-lo));
+  box-shadow:
+    inset 0 1px 0 var(--color-ti-glint),
+    0 1px 2px oklch(0% 0 0 / 0.2);
+}
+/* The header bar: near-opaque, a crisp hairline, a faint lit top edge. */
+@utility metal-edge {
+  border: 1px solid var(--color-rule-2);
+  background: var(--color-bar);
+  box-shadow:
+    inset 0 1px 0 var(--color-bar-glint),
+    0 8px 24px -12px oklch(0% 0 0 / 0.35);
+  backdrop-filter: blur(12px);
+  @media (prefers-reduced-transparency: reduce) {
+    background: var(--color-paper);
+    backdrop-filter: none;
+  }
+}
+/* The hero's backdrop, barely there. Light falling from the top, as on a titanium sheet under a lamp. */
+@utility ti-light {
+  background: radial-gradient(ellipse 55% 50% at 50% -8%, var(--color-ti-edge), transparent 72%);
+}
+/* A section's top hairline, fading out at both ends. */
+@utility metal-rule {
+  border-top: 1px solid;
+  border-image: linear-gradient(
+      90deg,
+      transparent,
+      var(--color-ti-edge) 30%,
+      var(--color-ti-edge) 70%,
+      transparent
+    )
+    1;
+}
+
+/* Cut corners: two opposite bevels where supported, a plain radius otherwise. */
+@utility cut {
+  border-radius: var(--radius-card);
+  @supports (corner-shape: bevel) {
+    border-radius: var(--cut) 3px;
+    corner-shape: bevel round;
+  }
+}
+
+/* Content that arrives after the page appears eases in instead of popping. */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@utility fade-in {
+  animation: fade-in var(--dur-short) ease-out;
+}
+
+/* Board tabs and other strips scroll sideways without a visible bar. */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* The source's own description markup, sanitized on the server: quiet, readable, never wider than the panel. */
+.source-html {
+  color: var(--color-ink-2);
+  font-size: var(--text-md);
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+  & > * + * {
+    margin-top: 0.75em;
+  }
+  & :is(h1, h2, h3, h4, h5, h6) {
+    color: var(--color-ink);
+    font-weight: 600;
+  }
+  & a {
+    color: var(--color-ink);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  & :is(ul, ol) {
+    padding-left: 1.25em;
+  }
+  & ul {
+    list-style: disc;
+  }
+  & ol {
+    list-style: decimal;
+  }
+  & code {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+  }
+  & pre {
+    overflow-x: auto;
+    padding: 0.75em;
+    border: 1px solid var(--color-rule);
+    border-radius: 6px;
+    background: var(--color-paper);
+  }
+  & blockquote {
+    border-left: 2px solid var(--color-rule);
+    padding-left: 0.75em;
+  }
+  & table {
+    display: block;
+    overflow-x: auto;
+    border-collapse: collapse;
+  }
+  & :is(th, td) {
+    border: 1px solid var(--color-rule);
+    padding: 0.375em 0.625em;
+    text-align: left;
+  }
+  & img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 6px;
+  }
+}

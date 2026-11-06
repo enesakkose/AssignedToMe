@@ -1,0 +1,20 @@
+[
+  {
+    "shape": "app screen",
+    "theme": "desktop/DESIGN.md (locked)",
+    "axes": "light+dark/grotesk-sans/achromatic",
+    "hero": "none (app screen)",
+    "nav": "sidebar 240px, sheet under 1024px",
+    "footer": "none",
+    "imagery": "product (provider logos only)",
+    "photos": [],
+    "entry": "none",
+    "fingerprint": "sidebar+status-bands+detail-panel",
+    "sections": ["sidebar", "header", "status bands", "task rows", "detail panel"],
+    "signature": "pulled bar marks the open task",
+    "waived": ["26b"],
+    "prompt": "AssignedToMe web first screen, rebuilt as a real web app shell",
+    "date": "2026-11-05",
+    "mode": "build"
+  }
+]
