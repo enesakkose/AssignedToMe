@@ -28,9 +28,16 @@ const KEYCHAIN_SERVICE: &str = "com.mytask.desktop";
 /// https origins the user connected (e.g. a self-hosted Jira) that the http plugin may reach.
 struct AllowedOrigins(Mutex<HashSet<String>>);
 
-/// When the popover last hid itself on blur. A tray click right after that is the
-/// same click that caused the blur, so it must not reopen the popover.
+/// When the popover last hid itself. A tray click right after that is the
+/// same click that caused the hide, so it must not reopen the popover.
 struct LastBlurHide(Mutex<Option<Instant>>);
+
+/// The outside-click monitor that dismisses the popover, while it is open.
+/// Hiding on focus loss would kill the popover whenever macOS reveals the menu bar
+/// over a full-screen app; a global mouse-down monitor dismisses only on a real click
+/// outside the panel (clicks inside the panel are local events and never reach it).
+/// The NSEvent token isn't `Send`, so it is kept as its pointer and only touched on the main thread.
+struct ClickMonitor(Mutex<Option<usize>>);
 
 // shortcut: in `tauri dev` secrets live in a plaintext file under the app-data dir, not the Keychain, because every
 // rebuild is a new unsigned binary and macOS re-prompts for Keychain access on each one. Release builds (stable code
@@ -147,9 +154,7 @@ fn position_popover(app: &AppHandle, window: &tauri::WebviewWindow) {
 #[tauri::command]
 fn show_popover(app: AppHandle) {
     let Some(window) = app.get_webview_window("main") else { return };
-    position_popover(&app, &window);
-    let _ = window.show();
-    let _ = window.set_focus();
+    present_popover(&app, &window);
 }
 
 /// Brings the app window forward if it's open; false when there is none.
@@ -532,10 +537,80 @@ fn allow_http_origin(app: AppHandle, origin: String) -> Result<(), String> {
     Ok(())
 }
 
+/// Dismiss the popover: hide it, stop the outside-click monitor, and note the time so the same
+/// click that dismissed it (e.g. on the tray icon) doesn't immediately reopen it.
+fn hide_popover(app: &AppHandle) {
+    let Some(window) = app.get_webview_window("main") else { return };
+    let was_visible = window.is_visible().unwrap_or(false);
+    let _ = window.hide();
+    if was_visible {
+        *app.state::<LastBlurHide>().0.lock().unwrap() = Some(Instant::now());
+    }
+    #[cfg(target_os = "macos")]
+    remove_click_monitor(app);
+}
+
+/// Show the popover under the tray icon and start watching for a click outside it.
+fn present_popover(app: &AppHandle, window: &tauri::WebviewWindow) {
+    position_popover(app, window);
+    let _ = window.show();
+    let _ = window.set_focus();
+    #[cfg(target_os = "macos")]
+    install_click_monitor(app);
+}
+
+// A global mouse-down monitor: it only sees clicks delivered to other apps, so a click inside the
+// popover (a local event) never reaches it, while a click anywhere outside dismisses the popover —
+// without the focus-loss hide that a full-screen menu-bar reveal used to trigger.
+#[cfg(target_os = "macos")]
+fn install_click_monitor(app: &AppHandle) {
+    let handle = app.clone();
+    // NSEvent APIs are main-thread only.
+    let _ = app.run_on_main_thread(move || {
+        use block2::RcBlock;
+        use objc2::rc::Retained;
+        use objc2_app_kit::{NSEvent, NSEventMask};
+        use std::ptr::NonNull;
+
+        let state = handle.state::<ClickMonitor>();
+        let mut slot = state.0.lock().unwrap();
+        if slot.is_some() {
+            return;
+        }
+        let on_click = handle.clone();
+        let block = RcBlock::new(move |_event: NonNull<NSEvent>| hide_popover(&on_click));
+        let mask =
+            NSEventMask::LeftMouseDown | NSEventMask::RightMouseDown | NSEventMask::OtherMouseDown;
+        if let Some(token) = NSEvent::addGlobalMonitorForEventsMatchingMask_handler(mask, &block) {
+            *slot = Some(Retained::into_raw(token) as usize);
+        }
+    });
+}
+
+#[cfg(target_os = "macos")]
+fn remove_click_monitor(app: &AppHandle) {
+    let handle = app.clone();
+    let _ = app.run_on_main_thread(move || {
+        use objc2::rc::Retained;
+        use objc2::runtime::AnyObject;
+        use objc2_app_kit::NSEvent;
+
+        let token = handle.state::<ClickMonitor>().0.lock().unwrap().take();
+        if let Some(ptr) = token {
+            let ptr = ptr as *mut AnyObject;
+            unsafe {
+                NSEvent::removeMonitor(&*ptr);
+                // Balance the retain kept by into_raw when the monitor was stored.
+                drop(Retained::from_raw(ptr));
+            }
+        }
+    });
+}
+
 fn toggle_popover(app: &AppHandle) {
     let Some(window) = app.get_webview_window("main") else { return };
     if window.is_visible().unwrap_or(false) {
-        let _ = window.hide();
+        hide_popover(app);
         return;
     }
     let just_hidden = app
@@ -547,15 +622,14 @@ fn toggle_popover(app: &AppHandle) {
     if just_hidden {
         return;
     }
-    position_popover(app, &window);
-    let _ = window.show();
-    let _ = window.set_focus();
+    present_popover(app, &window);
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .manage(LastBlurHide(Mutex::new(None)))
+        .manage(ClickMonitor(Mutex::new(None)))
         .manage(AllowedOrigins(Mutex::new(HashSet::new())))
         .manage(OAuthListener(Mutex::new(None)))
         .manage(OAuthCancelled(std::sync::atomic::AtomicBool::new(false)))
@@ -656,11 +730,8 @@ pub fn run() {
             Ok(())
         })
         .on_window_event(|window, event| match event {
-            // Only the popover hides when it loses focus; the app window behaves like any other window.
-            WindowEvent::Focused(false) if window.label() == "main" => {
-                let _ = window.hide();
-                *window.state::<LastBlurHide>().0.lock().unwrap() = Some(Instant::now());
-            }
+            // The popover is not hidden on focus loss: that fired whenever macOS revealed the menu bar over a
+            // full-screen app and made the popover vanish. It is dismissed by the outside-click monitor instead.
             // Again once the window is up: the Dock may only build its tile after the switch above has returned.
             #[cfg(target_os = "macos")]
             WindowEvent::Focused(true) if window.label() == "app" => restore_dock_icon(),

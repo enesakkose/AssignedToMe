@@ -19,7 +19,12 @@ export function PopoverContent({
   return (
     <BasePopover.Portal>
       <BasePopover.Positioner align={align} sideOffset={sideOffset} collisionPadding={8} className="z-50">
-        <BasePopover.Popup data-floating className={cn(floatingPanelClass, 'p-3', className)} {...props} />
+        {/* The popover lives inside a small 400×600 window; cap it to the room left so a tall one scrolls instead of clipping. */}
+        <BasePopover.Popup
+          data-floating
+          className={cn(floatingPanelClass, 'max-h-[var(--available-height)] overflow-y-auto p-3', className)}
+          {...props}
+        />
       </BasePopover.Positioner>
     </BasePopover.Portal>
   );
