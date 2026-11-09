@@ -28,6 +28,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     const tasks = await provider.fetchMyTasks(connection, providerFetch);
     return Response.json({ tasks }, { headers: noStore });
   } catch (error) {
+    // Server-side only: the provider's error detail (never credentials) so a failing board is debuggable.
+    console.error(`board ${id} tasks failed:`, error instanceof Error ? error.message : error);
     return Response.json(errorBody(error), { status: 502, headers: noStore });
   }
 }

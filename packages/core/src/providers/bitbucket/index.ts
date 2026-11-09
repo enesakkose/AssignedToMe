@@ -224,7 +224,7 @@ export const bitbucket: Provider = {
     const ctx = context(connection, fetch);
     const me = await currentUser(ctx);
     // shortcut: reviewer-only; to also show PRs I authored, page role=AUTHOR too and merge by id.
-    const prs = await page(ctx, '/dashboard/pull-requests?role=REVIEWER&state=OPEN&avatarSize=0', prSchema);
+    const prs = await page(ctx, '/dashboard/pull-requests?role=REVIEWER&state=OPEN', prSchema);
     return prs.map((pr) => toTask(ctx, pr, me.username));
   },
   getTransitions: async (connection, taskKey, fetch): Promise<Transition[]> => {

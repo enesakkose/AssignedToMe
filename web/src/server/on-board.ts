@@ -30,6 +30,8 @@ export async function onBoard<T>(
     if (changed) await saveBoard({ ...board, connection });
     return { ok: await run(provider, connection) };
   } catch (error) {
+    // Server-side only: the provider's error detail (never credentials) so a failing action is debuggable.
+    console.error(`board ${boardId} action failed:`, error instanceof Error ? error.message : error);
     return errorBody(error);
   }
 }
