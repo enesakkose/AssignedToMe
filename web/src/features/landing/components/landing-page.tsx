@@ -16,6 +16,7 @@ import { Features } from "./features";
 import { HeroList } from "./hero-list";
 import { FooterPrefs } from "./footer-prefs";
 import { SiteNav } from "./site-nav";
+import { StructuredData } from "./structured-data";
 
 /** One container for the whole page: 1200px of content at most; past it the gutters grow. */
 const Container = ({ className, children }: { className?: string; children: ReactNode }) => (
@@ -31,8 +32,10 @@ const signInFor = (p: Provider) => signInProviders.find((s) => s.signIn?.for ===
 /** What a first-time visitor sees: what it is, in the sources' own marks; one statement; what it does; keys; download. */
 export async function LandingPage() {
   const [t, locale] = await Promise.all([getTranslations("landing"), getLocale()]);
+  const faq = t.raw("faq") as { q: string; a: string }[];
   return (
     <div className="text-lg">
+      <StructuredData />
       <SiteNav />
 
       <main>
@@ -152,6 +155,24 @@ export async function LandingPage() {
                 </span>
               ))}
             </div>
+          </Container>
+        </section>
+
+        <section aria-labelledby="faq" className="pb-28 lg:pb-36">
+          <Container className="grid gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
+            <h2 id="faq" className={cn(sectionHead, "max-w-[12ch]")}>
+              {t("faqTitle")}
+            </h2>
+            <dl className="flex flex-col divide-y divide-rule border-t border-rule">
+              {faq.map((f) => (
+                <div key={f.q} className="flex flex-col gap-2 py-6">
+                  <dt className="font-display text-xl font-medium tracking-[-0.01em] text-ink">
+                    {f.q}
+                  </dt>
+                  <dd className="max-w-[46ch] text-md leading-relaxed text-muted">{f.a}</dd>
+                </div>
+              ))}
+            </dl>
           </Container>
         </section>
 

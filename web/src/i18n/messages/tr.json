@@ -2,7 +2,7 @@
   "metadata": {
     "title": "AssignedToMe",
     "home": "AssignedToMe: sana atanan her şey, tek listede",
-    "description": "Jira, Linear, GitHub, GitLab ve Azure DevOps'ta sana atanan her görev, saatte bir yenilenen tek bir listede. macOS menü çubuğu uygulaması ve web.",
+    "description": "Jira, Linear, GitHub, GitLab, Azure DevOps ve Bitbucket'ta sana atanan her görev, saatte bir yenilenen tek bir listede. macOS menü çubuğu uygulaması ve web.",
     "app": "Görevlerim",
     "connect": "Board bağla"
   },
@@ -137,7 +137,38 @@
     "statementLabel": "Ne olduğu",
     "statementLead": "Sana atanan her şey için tek liste.",
     "statementRest": "Her board bir sekmeye dönüşür, her görev bulunduğu yerde açılır ve liste saatte bir kendini yeniler.",
-    "heroWebNote": "Web uygulaması tarayıcında çalışır, indirmeye gerek yok."
+    "heroWebNote": "Web uygulaması tarayıcında çalışır, indirmeye gerek yok.",
+    "faqTitle": "Sık sorulanlar",
+    "faq": [
+      {
+        "q": "AssignedToMe nedir?",
+        "a": "AssignedToMe; Jira, Linear, GitHub, GitLab, Azure DevOps ve Bitbucket'ta sana atanan her görevi tek bir listede toplar. Her board bir sekmeye dönüşür, her görev kendi kaynağında açılır."
+      },
+      {
+        "q": "Hangi araçlara bağlanıyor?",
+        "a": "Jira (Cloud ve Data Center), Linear, GitHub, GitLab, Azure DevOps ve Bitbucket Data Center. Her kaynak kendi girişi veya API anahtarıyla eklenir."
+      },
+      {
+        "q": "API anahtarlarım nerede saklanıyor?",
+        "a": "Mac uygulamasında anahtarlar cihazında macOS Keychain'de kalır; web'de ise şifreli sunucu depolamasında tutulur. Loglara, URL'lere veya analitiğe asla yazılmaz ve tarayıcıya hiçbir sağlayıcı anahtarı gönderilmez."
+      },
+      {
+        "q": "Liste ne sıklıkla yenileniyor?",
+        "a": "Her board otomatik olarak saatte bir, ayrıca veri bir saatten eskiyse uygulamayı açtığında veya odaklandığında yeniden yenilenir."
+      },
+      {
+        "q": "Web ve Mac'te çalışıyor mu?",
+        "a": "İkisinde de. Tarayıcında kullan ya da macOS menü çubuğunda tut. Mobil uygulama da yolda."
+      },
+      {
+        "q": "Ücretsiz mi?",
+        "a": "Evet. AssignedToMe ücretsiz ve açık kaynak; hem macOS uygulaması hem web sürümü bugün kullanılabilir."
+      },
+      {
+        "q": "Görevlere işlem yapabilir miyim, yoksa sadece görüntüleme mi?",
+        "a": "Kaynağa göre; durum değiştirme, pull request onaylama, atama, süre girişi ve yorum yapmayı listeden ayrılmadan doğrudan yapabilirsin."
+      }
+    ]
   },
   "connect": {
     "title": "Board bağla",

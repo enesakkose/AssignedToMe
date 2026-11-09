@@ -2,7 +2,7 @@
   "metadata": {
     "title": "AssignedToMe",
     "home": "AssignedToMe: everything assigned to you, in one list",
-    "description": "Every task assigned to you in Jira, Linear, GitHub, GitLab and Azure DevOps, in one list that refreshes every hour. A macOS menu bar app, and on the web.",
+    "description": "Every task assigned to you in Jira, Linear, GitHub, GitLab, Azure DevOps and Bitbucket, in one list that refreshes every hour. A macOS menu bar app, and on the web.",
     "app": "My tasks",
     "connect": "Connect a board"
   },
@@ -137,7 +137,38 @@
     "statementLabel": "What it is",
     "statementLead": "One list for everything assigned to you.",
     "statementRest": "Each board becomes a tab, every task opens where it lives, and the list refreshes itself every hour.",
-    "heroWebNote": "The web app runs in your browser, no download needed."
+    "heroWebNote": "The web app runs in your browser, no download needed.",
+    "faqTitle": "Questions, answered",
+    "faq": [
+      {
+        "q": "What is AssignedToMe?",
+        "a": "AssignedToMe gathers every task assigned to you across Jira, Linear, GitHub, GitLab, Azure DevOps and Bitbucket into a single list. Each board becomes a tab, and every task opens in its source app."
+      },
+      {
+        "q": "Which tools does it connect to?",
+        "a": "Jira (Cloud and Data Center), Linear, GitHub, GitLab, Azure DevOps and Bitbucket Data Center. Each source is added with its own sign-in or API key."
+      },
+      {
+        "q": "Where are my API keys stored?",
+        "a": "On the Mac app keys stay on your device in the macOS Keychain; on the web they live in encrypted server storage. They are never written to logs, URLs or analytics, and the browser never receives provider keys."
+      },
+      {
+        "q": "How often does the list refresh?",
+        "a": "Every board refreshes automatically once an hour, and again when you open or focus the app if the data is more than an hour old."
+      },
+      {
+        "q": "Does it work on web and Mac?",
+        "a": "Both. Use it in your browser, or keep it in the macOS menu bar. A mobile app is on the way."
+      },
+      {
+        "q": "Is it free?",
+        "a": "Yes. AssignedToMe is free and open source, and both the macOS app and the web app are available today."
+      },
+      {
+        "q": "Can I act on tasks, or only view them?",
+        "a": "Depending on the source you can change status, approve pull requests, assign, log time and comment directly from the list, without leaving it."
+      }
+    ]
   },
   "connect": {
     "title": "Connect a board",
