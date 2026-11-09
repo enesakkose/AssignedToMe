@@ -78,9 +78,15 @@ async function fetchUsername(ctx: Ctx): Promise<string> {
   }
   if (res.status === 401 || res.status === 403) throw new ProviderError('unauthorized', 'Credentials rejected', res.status);
   if (!res.ok) throw new ProviderError('http', `HTTP ${res.status}`, res.status);
-  const username = res.headers.get('X-AUSERNAME');
-  if (!username || username === 'anonymous') throw new ProviderError('unauthorized', 'Not signed in', res.status);
-  return username;
+  const raw = res.headers.get('X-AUSERNAME');
+  if (!raw || raw === 'anonymous') throw new ProviderError('unauthorized', 'Not signed in', res.status);
+  // Bitbucket URL-encodes this header (e.g. %40 for @ in an email-style username); decode it so it matches the
+  // names and slugs in PR reviewer lists and the participant path. Without this, approvals never show as mine.
+  try {
+    return decodeURIComponent(raw);
+  } catch {
+    return raw;
+  }
 }
 
 // shortcut: caches the connected account per base for the app's lifetime; fine until someone swaps tokens mid-session.
@@ -107,8 +113,13 @@ function currentUser(ctx: Ctx) {
 }
 
 /** My review status on a PR (I'm always a reviewer here), or UNAPPROVED when it can't be read. */
-function myStatus(pr: PullRequest, username: string): string {
-  return pr.reviewers?.find((r) => r.user.name === username)?.status?.toUpperCase() ?? 'UNAPPROVED';
+function myStatus(pr: PullRequest, me: { username: string; slug: string }): string {
+  const ids = new Set([me.username.toLowerCase(), me.slug.toLowerCase()]);
+  const mine = pr.reviewers?.find((r) => ids.has(r.user.name.toLowerCase()) || ids.has(r.user.slug.toLowerCase()));
+  if (!mine) return 'UNAPPROVED';
+  // Some responses carry `status`, others only the `approved` flag.
+  if (mine.status) return mine.status.toUpperCase();
+  return mine.approved ? 'APPROVED' : 'UNAPPROVED';
 }
 
 function statusLabel(status: string): { status: string; statusCategory: StatusCategory } {
@@ -138,14 +149,14 @@ function prUrl(ctx: Ctx, pr: PullRequest, project: string, repo: string): string
   return `${ctx.base}/projects/${project}/repos/${repo}/pull-requests/${pr.id}/overview`;
 }
 
-function toTask(ctx: Ctx, pr: PullRequest, username: string): Task {
+function toTask(ctx: Ctx, pr: PullRequest, me: { username: string; slug: string }): Task {
   const repo = pr.toRef.repository;
   const project = repo.project.key;
   return {
     id: `${ctx.connection.id}:${pr.id}`,
     key: `${project}/${repo.slug}#${pr.id}`,
     title: pr.title,
-    ...statusLabel(myStatus(pr, username)),
+    ...statusLabel(myStatus(pr, me)),
     type: 'Pull request',
     project: repo.name ?? repo.slug,
     // PR descriptions are untrusted markdown; keep as plain text, never rendered as HTML.
@@ -225,7 +236,7 @@ export const bitbucket: Provider = {
     const me = await currentUser(ctx);
     // shortcut: reviewer-only; to also show PRs I authored, page role=AUTHOR too and merge by id.
     const prs = await page(ctx, '/dashboard/pull-requests?role=REVIEWER&state=OPEN', prSchema);
-    return prs.map((pr) => toTask(ctx, pr, me.username));
+    return prs.map((pr) => toTask(ctx, pr, me));
   },
   getTransitions: async (connection, taskKey, fetch): Promise<Transition[]> => {
     const ctx = context(connection, fetch);
@@ -236,7 +247,7 @@ export const bitbucket: Provider = {
     ]);
     const parsed = prSchema.safeParse(body);
     if (!parsed.success) throw unexpected(parsed.error);
-    const current = myStatus(parsed.data, me.username);
+    const current = myStatus(parsed.data, me);
     return REVIEW_STATES.filter((s) => s.status !== current).map((s) => ({
       id: s.status,
       name: s.name,
@@ -249,9 +260,20 @@ export const bitbucket: Provider = {
   transition: async (connection, taskKey, transition, fetch) => {
     const ctx = context(connection, fetch);
     const { project, repo, id } = parseKey(taskKey);
+    const prBase = api(ctx, `/projects/${project}/repos/${repo}/pull-requests/${id}`);
+    // Approve/unapprove act as the current user with no userSlug in the path, so they can't be refused as
+    // "changing another user's status" — the way the participant PUT was (403 with an empty body).
+    if (transition.id === 'APPROVED') {
+      await request(fetch, `${prBase}/approve`, { method: 'POST', headers: ctx.init.headers });
+      return;
+    }
+    if (transition.id === 'UNAPPROVED') {
+      await request(fetch, `${prBase}/approve`, { method: 'DELETE', headers: ctx.init.headers });
+      return;
+    }
+    // "Needs work" (and any other status) still goes through my participant entry.
     const me = await currentUser(ctx);
-    // Changing my own participant status approves / requests changes / resets. REPO_READ is enough.
-    await request(fetch, api(ctx, `/projects/${project}/repos/${repo}/pull-requests/${id}/participants/${encodeURIComponent(me.slug)}`), {
+    await request(fetch, `${prBase}/participants/${encodeURIComponent(me.slug)}`, {
       method: 'PUT',
       headers: { ...ctx.init.headers, 'Content-Type': 'application/json' },
       body: JSON.stringify({ user: { name: me.username }, status: transition.id }),

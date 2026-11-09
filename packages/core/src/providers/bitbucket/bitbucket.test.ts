@@ -97,13 +97,21 @@ test('getTransitions drops the current state (approved)', async () => {
   expect(transitions.map((t) => t.id)).toEqual(['NEEDS_WORK', 'UNAPPROVED']);
 });
 
-test('transition PUTs my participant status to the approve endpoint', async () => {
+test('approve posts to the current-user approve endpoint (no participant slug)', async () => {
   const seen: { url?: string; method?: string; body?: string } = {};
   const transition = { id: 'APPROVED', name: 'Approve', to: { name: 'Approved', category: 'done' as const }, fields: [], allowsComment: false, needsInput: false };
   await bitbucket.transition!(connection, 'PROJ/app#42', transition, route({}, seen));
+  expect(seen.method).toBe('POST');
+  expect(seen.url).toBe('https://bitbucket.acme.com/rest/api/1.0/projects/PROJ/repos/app/pull-requests/42/approve');
+});
+
+test('request-changes PUTs my participant status', async () => {
+  const seen: { url?: string; method?: string; body?: string } = {};
+  const transition = { id: 'NEEDS_WORK', name: 'Request changes', to: { name: 'Needs work', category: 'in_progress' as const }, fields: [], allowsComment: false, needsInput: false };
+  await bitbucket.transition!(connection, 'PROJ/app#42', transition, route({}, seen));
   expect(seen.method).toBe('PUT');
   expect(seen.url).toBe('https://bitbucket.acme.com/rest/api/1.0/projects/PROJ/repos/app/pull-requests/42/participants/me');
-  expect(seen.body).toContain('"status":"APPROVED"');
+  expect(seen.body).toContain('"status":"NEEDS_WORK"');
 });
 
 test('a key without a project/repo is rejected', () => {
