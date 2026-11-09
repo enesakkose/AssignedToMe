@@ -152,16 +152,20 @@ export async function addComment(
   board: string,
   key: string,
   text: string,
+  parentId?: string,
 ): Promise<Result<Comment>> {
   const body = text.trim();
   if (
     !boardId.safeParse(board).success ||
     !taskKey.safeParse(key).success ||
     !body ||
-    body.length > 8000
+    body.length > 8000 ||
+    (parentId !== undefined && !id.safeParse(parentId).success)
   )
     return invalid;
-  return onBoard(board, (p, c) => (p.addComment ?? unsupported)(c, key, body, providerFetch));
+  return onBoard(board, (p, c) =>
+    (p.addComment ?? unsupported)(c, key, body, providerFetch, parentId),
+  );
 }
 
 export async function deleteComment(

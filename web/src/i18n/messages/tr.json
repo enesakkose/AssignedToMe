@@ -235,6 +235,7 @@
     "commentAdded": "Yorum eklendi",
     "commentFailed": "Yorum eklenemedi",
     "deleteComment": "Yorumu sil",
+    "reply": "Yanıtla",
     "commentDeleted": "Yorum silindi",
     "loadFailed": "Yüklenemedi.",
     "you": "Sen"

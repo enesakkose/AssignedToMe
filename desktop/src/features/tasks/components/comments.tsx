@@ -1,5 +1,5 @@
-import type { Attachment } from '@mytask/core';
-import { MessageSquare, Trash2 } from 'lucide-react';
+import type { Attachment, Comment } from '@mytask/core';
+import { MessageSquare, Reply, Trash2 } from 'lucide-react';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Avatar } from '@/components/ui/avatar';
@@ -73,41 +73,18 @@ export function Comments({ connectionId, taskKey, url, attachments, onOpen }: Pr
           ) : (
             <ul className="fade-in flex flex-col gap-3">
               {list.slice(hidden).map((c) => (
-                <li key={c.id} className="group flex gap-2">
-                  <Avatar name={c.author} className="mt-px" />
-                  <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                    <span className="flex min-w-0 items-center gap-1.5 text-sm">
-                      <span className="truncate font-medium text-ink">{c.author ?? t('tasks.unknownAuthor')}</span>
-                      {c.mine && <Badge>{t('tasks.you')}</Badge>}
-                      <span className="num shrink-0 text-xs text-muted" title={new Date(c.created).toLocaleString()}>
-                        {timeAgo(c.created)}
-                      </span>
-                      {c.mine && remove.supported && (
-                        // Quiet until the row is hovered or focused, so the thread reads clean; a spinner while Jira deletes it.
-                        <IconButton
-                          label={t('comments.delete')}
-                          onClick={() => setConfirming(c.id)}
-                          disabled={remove.mutation.isPending}
-                          className={cn(
-                            '-my-1 ml-auto size-6 opacity-0 group-hover:opacity-100 focus-visible:opacity-100',
-                            deleting === c.id && 'opacity-100',
-                          )}
-                        >
-                          {deleting === c.id ? <Spinner /> : <Trash2 />}
-                        </IconButton>
-                      )}
-                    </span>
-                    <RichText
-                      text={c.text}
-                      parts={c.parts}
-                      attachments={attachments}
-                      connectionId={connectionId}
-                      onOpen={onOpen}
-                      className="text-sm"
-                      lines="line-clamp-4"
-                    />
-                  </div>
-                </li>
+                <CommentItem
+                  key={c.id}
+                  comment={c}
+                  depth={0}
+                  connectionId={connectionId}
+                  taskKey={taskKey}
+                  attachments={attachments}
+                  onOpen={onOpen}
+                  remove={remove}
+                  deleting={deleting}
+                  onDelete={setConfirming}
+                />
               ))}
             </ul>
           )}
@@ -132,7 +109,112 @@ export function Comments({ connectionId, taskKey, url, attachments, onOpen }: Pr
   );
 }
 
-function Composer({ connectionId, taskKey }: { connectionId: string; taskKey: string }) {
+/** One comment and its replies, nested and indented; depth caps the indent so deep threads stay readable. */
+function CommentItem({
+  comment: c,
+  depth,
+  connectionId,
+  taskKey,
+  attachments,
+  onOpen,
+  remove,
+  deleting,
+  onDelete,
+}: {
+  comment: Comment;
+  depth: number;
+  connectionId: string;
+  taskKey: string;
+  attachments: Attachment[] | undefined;
+  onOpen: (url: string) => void;
+  remove: ReturnType<typeof useDeleteComment>;
+  deleting: string | undefined;
+  onDelete: (id: string) => void;
+}) {
+  const { t } = useTranslation();
+  const [replying, setReplying] = useState(false);
+  return (
+    <li className="group flex gap-2">
+      <Avatar name={c.author} className="mt-px" />
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span className="flex min-w-0 items-center gap-1.5 text-sm">
+          <span className="truncate font-medium text-ink">{c.author ?? t('tasks.unknownAuthor')}</span>
+          {c.mine && <Badge>{t('tasks.you')}</Badge>}
+          <span className="num shrink-0 text-xs text-muted" title={new Date(c.created).toLocaleString()}>
+            {timeAgo(c.created)}
+          </span>
+          {c.mine && remove.supported && (
+            // Quiet until the row is hovered or focused, so the thread reads clean; a spinner while the source deletes it.
+            <IconButton
+              label={t('comments.delete')}
+              onClick={() => onDelete(c.id)}
+              disabled={remove.mutation.isPending}
+              className={cn(
+                '-my-1 ml-auto size-6 opacity-0 group-hover:opacity-100 focus-visible:opacity-100',
+                deleting === c.id && 'opacity-100',
+              )}
+            >
+              {deleting === c.id ? <Spinner /> : <Trash2 />}
+            </IconButton>
+          )}
+        </span>
+        <RichText
+          text={c.text}
+          parts={c.parts}
+          attachments={attachments}
+          connectionId={connectionId}
+          onOpen={onOpen}
+          className="text-sm"
+          lines="line-clamp-4"
+        />
+        <button
+          type="button"
+          onClick={() => setReplying((r) => !r)}
+          className="flex items-center gap-1 self-start text-xs font-medium text-muted hover:text-ink"
+        >
+          <Reply className="size-3" aria-hidden />
+          {t('comments.reply')}
+        </button>
+        {replying && (
+          <Composer connectionId={connectionId} taskKey={taskKey} parentId={c.id} autoFocus onSent={() => setReplying(false)} />
+        )}
+        {c.replies && c.replies.length > 0 && (
+          // Cap the indent at depth 2 so deep threads don't run off a narrow card.
+          <ul className={cn('mt-2 flex flex-col gap-3 border-l border-rule', depth < 2 ? 'ml-1 pl-3' : 'pl-3')}>
+            {c.replies.map((r) => (
+              <CommentItem
+                key={r.id}
+                comment={r}
+                depth={depth + 1}
+                connectionId={connectionId}
+                taskKey={taskKey}
+                attachments={attachments}
+                onOpen={onOpen}
+                remove={remove}
+                deleting={deleting}
+                onDelete={onDelete}
+              />
+            ))}
+          </ul>
+        )}
+      </div>
+    </li>
+  );
+}
+
+function Composer({
+  connectionId,
+  taskKey,
+  parentId,
+  autoFocus,
+  onSent,
+}: {
+  connectionId: string;
+  taskKey: string;
+  parentId?: string;
+  autoFocus?: boolean;
+  onSent?: () => void;
+}) {
   const appName = useBoard(connectionId).provider?.appName;
   const { t } = useTranslation();
   const add = useAddComment(connectionId, taskKey);
@@ -147,8 +229,18 @@ function Composer({ connectionId, taskKey }: { connectionId: string; taskKey: st
     el.style.height = `${Math.min(el.scrollHeight, 132)}px`;
   }, [text]);
   const canSend = !!text.trim() && !add.isPending;
-  // Text stays in the box until Jira confirms, so a failure loses nothing.
-  const send = () => canSend && add.mutate(text, { onSuccess: () => setText('') });
+  // Text stays in the box until the source confirms, so a failure loses nothing.
+  const send = () =>
+    canSend &&
+    add.mutate(
+      { text, parentId },
+      {
+        onSuccess: () => {
+          setText('');
+          onSent?.();
+        },
+      },
+    );
 
   return (
     <form
@@ -160,6 +252,7 @@ function Composer({ connectionId, taskKey }: { connectionId: string; taskKey: st
     >
       <Textarea
         ref={box}
+        autoFocus={autoFocus}
         value={text}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={(e) => {

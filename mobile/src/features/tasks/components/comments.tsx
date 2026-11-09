@@ -1,4 +1,4 @@
-import type { Attachment } from "@mytask/core";
+import type { Attachment, Comment } from "@mytask/core";
 import { Button } from "@/components/ui/button";
 import { confirm } from "@/components/ui/confirm-sheet";
 import { Icon } from "@/components/ui/icon";
@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Text } from "@/components/ui/text";
 import { providerErrorText } from "@/lib/errors";
 import { timeAgo } from "@/lib/format";
-import { MessageSquare, Trash2 } from "lucide-react-native";
+import { MessageSquare, Reply, Trash2 } from "lucide-react-native";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ActivityIndicator, Pressable, View } from "react-native";
@@ -82,67 +82,22 @@ export function Comments({
               {t("comments.empty")}
             </Text>
           ) : (
-            list.slice(hidden).map((c) => (
-              <View className="flex-row gap-2.5" key={c.id}>
-                <Avatar name={c.author} size={26} />
-                <View className="min-w-0 flex-1 gap-1">
-                  <View className="flex-row items-center gap-1.5">
-                    <Text className="shrink text-sm font-medium" numberOfLines={1}>
-                      {c.author ?? t("tasks.unknownAuthor")}
-                    </Text>
-                    {c.mine ? (
-                      <Text className="rounded-sm bg-paper-3 px-1.5 text-xs font-medium text-ink-2">
-                        {t("tasks.you")}
-                      </Text>
-                    ) : null}
-                    <Text className="text-xs" variant="muted">
-                      {timeAgo(c.created)}
-                    </Text>
-                    {c.mine && remove.supported ? (
-                      <Pressable
-                        accessibilityLabel={t("comments.delete")}
-                        accessibilityRole="button"
-                        className="-my-2 ml-auto size-9 items-center justify-center rounded-full active:bg-paper-3"
-                        hitSlop={4}
-                        disabled={remove.mutation.isPending}
-                        onPress={() =>
-                          confirm({
-                            title: t("comments.deleteTitle"),
-                            description: t("comments.deleteDescription", { app: appName }),
-                            confirmLabel: t("comments.delete"),
-                            cancelLabel: t("ui.cancel"),
-                            destructive: true,
-                            onConfirm: () =>
-                              remove.mutation.mutate(c.id, {
-                                onError: (error) =>
-                                  toast.error(t("comments.deleteFailed"), {
-                                    description: providerErrorText(error, t, appName),
-                                  }),
-                                onSuccess: () => toast.success(t("comments.deleted")),
-                              }),
-                          })
-                        }
-                      >
-                        {deleting === c.id ? (
-                          <ActivityIndicator size="small" />
-                        ) : (
-                          <Icon as={Trash2} className="text-muted-foreground" size={15} />
-                        )}
-                      </Pressable>
-                    ) : null}
-                  </View>
-                  <RichText
-                    attachments={attachments}
-                    className="text-sm leading-5"
-                    connectionId={connectionId}
-                    fold
-                    parts={c.parts}
-                    taskUrl={url}
-                    text={c.text}
-                  />
-                </View>
-              </View>
-            ))
+            list
+              .slice(hidden)
+              .map((c) => (
+                <CommentItem
+                  key={c.id}
+                  comment={c}
+                  depth={0}
+                  connectionId={connectionId}
+                  taskKey={taskKey}
+                  url={url}
+                  attachments={attachments}
+                  appName={appName}
+                  remove={remove}
+                  deleting={deleting}
+                />
+              ))
           )}
           <Composer connectionId={connectionId} taskKey={taskKey} />
         </>
@@ -151,19 +106,174 @@ export function Comments({
   );
 }
 
-function Composer({ connectionId, taskKey }: { connectionId: string; taskKey: string }) {
+/** One comment and its replies, nested and indented; depth caps the indent so deep threads stay readable on a phone. */
+function CommentItem({
+  comment: c,
+  depth,
+  connectionId,
+  taskKey,
+  url,
+  attachments,
+  appName,
+  remove,
+  deleting,
+}: {
+  comment: Comment;
+  depth: number;
+  connectionId: string;
+  taskKey: string;
+  url: string;
+  attachments: Attachment[] | undefined;
+  appName: string | undefined;
+  remove: ReturnType<typeof useDeleteComment>;
+  deleting: string | undefined;
+}) {
+  const { t } = useTranslation();
+  const [replying, setReplying] = useState(false);
+  return (
+    <View className="flex-row gap-2.5">
+      <Avatar name={c.author} size={26} />
+      <View className="min-w-0 flex-1 gap-1">
+        <View className="flex-row items-center gap-1.5">
+          <Text className="shrink text-sm font-medium" numberOfLines={1}>
+            {c.author ?? t("tasks.unknownAuthor")}
+          </Text>
+          {c.mine ? (
+            <Text className="rounded-sm bg-paper-3 px-1.5 text-xs font-medium text-ink-2">
+              {t("tasks.you")}
+            </Text>
+          ) : null}
+          <Text className="text-xs" variant="muted">
+            {timeAgo(c.created)}
+          </Text>
+          {c.mine && remove.supported ? (
+            <Pressable
+              accessibilityLabel={t("comments.delete")}
+              accessibilityRole="button"
+              className="-my-2 ml-auto size-9 items-center justify-center rounded-full active:bg-paper-3"
+              hitSlop={4}
+              disabled={remove.mutation.isPending}
+              onPress={() =>
+                confirm({
+                  title: t("comments.deleteTitle"),
+                  description: t("comments.deleteDescription", { app: appName }),
+                  confirmLabel: t("comments.delete"),
+                  cancelLabel: t("ui.cancel"),
+                  destructive: true,
+                  onConfirm: () =>
+                    remove.mutation.mutate(c.id, {
+                      onError: (error) =>
+                        toast.error(t("comments.deleteFailed"), {
+                          description: providerErrorText(error, t, appName),
+                        }),
+                      onSuccess: () => toast.success(t("comments.deleted")),
+                    }),
+                })
+              }
+            >
+              {deleting === c.id ? (
+                <ActivityIndicator size="small" />
+              ) : (
+                <Icon as={Trash2} className="text-muted-foreground" size={15} />
+              )}
+            </Pressable>
+          ) : null}
+        </View>
+        <RichText
+          attachments={attachments}
+          className="text-sm leading-5"
+          connectionId={connectionId}
+          fold
+          parts={c.parts}
+          taskUrl={url}
+          text={c.text}
+        />
+        <Pressable
+          accessibilityRole="button"
+          className="min-h-9 flex-row items-center gap-1 self-start"
+          hitSlop={4}
+          onPress={() => setReplying((r) => !r)}
+        >
+          <Icon as={Reply} className="text-muted-foreground" size={13} />
+          <Text className="text-xs font-medium" variant="muted">
+            {t("comments.reply")}
+          </Text>
+        </Pressable>
+        {replying ? (
+          <Composer
+            connectionId={connectionId}
+            taskKey={taskKey}
+            parentId={c.id}
+            autoFocus
+            onSent={() => setReplying(false)}
+          />
+        ) : null}
+        {c.replies && c.replies.length > 0 ? (
+          // Cap the indent at depth 2 so deep threads don't run off a narrow screen.
+          <View
+            className={
+              depth < 2
+                ? "mt-2 gap-3 border-l border-rule pl-2.5"
+                : "mt-2 gap-3 border-l border-rule"
+            }
+          >
+            {c.replies.map((r) => (
+              <CommentItem
+                key={r.id}
+                comment={r}
+                depth={depth + 1}
+                connectionId={connectionId}
+                taskKey={taskKey}
+                url={url}
+                attachments={attachments}
+                appName={appName}
+                remove={remove}
+                deleting={deleting}
+              />
+            ))}
+          </View>
+        ) : null}
+      </View>
+    </View>
+  );
+}
+
+function Composer({
+  connectionId,
+  taskKey,
+  parentId,
+  autoFocus,
+  onSent,
+}: {
+  connectionId: string;
+  taskKey: string;
+  parentId?: string;
+  autoFocus?: boolean;
+  onSent?: () => void;
+}) {
   const { t } = useTranslation();
   const appName = useBoard(connectionId).provider?.appName;
   const add = useAddComment(connectionId, taskKey);
   const [text, setText] = useState("");
   const canSend = !!text.trim() && !add.isPending;
   // Text stays in the box until the source confirms, so a failure loses nothing.
-  const send = () => canSend && add.mutate(text, { onSuccess: () => setText("") });
+  const send = () =>
+    canSend &&
+    add.mutate(
+      { text, parentId },
+      {
+        onSuccess: () => {
+          setText("");
+          onSent?.();
+        },
+      },
+    );
 
   return (
     <View className="gap-2">
       <Input
         accessibilityLabel={t("comments.placeholder")}
+        autoFocus={autoFocus}
         className="h-auto max-h-36 min-h-11 rounded-[22px] py-3"
         multiline
         onChangeText={setText}

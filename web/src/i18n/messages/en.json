@@ -235,6 +235,7 @@
     "commentAdded": "Comment added",
     "commentFailed": "Couldn't add the comment",
     "deleteComment": "Delete comment",
+    "reply": "Reply",
     "commentDeleted": "Comment deleted",
     "loadFailed": "Couldn't load this.",
     "you": "You"

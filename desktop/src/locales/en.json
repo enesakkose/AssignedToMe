@@ -246,6 +246,7 @@
     "showEarlier_other": "Show {{count}} earlier comments",
     "placeholder": "Write a comment…",
     "send": "Send",
+    "reply": "Reply",
     "delete": "Delete comment",
     "deleteTitle": "Delete this comment?",
     "deleteDescription": "It's removed from {{app}} for good and can't be undone.",
