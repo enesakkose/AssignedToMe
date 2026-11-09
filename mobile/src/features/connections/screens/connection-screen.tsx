@@ -3,7 +3,7 @@ import { AppHeader } from "@/components/layout/app-header";
 import { Section } from "@/components/layout/section";
 import { Screen } from "@/components/layout/screen";
 import { Button } from "@/components/ui/button";
-import { ConfirmSheet } from "@/components/ui/confirm-sheet";
+import { confirm } from "@/components/ui/confirm-sheet";
 import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import { SecretInput } from "@/components/ui/secret-input";
@@ -145,7 +145,6 @@ function ConnectionForm({
   const [values, setValues] = useState<Record<string, string>>(initial?.values ?? {});
   const [name, setName] = useState(initial?.name ?? "");
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [removing, setRemoving] = useState(false);
 
   const connection = (): Connection => ({
     id: initial?.id ?? newConnectionId(),
@@ -309,7 +308,27 @@ function ConnectionForm({
         {!initial && signInFor(provider) ? <SignInPanel provider={signInFor(provider)!} /> : null}
         {initial && provider.signIn ? <SignInPanel existing={initial} provider={provider} /> : null}
         {initial ? (
-          <Button className="self-center" onPress={() => setRemoving(true)} variant="ghost">
+          <Button
+            className="self-center"
+            variant="ghost"
+            onPress={() =>
+              confirm({
+                title: t("connections.removeTitle", { name: initial.name }),
+                description: t("connections.removeDescription"),
+                confirmLabel: t("connections.remove"),
+                cancelLabel: t("ui.cancel"),
+                destructive: true,
+                onConfirm: () =>
+                  remove.mutate(initial.id, {
+                    onSuccess: () => {
+                      toast.success(t("connections.removed"));
+                      router.back();
+                    },
+                    onError: () => toast.error(t("errors.generic")),
+                  }),
+              })
+            }
+          >
             <Icon as={Trash2} className="text-error" size={16} />
             <Text className="text-error">{t("connections.remove")}</Text>
           </Button>
@@ -321,29 +340,6 @@ function ConnectionForm({
           <ProviderGuide provider={provider} values={values} />
         </Section>
       )}
-
-      {initial ? (
-        <ConfirmSheet
-          open={removing}
-          onOpenChange={setRemoving}
-          title={t("connections.removeTitle", { name: initial.name })}
-          description={t("connections.removeDescription")}
-          confirmLabel={t("connections.remove")}
-          cancelLabel={t("ui.cancel")}
-          destructive
-          pending={remove.isPending}
-          onConfirm={() => {
-            setRemoving(false);
-            remove.mutate(initial.id, {
-              onSuccess: () => {
-                toast.success(t("connections.removed"));
-                router.back();
-              },
-              onError: () => toast.error(t("errors.generic")),
-            });
-          }}
-        />
-      ) : null}
     </>
   );
 }

@@ -1,6 +1,6 @@
 import type { Attachment } from "@mytask/core";
 import { Button } from "@/components/ui/button";
-import { ConfirmSheet } from "@/components/ui/confirm-sheet";
+import { confirm } from "@/components/ui/confirm-sheet";
 import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -37,7 +37,6 @@ export function Comments({
   const appName = useBoard(connectionId).provider?.appName;
   const comments = useComments(connectionId, taskKey, attachments, supported);
   const [all, setAll] = useState(false);
-  const [confirming, setConfirming] = useState<string | null>(null);
   const remove = useDeleteComment(connectionId, taskKey);
   if (!supported) return null;
   const deleting = remove.mutation.isPending ? remove.mutation.variables : undefined;
@@ -106,7 +105,23 @@ export function Comments({
                         className="-my-2 ml-auto size-9 items-center justify-center rounded-full active:bg-paper-3"
                         hitSlop={4}
                         disabled={remove.mutation.isPending}
-                        onPress={() => setConfirming(c.id)}
+                        onPress={() =>
+                          confirm({
+                            title: t("comments.deleteTitle"),
+                            description: t("comments.deleteDescription", { app: appName }),
+                            confirmLabel: t("comments.delete"),
+                            cancelLabel: t("ui.cancel"),
+                            destructive: true,
+                            onConfirm: () =>
+                              remove.mutation.mutate(c.id, {
+                                onError: (error) =>
+                                  toast.error(t("comments.deleteFailed"), {
+                                    description: providerErrorText(error, t, appName),
+                                  }),
+                                onSuccess: () => toast.success(t("comments.deleted")),
+                              }),
+                          })
+                        }
                       >
                         {deleting === c.id ? (
                           <ActivityIndicator size="small" />
@@ -132,29 +147,6 @@ export function Comments({
           <Composer connectionId={connectionId} taskKey={taskKey} />
         </>
       )}
-
-      <ConfirmSheet
-        open={!!confirming}
-        onOpenChange={(open) => !open && setConfirming(null)}
-        title={t("comments.deleteTitle")}
-        description={t("comments.deleteDescription", { app: appName })}
-        confirmLabel={t("comments.delete")}
-        cancelLabel={t("ui.cancel")}
-        destructive
-        pending={remove.mutation.isPending}
-        onConfirm={() => {
-          if (!confirming) return;
-          const id = confirming;
-          setConfirming(null);
-          remove.mutation.mutate(id, {
-            onError: (error) =>
-              toast.error(t("comments.deleteFailed"), {
-                description: providerErrorText(error, t, appName),
-              }),
-            onSuccess: () => toast.success(t("comments.deleted")),
-          });
-        }}
-      />
     </View>
   );
 }

@@ -4,6 +4,7 @@ import "@/lib/crypto-polyfill";
 // Defines the background refresh task at startup, also when iOS launches the app headless just to run it.
 import "@/features/tasks/background-refresh";
 
+import { ConfirmSheetHost } from "@/components/ui/confirm-sheet";
 import { TaskSheets } from "@/features/tasks/components/task-sheets";
 import { AppProviders } from "@/providers/app-providers";
 import { PortalHost } from "@rn-primitives/portal";
@@ -14,6 +15,7 @@ export default function RootLayout() {
     <AppProviders>
       <Stack screenOptions={{ headerShown: false }} />
       <TaskSheets />
+      <ConfirmSheetHost />
       <PortalHost />
     </AppProviders>
   );
