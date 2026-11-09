@@ -83,7 +83,7 @@ export function ConnectForm({
     });
 
   return (
-    <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-16">
+    <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-16">
       <form
         className="flex flex-col gap-5"
         onSubmit={(e) => {
