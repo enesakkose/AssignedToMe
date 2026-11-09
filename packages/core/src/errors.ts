@@ -25,6 +25,24 @@ export class ProviderError extends Error {
   }
 }
 
+/**
+ * What the server says it refused; never includes our credentials. Jira/Bitbucket: { errorMessages, errors: [{message}] or {field: msg} };
+ * GraphQL (Linear, GitHub): { errors: [{ message }] }; GitHub/GitLab REST: { message } or { error }.
+ */
+async function serverDetail(res: Response): Promise<string> {
+  try {
+    const body = (await res.json()) as { errorMessages?: unknown[]; errors?: unknown; message?: unknown; error?: unknown };
+    const errors = Array.isArray(body.errors)
+      ? body.errors.map((e) => (e as { message?: unknown } | null)?.message)
+      : body.errors && typeof body.errors === 'object'
+        ? Object.values(body.errors)
+        : [];
+    return [...(body.errorMessages ?? []), ...errors, body.message, body.error].filter((m) => typeof m === 'string').join(' ').slice(0, 200);
+  } catch {
+    return '';
+  }
+}
+
 export async function request(fetch: typeof globalThis.fetch, url: string, init: RequestInit): Promise<unknown> {
   let res: Response;
   try {
@@ -38,25 +56,13 @@ export async function request(fetch: typeof globalThis.fetch, url: string, init:
   if (res.status === 401 || res.status === 403) {
     const denied = res.headers.get('X-Authentication-Denied-Reason') ?? '';
     if (/captcha/i.test(denied)) throw new ProviderError('captcha', 'Sign-in needs a CAPTCHA', res.status);
-    throw new ProviderError('unauthorized', 'Credentials rejected', res.status);
+    const detail = await serverDetail(res);
+    throw new ProviderError('unauthorized', `Credentials rejected${detail ? `: ${detail}` : ''}`, res.status);
   }
   if (res.status === 404) throw new ProviderError('not_found', 'Not found', res.status);
   if (!res.ok) {
-    // What the server says it refused; never includes our credentials. Jira: { errorMessages, errors: {field: msg} };
-    // GraphQL (Linear, GitHub): { errors: [{ message }] }; GitHub/GitLab REST: { message } or { error }.
-    let detail = '';
-    try {
-      const body = (await res.json()) as { errorMessages?: unknown[]; errors?: unknown; message?: unknown; error?: unknown };
-      const errors = Array.isArray(body.errors)
-        ? body.errors.map((e) => (e as { message?: unknown } | null)?.message)
-        : body.errors && typeof body.errors === 'object'
-          ? Object.values(body.errors)
-          : [];
-      detail = [...(body.errorMessages ?? []), ...errors, body.message, body.error].filter((m) => typeof m === 'string').join(' ');
-    } catch {
-      // not JSON
-    }
-    throw new ProviderError('http', `HTTP ${res.status}${detail ? `: ${detail.slice(0, 200)}` : ''}`, res.status);
+    const detail = await serverDetail(res);
+    throw new ProviderError('http', `HTTP ${res.status}${detail ? `: ${detail}` : ''}`, res.status);
   }
   if (res.status === 204) return undefined;
   const text = await res.text();
