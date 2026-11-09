@@ -6,9 +6,9 @@
 
 **Every task assigned to you, from every board you use, in one place.**
 
-A fast macOS menubar app (and window) that pulls your assigned issues from Jira, Linear, GitHub, GitLab and Azure DevOps into a single list, so you stop hopping between tabs to find out what's on your plate.
+A fast app that pulls your assigned issues from Jira, Linear, GitHub, GitLab, Azure DevOps and Bitbucket into a single list, so you stop hopping between tabs to find out what's on your plate. Use it on the web, or keep it in your macOS menubar.
 
-**[⬇ Download for macOS](https://github.com/enesakkose/AssignedToMe/releases/latest)** &nbsp;·&nbsp; Apple Silicon & Intel &nbsp;·&nbsp; macOS 13+
+**[🌐 Open the web app](https://assignedtome.xyz)** &nbsp;·&nbsp; **[⬇ Download for macOS](https://github.com/enesakkose/AssignedToMe/releases/latest)** &nbsp;·&nbsp; Apple Silicon & Intel &nbsp;·&nbsp; macOS 13+
 
 <p>
   <img src="docs/assets/providers/jira.svg" width="28" height="28" alt="Jira" />&nbsp;&nbsp;
@@ -18,7 +18,8 @@ A fast macOS menubar app (and window) that pulls your assigned issues from Jira,
     <img src="docs/assets/providers/github-light.svg" width="28" height="28" alt="GitHub" />
   </picture>&nbsp;&nbsp;
   <img src="docs/assets/providers/gitlab.svg" width="28" height="28" alt="GitLab" />&nbsp;&nbsp;
-  <img src="docs/assets/providers/azure.svg" width="28" height="28" alt="Azure DevOps" />
+  <img src="docs/assets/providers/azure.svg" width="28" height="28" alt="Azure DevOps" />&nbsp;&nbsp;
+  <img src="docs/assets/providers/bitbucket.svg" width="28" height="28" alt="Bitbucket" />
 </p>
 
 </div>
@@ -53,6 +54,7 @@ Your work is spread out: a client's Jira, your team's Linear, a few GitHub repos
 | <picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/providers/github-dark.svg" /><img src="docs/assets/providers/github-light.svg" width="32" height="32" alt="" /></picture> | **GitHub** | Classic personal access token (`repo`, plus `project` for Projects status) | ✓ | ✓ | — | — | ✓ |
 | <img src="docs/assets/providers/gitlab.svg" width="32" height="32" alt="" /> | **GitLab** (gitlab.com or self-hosted) | Personal access token (`api`) | ✓ | ✓ | — | — | — |
 | <img src="docs/assets/providers/azure.svg" width="32" height="32" alt="" /> | **Azure DevOps** | Personal access token (Work Items: Read & write) | ✓ | ✓ | — | — | — |
+| <img src="docs/assets/providers/bitbucket.svg" width="32" height="32" alt="" /> | **Bitbucket Data Center** | HTTP access token (Repository: Read) | ✓ | ✓ | — | — | — |
 
 You don't need to look any of this up: when you add a board, the app walks you through creating the right token, step by step, with links and copy buttons.
 
@@ -60,6 +62,7 @@ A few notes:
 - **GitHub status** covers opening and closing issues, plus the **Status** field (Todo / In Progress / Done) when an issue belongs to a GitHub Project. **Sub-tasks** on GitHub are its sub-issues.
 - **GitHub organizations with SAML SSO:** after creating the token, click **Configure SSO** next to it and authorize each organization, or that organization's issues won't appear.
 - **Linear** is read-only for now: you see and open your issues, and actions happen in Linear.
+- **Bitbucket** shows the pull requests waiting on your review. **Status** there means approving, requesting changes or resetting your review, and you can read and reply to PR comments. It targets **Bitbucket Data Center/Server**; if its API is behind a VPN, you must be connected to that network for the board to load.
 
 ## Your data stays yours
 
@@ -155,11 +158,12 @@ desktop/         The macOS app: Tauri v2 + React + Vite + Tailwind + Base UI.
   src/           UI (features/, components/, lib/, locales/)
   src-tauri/     Rust side: menubar, windows, Keychain, permissions
   design/logo/   Logo sources and usage rules (GUIDELINES.md)
+web/             The web app: Next.js, shares packages/core (live at assignedtome.xyz)
 mobile/          Expo / React Native app (early stage)
 docs/assets/     Images used by this README
 ```
 
-A web app is planned and will share `packages/core` the same way.
+The web app lives in `web/` (Next.js) and shares `packages/core` the same way; it's live at [assignedtome.xyz](https://assignedtome.xyz).
 
 Every provider lives in `packages/core/src/providers/<id>/` and implements one `Provider` interface: its logo, form fields, the step-by-step token guide (English and Turkish), and functions like `validate`, `fetchMyTasks`, `transition` or `getComments`. The apps render forms, guides and actions from that object. When a provider leaves out a function, the UI simply hides that action.
 
