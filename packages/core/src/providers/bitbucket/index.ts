@@ -177,8 +177,14 @@ export const bitbucket: Provider = {
   guide: [
     {
       text: {
-        tr: 'Bitbucket adresin, Bitbucket açıkken tarayıcının adres çubuğundaki adres (örn. bitbucket.sirket.com). Şirket ağı ya da VPN gerekiyorsa bağlı ol.',
-        en: 'Your Bitbucket address is what the browser shows while Bitbucket is open (e.g. bitbucket.company.com). Connect to the company network or VPN if needed.',
+        tr: 'Önemli: Bitbucket’ınız VPN arkasındaysa bağlı olduğunuzdan emin olun — uygulama sunucuya doğrudan cihazınızdan erişir. Bağlantının en sık başarısız olma nedeni budur.',
+        en: 'Important: If your Bitbucket is behind a VPN, make sure you’re connected to it — the app reaches the server directly from your device. This is the most common reason a connection fails.',
+      },
+    },
+    {
+      text: {
+        tr: 'Bitbucket adresin, Bitbucket açıkken tarayıcının adres çubuğundaki adres (örn. bitbucket.sirket.com).',
+        en: 'Your Bitbucket address is what the browser shows while Bitbucket is open (e.g. bitbucket.company.com).',
       },
     },
     {
