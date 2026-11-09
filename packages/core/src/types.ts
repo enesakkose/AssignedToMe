@@ -180,6 +180,8 @@ export type Comment = {
   text: string;
   /** Set when the comment has links or inline images. */
   parts?: DescriptionPart[];
+  /** Nested replies, oldest first. Omitted by providers that don't thread. */
+  replies?: Comment[];
 };
 
 /** Platform fetch (Tauri plugin-http, Next proxy, React Native). */
@@ -256,8 +258,8 @@ export type Provider = {
   getWorkLogs?: (connection: Connection, taskKey: string, fetch: Fetch) => Promise<WorkLog[]>;
   /** Optional: the latest comments, oldest first. `attachments` lets inline images resolve to the task's files. */
   getComments?: (connection: Connection, taskKey: string, fetch: Fetch, attachments?: Attachment[]) => Promise<Comment[]>;
-  /** Optional: adds a plain-text comment and returns it. */
-  addComment?: (connection: Connection, taskKey: string, text: string, fetch: Fetch) => Promise<Comment>;
+  /** Optional: adds a plain-text comment and returns it. `parentId` replies under an existing comment (threading providers only; others ignore it). */
+  addComment?: (connection: Connection, taskKey: string, text: string, fetch: Fetch, parentId?: string) => Promise<Comment>;
   /** Optional: deletes a comment; UIs offer it only on the user's own (`mine`). */
   deleteComment?: (connection: Connection, taskKey: string, commentId: string, fetch: Fetch) => Promise<void>;
 };

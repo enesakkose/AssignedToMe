@@ -117,3 +117,86 @@ test('request-changes PUTs my participant status', async () => {
 test('a key without a project/repo is rejected', () => {
   expect(bitbucket.getTransitions!(connection, '#42', route({}))).rejects.toThrow();
 });
+
+/** Resolves whoami (count + users) and delegates everything else to `rest`. */
+const withWhoami = (rest: Fetch, username = 'me'): Fetch =>
+  (async (url: string | URL | Request, init?: RequestInit) => {
+    const u = String(url);
+    if (u.includes('/inbox/pull-requests/count')) return json({ count: 1 }, { 'X-AUSERNAME': username });
+    if (u.includes('/users?filter=')) return json({ values: [{ name: 'me', slug: 'me', displayName: 'Me' }], isLastPage: true });
+    return rest(url, init);
+  }) as Fetch;
+
+const comment = (id: number, author: string, overrides: Record<string, unknown> = {}) => ({
+  id,
+  version: 0,
+  text: `comment ${id}`,
+  author: { name: author, slug: author, displayName: author === 'me' ? 'Me' : 'Them' },
+  createdDate: 1_698_624_000_000,
+  ...overrides,
+});
+
+test('getComments builds a thread tree with nested replies and mine detection', async () => {
+  const activities = () =>
+    json({
+      values: [
+        { action: 'APPROVED' },
+        {
+          action: 'COMMENTED',
+          comment: comment(1, 'them', {
+            comments: [comment(2, 'me', { comments: [comment(3, 'them')] })],
+          }),
+        },
+      ],
+      isLastPage: true,
+    });
+  const comments = await bitbucket.getComments!(connection, 'PROJ/app#42', withWhoami((async (url) => {
+    if (String(url).includes('/activities')) return activities();
+    throw new Error(`unexpected ${url}`);
+  }) as Fetch));
+  expect(comments).toHaveLength(1);
+  expect(comments[0]).toMatchObject({ id: '1', author: 'Them', mine: false, text: 'comment 1' });
+  const reply = comments[0]!.replies![0]!;
+  expect(reply).toMatchObject({ id: '2', mine: true });
+  expect(reply.replies![0]).toMatchObject({ id: '3', mine: false });
+});
+
+test('addComment posts a top-level comment with just text', async () => {
+  const seen: { url?: string; method?: string; body?: string } = {};
+  await bitbucket.addComment!(connection, 'PROJ/app#42', 'hello', withWhoami((async (url, init) => {
+    seen.url = String(url);
+    seen.method = init?.method;
+    seen.body = init?.body as string;
+    return json(comment(9, 'me', { text: 'hello' }));
+  }) as Fetch));
+  expect(seen.method).toBe('POST');
+  expect(seen.url).toBe('https://bitbucket.acme.com/rest/api/1.0/projects/PROJ/repos/app/pull-requests/42/comments');
+  expect(JSON.parse(seen.body!)).toEqual({ text: 'hello' });
+});
+
+test('addComment with a parentId posts a reply', async () => {
+  const seen: { body?: string } = {};
+  const created = await bitbucket.addComment!(connection, 'PROJ/app#42', 'a reply', withWhoami((async (_url, init) => {
+    seen.body = init?.body as string;
+    return json(comment(10, 'me', { text: 'a reply' }));
+  }) as Fetch), '1');
+  expect(JSON.parse(seen.body!)).toEqual({ text: 'a reply', parent: { id: 1 } });
+  expect(created).toMatchObject({ id: '10', mine: true });
+});
+
+test('deleteComment fetches the version then deletes with it', async () => {
+  const seen: { getUrl?: string; delUrl?: string; delMethod?: string } = {};
+  await bitbucket.deleteComment!(connection, 'PROJ/app#42', '9', withWhoami((async (url, init) => {
+    const u = String(url);
+    if (init?.method === 'DELETE') {
+      seen.delUrl = u;
+      seen.delMethod = init.method;
+      return new Response('', { status: 204 });
+    }
+    seen.getUrl = u;
+    return json(comment(9, 'me', { version: 4 }));
+  }) as Fetch));
+  expect(seen.getUrl).toBe('https://bitbucket.acme.com/rest/api/1.0/projects/PROJ/repos/app/pull-requests/42/comments/9');
+  expect(seen.delMethod).toBe('DELETE');
+  expect(seen.delUrl).toBe('https://bitbucket.acme.com/rest/api/1.0/projects/PROJ/repos/app/pull-requests/42/comments/9?version=4');
+});

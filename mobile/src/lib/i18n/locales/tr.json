@@ -275,6 +275,7 @@
     "showEarlier": "Önceki {{count}} yorumu göster",
     "placeholder": "Yorum yaz…",
     "send": "Gönder",
+    "reply": "Yanıtla",
     "delete": "Yorumu sil",
     "deleteTitle": "Yorum silinsin mi?",
     "deleteDescription": "{{app}} üzerinden kalıcı olarak silinir, geri alınamaz.",

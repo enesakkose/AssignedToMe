@@ -21,20 +21,39 @@ export function useComments(connectionId: string, taskKey: string, attachments: 
   });
 }
 
-/** Posts a comment; the list shows it as soon as Jira confirms, without a reload. */
+/** Adds `reply` under the comment with `parentId`, anywhere in the thread tree. */
+function insertReply(list: Comment[], parentId: string, reply: Comment): Comment[] {
+  return list.map((c) =>
+    c.id === parentId
+      ? { ...c, replies: [...(c.replies ?? []), reply] }
+      : c.replies
+        ? { ...c, replies: insertReply(c.replies, parentId, reply) }
+        : c,
+  );
+}
+
+/** Removes the comment with `id`, whether top-level or a nested reply. */
+function removeComment(list: Comment[], id: string): Comment[] {
+  return list.filter((c) => c.id !== id).map((c) => (c.replies ? { ...c, replies: removeComment(c.replies, id) } : c));
+}
+
+/** Posts a comment; the list shows it as soon as the source confirms, without a reload. `parentId` replies under a comment. */
 export function useAddComment(connectionId: string, taskKey: string) {
   const qc = useQueryClient();
   const { connection, provider } = useBoard(connectionId);
   return useMutation({
-    mutationFn: async (text: string) => {
+    mutationFn: async ({ text, parentId }: { text: string; parentId?: string }) => {
       if (!connection || !provider?.addComment) throw new Error('Comments are not supported here');
-      return provider.addComment(await withSecrets(connection), taskKey, text, http);
+      return provider.addComment(await withSecrets(connection), taskKey, text, http, parentId);
     },
-    onSuccess: (comment) => qc.setQueryData<Comment[]>(['comments', connectionId, taskKey], (list) => [...(list ?? []), comment]),
+    onSuccess: (comment, { parentId }) =>
+      qc.setQueryData<Comment[]>(['comments', connectionId, taskKey], (list) =>
+        parentId ? insertReply(list ?? [], parentId, comment) : [...(list ?? []), comment],
+      ),
   });
 }
 
-/** Deletes one of your comments; it leaves the list only once Jira confirms. */
+/** Deletes one of your comments; it leaves the list only once the source confirms. */
 export function useDeleteComment(connectionId: string, taskKey: string) {
   const qc = useQueryClient();
   const { connection, provider } = useBoard(connectionId);
@@ -46,7 +65,7 @@ export function useDeleteComment(connectionId: string, taskKey: string) {
         await provider.deleteComment(await withSecrets(connection), taskKey, commentId, http);
       },
       onSuccess: (_d, commentId) =>
-        qc.setQueryData<Comment[]>(['comments', connectionId, taskKey], (list) => list?.filter((c) => c.id !== commentId)),
+        qc.setQueryData<Comment[]>(['comments', connectionId, taskKey], (list) => (list ? removeComment(list, commentId) : list)),
     }),
   };
 }

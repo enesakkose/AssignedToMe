@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { ProviderError, request } from '../../errors';
-import type { Connection, Fetch, Provider, StatusCategory, Task, Transition } from '../../types';
+import type { Comment, Connection, Fetch, Provider, StatusCategory, Task, Transition } from '../../types';
 import { dataCenterBase } from '../jira';
 
 // Official Bitbucket mark (Simple Icons), in Atlassian blue.
@@ -38,6 +38,28 @@ type PullRequest = z.infer<typeof prSchema>;
 const pageSchema = <T extends z.ZodTypeAny>(item: T) =>
   z.object({ values: z.array(item), isLastPage: z.boolean().optional(), nextPageStart: z.number().nullish() });
 const usersPageSchema = pageSchema(userSchema);
+
+// A comment author may lack a slug; name alone is enough to match the current user.
+const commentAuthorSchema = z.object({ name: z.string(), slug: z.string().optional(), displayName: z.string().optional() });
+type BbComment = {
+  id: number;
+  version?: number;
+  text: string;
+  author: z.infer<typeof commentAuthorSchema>;
+  createdDate?: number;
+  comments?: BbComment[];
+};
+const commentSchema: z.ZodType<BbComment> = z.lazy(() =>
+  z.object({
+    id: z.number(),
+    version: z.number().optional(),
+    text: z.string(),
+    author: commentAuthorSchema,
+    createdDate: z.number().optional(),
+    comments: z.array(commentSchema).optional(),
+  }),
+);
+const activitySchema = z.object({ action: z.string(), comment: commentSchema.nullish() });
 
 type Ctx = { connection: Connection; base: string; init: RequestInit; fetch: Fetch };
 
@@ -120,6 +142,26 @@ function myStatus(pr: PullRequest, me: { username: string; slug: string }): stri
   // Some responses carry `status`, others only the `approved` flag.
   if (mine.status) return mine.status.toUpperCase();
   return mine.approved ? 'APPROVED' : 'UNAPPROVED';
+}
+
+/** Whether a comment author is the connected account (matched like `myStatus`). */
+function isMine(author: z.infer<typeof commentAuthorSchema>, me: { username: string; slug: string }): boolean {
+  const ids = new Set([me.username.toLowerCase(), me.slug.toLowerCase()]);
+  return ids.has(author.name.toLowerCase()) || (author.slug != null && ids.has(author.slug.toLowerCase()));
+}
+
+/** Normalize a Bitbucket comment and its nested replies to the shared Comment, recursively. */
+function toComment(c: BbComment, me: { username: string; slug: string }): Comment {
+  const replies = c.comments?.map((r) => toComment(r, me));
+  return {
+    id: String(c.id),
+    author: c.author.displayName ?? c.author.name,
+    mine: isMine(c.author, me),
+    created: new Date(c.createdDate ?? Date.now()).toISOString(),
+    // Comment text is untrusted; kept as plain text, never rendered as HTML.
+    text: c.text,
+    ...(replies?.length ? { replies } : {}),
+  };
 }
 
 function statusLabel(status: string): { status: string; statusCategory: StatusCategory } {
@@ -278,6 +320,50 @@ export const bitbucket: Provider = {
       headers: { ...ctx.init.headers, 'Content-Type': 'application/json' },
       body: JSON.stringify({ user: { name: me.username }, status: transition.id }),
     });
+  },
+  getComments: async (connection, taskKey, fetch): Promise<Comment[]> => {
+    const ctx = context(connection, fetch);
+    const { project, repo, id } = parseKey(taskKey);
+    const [activities, me] = await Promise.all([
+      page(ctx, `/projects/${project}/repos/${repo}/pull-requests/${id}/activities`, activitySchema),
+      currentUser(ctx),
+    ]);
+    // Activities come newest first; reverse so comments read oldest first like the other providers.
+    return activities
+      .filter((a): a is typeof a & { comment: BbComment } => a.action === 'COMMENTED' && a.comment != null)
+      .map((a) => toComment(a.comment, me))
+      .reverse();
+  },
+  addComment: async (connection, taskKey, text, fetch, parentId): Promise<Comment> => {
+    if (!text.trim()) throw new ProviderError('invalid_input', 'Empty comment');
+    const ctx = context(connection, fetch);
+    const { project, repo, id } = parseKey(taskKey);
+    const body: { text: string; parent?: { id: number } } = { text: text.trim() };
+    if (parentId != null) {
+      if (!/^\d+$/.test(parentId)) throw new ProviderError('invalid_input', 'Not a comment id');
+      body.parent = { id: Number(parentId) };
+    }
+    const [res, me] = await Promise.all([
+      request(fetch, api(ctx, `/projects/${project}/repos/${repo}/pull-requests/${id}/comments`), {
+        method: 'POST',
+        headers: { ...ctx.init.headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      }),
+      currentUser(ctx),
+    ]);
+    const parsed = commentSchema.safeParse(res);
+    if (!parsed.success) throw unexpected(parsed.error);
+    return toComment(parsed.data, me);
+  },
+  deleteComment: async (connection, taskKey, commentId, fetch) => {
+    if (!/^\d+$/.test(commentId)) throw new ProviderError('invalid_input', 'Not a comment id');
+    const ctx = context(connection, fetch);
+    const { project, repo, id } = parseKey(taskKey);
+    const path = api(ctx, `/projects/${project}/repos/${repo}/pull-requests/${id}/comments/${commentId}`);
+    // Bitbucket rejects a delete without the comment's current version, so read it first.
+    const current = commentSchema.safeParse(await request(fetch, path, ctx.init));
+    if (!current.success) throw unexpected(current.error);
+    await request(fetch, `${path}?version=${current.data.version ?? 0}`, { method: 'DELETE', headers: ctx.init.headers });
   },
   // shortcut: no merge action yet (needs REPO_WRITE); add POST .../pull-requests/{id}/merge?version=N, gated on write access.
 };
