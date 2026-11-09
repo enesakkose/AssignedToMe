@@ -1,4 +1,5 @@
 import { azure } from './providers/azure';
+import { bitbucket } from './providers/bitbucket';
 import { github } from './providers/github';
 import { gitlab } from './providers/gitlab';
 import { jira, jiraDataCenter } from './providers/jira';
@@ -19,7 +20,7 @@ export * from './filters';
 export * from './transfer';
 
 /** Add a provider: create providers/<id>/index.ts and list it here. */
-export const providers: Provider[] = [jira, jiraDataCenter, linear, github, gitlab, azure];
+export const providers: Provider[] = [jira, jiraDataCenter, linear, github, gitlab, azure, bitbucket];
 
 /** Offered inside another provider's screen (`signIn.for`), not in the list above. */
 export const signInProviders: Provider[] = [jiraAtlassian, linearSignIn, githubSignIn];
