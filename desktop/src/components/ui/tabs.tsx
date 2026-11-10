@@ -1,5 +1,5 @@
 import { Tabs as BaseTabs } from '@base-ui/react/tabs';
-import type { ComponentProps, ReactNode } from 'react';
+import { type ComponentProps, type ReactNode, useEffect, useRef } from 'react';
 import { cn } from '@/lib/cn';
 
 export const Tabs = BaseTabs.Root;
@@ -7,8 +7,22 @@ export const TabsPanel = BaseTabs.Panel;
 
 /** Horizontally scrolling tab strip with a sliding graphite underline. */
 export function TabsList({ className, children, ...props }: ComponentProps<typeof BaseTabs.List>) {
+  const ref = useRef<HTMLDivElement>(null);
+  // A mouse wheel only scrolls vertically; translate it to horizontal so the tabs scroll with a mouse too, not just a trackpad.
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      if (el.scrollWidth <= el.clientWidth || Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+      el.scrollLeft += e.deltaY;
+      e.preventDefault();
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, []);
   return (
     <BaseTabs.List
+      ref={ref}
       className={cn(
         'relative flex items-stretch gap-0.5 overflow-x-auto border-b border-rule px-2 [scrollbar-width:none]',
         className,
