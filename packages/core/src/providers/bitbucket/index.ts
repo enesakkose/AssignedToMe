@@ -297,6 +297,8 @@ export const bitbucket: Provider = {
       fields: [],
       allowsComment: false,
       needsInput: false,
+      // Approving (or any review move) doesn't close the PR, so it stays in my list until it's merged.
+      staysInList: true,
     }));
   },
   transition: async (connection, taskKey, transition, fetch) => {

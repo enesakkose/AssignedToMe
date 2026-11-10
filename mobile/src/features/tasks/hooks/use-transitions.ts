@@ -44,7 +44,7 @@ export function useChangeStatus(connectionId: string) {
       const status = { status: transition.to.name, statusCategory: transition.to.category };
       // Moved to done (or cancelled): it leaves the list now, not on the next refresh (my list holds open work only).
       // A sub-task stays under its parent, shown as done.
-      const leaves = transition.to.category === "done";
+      const leaves = transition.to.category === "done" && !transition.staysInList;
       qc.setQueryData<Task[]>(tasksKey, (tasks) =>
         tasks
           ?.filter((t) => !(leaves && t.key === taskKey))

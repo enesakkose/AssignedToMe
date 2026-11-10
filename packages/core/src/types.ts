@@ -147,6 +147,8 @@ export type Transition = {
   allowsComment: boolean;
   /** A required field the app can't render (date, user…); offer "open in source" instead. */
   needsInput: boolean;
+  /** The task stays in the list after this move, even to a `done` status (e.g. approving a still-open PR). */
+  staysInList?: boolean;
 };
 
 /** Values for a transition's screen, keyed by field; `select` values are option ids. */
