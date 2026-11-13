@@ -42,6 +42,13 @@ describe('renewConnection', () => {
     expect(await renewConnection(provider(refused), board('r1'), fetch, async () => winner)).toEqual({ values: winner.values, changed: false });
   });
 
+  test("a winner still mid-save is waited for, not latched as a sign-out", async () => {
+    // The loser loses the race, then re-reads: the old token at first, the winner's saved token a moment later.
+    let reads = 0;
+    const reload = async () => (reads++ < 2 ? board('r1') : { id: 'c1', providerId: 'x', name: 'x', values: { refreshToken: 'r2', accessToken: 'fresh' } });
+    expect(await renewConnection(provider(refused), board('r1'), fetch, reload)).toEqual({ values: { refreshToken: 'r2', accessToken: 'fresh' }, changed: false });
+  });
+
   test('a refusal with nothing newer saved is a real sign-out', async () => {
     await expect(renewConnection(provider(refused), board('r1'), fetch, async () => board('r1'))).rejects.toMatchObject({ code: 'unauthorized' });
   });

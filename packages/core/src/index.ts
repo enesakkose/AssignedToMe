@@ -54,8 +54,10 @@ export function transferable(connection: Connection): Connection {
 /**
  * Renews a signed-in board's credentials when they are about to end. The refresh token works once, so when two
  * places renew at the same moment (the popover and the app window, the background task and the app) the loser is
- * refused; `reload` then re-reads what the winner saved, and that is used instead of failing. `changed` says the
- * returned values are new and still need saving.
+ * refused; `reload` then re-reads what the winner saved, and that is used instead of failing. The winner may still
+ * be mid-save when we lose, so re-read a few times before giving up — otherwise a lost race becomes a false
+ * "signed out" that, being treated as a sign-in error, halts the board for good. `changed` says the returned
+ * values are new and still need saving.
  */
 export async function renewConnection(
   provider: Provider,
@@ -67,10 +69,14 @@ export async function renewConnection(
     const values = await provider.refreshCredentials?.(connection, fetch);
     return values ? { values, changed: true } : { values: connection.values, changed: false };
   } catch (error) {
-    const again = await reload();
-    if (again.values.refreshToken && again.values.refreshToken !== connection.values.refreshToken)
-      return { values: again.values, changed: false };
-    throw error;
+    // shortcut: ~1.5s of re-reads covers a winner's token POST + save; a slower winner still latches until next fetch.
+    for (let tries = 0; ; tries++) {
+      const again = await reload();
+      if (again.values.refreshToken && again.values.refreshToken !== connection.values.refreshToken)
+        return { values: again.values, changed: false };
+      if (tries >= 5) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 300));
+    }
   }
 }
 
