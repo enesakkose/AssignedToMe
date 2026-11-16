@@ -1,5 +1,5 @@
 import type { Attachment } from '@mytask/core';
-import { ExternalLink, ImageOff } from 'lucide-react';
+import { ExternalLink, Image as ImageIcon, ImageOff, Paperclip } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -42,6 +42,70 @@ export function AttachmentImages({
         ))}
       </ul>
       {preview && <ImagePreview connectionId={connectionId} attachment={preview} onClose={() => setPreview(null)} onOpen={onOpen} />}
+    </div>
+  );
+}
+
+/**
+ * Attachments shown as openable file links (non-image files, any provider). On a board we can't download image bytes
+ * from (e.g. Jira over the Atlassian MCP server), images can't be shown at all, so instead of listing them we add one
+ * link that opens the task in its source, where the user is signed in and can see the images.
+ */
+export function AttachmentLinks({
+  connectionId,
+  attachments,
+  exclude,
+  onOpen,
+  taskUrl,
+  className,
+}: {
+  connectionId: string;
+  attachments: Attachment[] | undefined;
+  exclude?: Set<string>;
+  onOpen: (url: string) => void;
+  taskUrl?: string;
+  className?: string;
+}) {
+  const { t } = useTranslation();
+  const canDownload = useCanShowAttachments(connectionId);
+  const all = attachments ?? [];
+  // Images are shown as thumbnails when we can download; otherwise they are left out of the list entirely.
+  const files = all.filter((a) => !isImage(a) && (canDownload ? !exclude?.has(a.id) : true));
+  const images = !canDownload && taskUrl ? all.filter(isImage).length : 0;
+  if (!files.length && !images) return null;
+
+  return (
+    <div className={cn('flex flex-col gap-1', className)}>
+      <h4 className="font-display text-sm font-semibold text-ink-2">{t('tasks.attachments', { count: files.length + (images ? 1 : 0) })}</h4>
+      <ul className="flex flex-col gap-1">
+        {files.map((a) => (
+          <li key={a.id}>
+            <button
+              type="button"
+              onClick={() => onOpen(a.url)}
+              title={a.name}
+              className="flex w-full items-center gap-2 rounded-sm border border-rule bg-paper-2 px-2.5 py-1.5 text-left text-sm text-ink-2 transition-colors hover:bg-paper-3 hover:text-ink"
+            >
+              <Paperclip className="size-3.5 shrink-0 text-muted" aria-hidden />
+              <span className="truncate">{a.name}</span>
+              <ExternalLink className="ml-auto size-3.5 shrink-0 text-muted" aria-hidden />
+            </button>
+          </li>
+        ))}
+        {images > 0 && (
+          <li>
+            <button
+              type="button"
+              onClick={() => onOpen(taskUrl!)}
+              className="flex w-full items-center gap-2 rounded-sm border border-rule bg-paper-2 px-2.5 py-1.5 text-left text-sm text-ink-2 transition-colors hover:bg-paper-3 hover:text-ink"
+            >
+              <ImageIcon className="size-3.5 shrink-0 text-muted" aria-hidden />
+              <span className="truncate">{t('tasks.imagesInSource', { count: images })}</span>
+              <ExternalLink className="ml-auto size-3.5 shrink-0 text-muted" aria-hidden />
+            </button>
+          </li>
+        )}
+      </ul>
     </div>
   );
 }

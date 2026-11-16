@@ -30,6 +30,16 @@ const list = (v: string | null) => (v ? v.split(',').filter(Boolean) : undefined
 export function mcpFetch(connection: Connection, fetch: Fetch): Fetch {
   const { accessToken = '', cloudId = '' } = connection.values;
   const call = (name: string, args: Record<string, unknown>) => callTool(fetch, accessToken, name, { cloudId, ...args });
+  // Attachment content/thumbnail urls come back pointing at the api.atlassian.com gateway, which only answers to the
+  // OAuth token, not a browser session — so the "open" link 403s. Rewrite them to the site origin, where the user is
+  // signed in, so the link opens the file in Jira. (Inline preview still needs a download tool the server doesn't have.)
+  let origin = '';
+  try {
+    origin = jiraOrigin(connection.values.domain ?? '');
+  } catch {
+    /* no site domain: leave the gateway urls as they are */
+  }
+  const toSite = (body: string) => (origin && cloudId ? body.replaceAll(`https://api.atlassian.com/ex/jira/${cloudId}`, origin) : body);
   const route = async (input: string | URL | Request, init?: RequestInit) => {
     const url = new URL(input instanceof Request ? input.url : String(input));
     const method = (init?.method ?? 'GET').toUpperCase();
@@ -42,13 +52,15 @@ export function mcpFetch(connection: Connection, fetch: Fetch): Fetch {
     if (method === 'GET' && path === '/search/jql') {
       const max = Number(q.get('maxResults') ?? 50);
       return json(
-        await call('searchJiraIssuesUsingJql', {
-          jql: q.get('jql') ?? '',
-          fields: list(q.get('fields')),
-          // The tool takes 50–100; the Jira code asks for fewer only near its own limit, so a few extra are harmless.
-          maxResults: Math.min(100, Math.max(50, max)),
-          ...(q.get('nextPageToken') ? { nextPageToken: q.get('nextPageToken') } : {}),
-        }),
+        toSite(
+          await call('searchJiraIssuesUsingJql', {
+            jql: q.get('jql') ?? '',
+            fields: list(q.get('fields')),
+            // The tool takes 50–100; the Jira code asks for fewer only near its own limit, so a few extra are harmless.
+            maxResults: Math.min(100, Math.max(50, max)),
+            ...(q.get('nextPageToken') ? { nextPageToken: q.get('nextPageToken') } : {}),
+          }),
+        ),
       );
     }
     if (method === 'GET' && path === '/myself') {
@@ -121,7 +133,7 @@ export function mcpFetch(connection: Connection, fetch: Fetch): Fetch {
       return json(JSON.stringify(found.data.data.users.users.map((u) => ({ ...u, active: true }))));
     }
     if (issue && !issue[2] && method === 'GET')
-      return json(await call('getJiraIssue', { issueIdOrKey: key, fields: list(q.get('fields')), expand: q.get('expand') ?? undefined }));
+      return json(toSite(await call('getJiraIssue', { issueIdOrKey: key, fields: list(q.get('fields')), expand: q.get('expand') ?? undefined })));
     return json('{"errorMessages":["Not available through the Atlassian MCP server"]}', 501);
   };
   // The Jira code reads a thrown error as "network", so an answer the server gave (signed out, not found, rate limit)
@@ -191,10 +203,16 @@ const base = createJira({
 
 export const jiraAtlassian: Provider = {
   ...base,
-  // The server has no tool to delete a work log or comment, nor to download a file; those are left out.
+  // The server has no tool to delete a work log or comment, nor to download a file. The OAuth token is issued by the
+  // MCP server (its audience is mcp.atlassian.com), so it is rejected by the api.atlassian.com REST gateway — there is
+  // no way to fetch attachment bytes here. The app shows attachments as links instead (openable in the browser, where
+  // the user has a Jira session); for inline preview the board must be added with a site API token.
   deleteWorkLog: undefined,
   deleteComment: undefined,
   downloadAttachment: undefined,
+  // The MCP returns the description as Markdown, not HTML, so renderedFields would show raw `![](…)` / `**…**`;
+  // drop it and let the app use our normalized descriptionParts (wikiToParts handles the Markdown) instead.
+  getDescriptionHtml: undefined,
   signIn: {
     for: 'jira',
     label: { tr: 'Atlassian ile ekle', en: 'Add with Atlassian' },
@@ -209,7 +227,6 @@ export const jiraAtlassian: Provider = {
   fetchMyTasks: (c, fetch) => base.fetchMyTasks(c, mcpFetch(c, fetch)),
   getTask: (c, key, fetch) => base.getTask!(c, key, mcpFetch(c, fetch)),
   getChildren: (c, task, fetch) => base.getChildren!(c, task, mcpFetch(c, fetch)),
-  getDescriptionHtml: (c, key, fetch) => base.getDescriptionHtml!(c, key, mcpFetch(c, fetch)),
   searchTasks: (c, query, fetch, hints) => base.searchTasks!(c, query, mcpFetch(c, fetch), hints),
   getTransitions: (c, key, fetch) => base.getTransitions!(c, key, mcpFetch(c, fetch)),
   transition: (c, key, tr, fetch, input) => base.transition!(c, key, tr, mcpFetch(c, fetch), input),

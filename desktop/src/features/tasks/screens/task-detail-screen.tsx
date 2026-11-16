@@ -22,7 +22,7 @@ import { openExternal } from '@/lib/open-external';
 import { markForRefresh } from '@/lib/query';
 import { useNav } from '@/stores/nav';
 import { AssigneeMenu } from '../components/assignee-menu';
-import { AttachmentImages } from '../components/attachment-images';
+import { AttachmentImages, AttachmentLinks } from '../components/attachment-images';
 import { Comments } from '../components/comments';
 import { LogWork } from '../components/log-work';
 import { inlineImageIds, RichText } from '../components/rich-text';
@@ -320,6 +320,7 @@ export function TaskDetailScreen({ snapshot }: { snapshot: Task }) {
           )}
 
           <AttachmentImages connectionId={task.connectionId} attachments={task.attachments} exclude={inlineImageIds(task.descriptionParts)} onOpen={open} />
+          <AttachmentLinks connectionId={task.connectionId} attachments={task.attachments} exclude={inlineImageIds(task.descriptionParts)} onOpen={open} taskUrl={task.url} />
 
           {subtasks.length > 0 && (
             <Section title={`${t('tasks.subtasks')} · ${done}/${subtasks.length}`}>

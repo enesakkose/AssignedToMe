@@ -50,3 +50,20 @@ test('wiki markup: images by name only, bracket and bare links, other ! text unt
     { type: 'text', text: ' !important!' },
   ]);
 });
+
+test('MCP markdown: inline images are dropped (or matched by name), links kept — no raw ![](url) leaks', () => {
+  const parts = wikiToParts('Note ![](blob:https://media.atl-paas.net/?id=1) then ![shot.png](https://m/2) and [the spec](https://x.io/s).', [img('5', 'shot.png')]);
+  expect(parts).toEqual([
+    { type: 'text', text: 'Note  then ' },
+    { type: 'image', attachmentId: '5' },
+    { type: 'text', text: ' and ' },
+    { type: 'link', url: 'https://x.io/s', text: 'the spec' },
+    { type: 'text', text: '.' },
+  ]);
+});
+
+test('MCP markdown: a blob image whose url is split by whitespace/newline is still dropped whole', () => {
+  // The MCP emits the media url with a space or newline after `blob:`, so the parens span whitespace.
+  expect(wikiToParts('A ![](blob: https://media/?id=1&w=2) B')).toEqual([{ type: 'text', text: 'A  B' }]);
+  expect(wikiToParts('A ![](blob:\nhttps://media/?id=1&w=2) B')).toEqual([{ type: 'text', text: 'A  B' }]);
+});

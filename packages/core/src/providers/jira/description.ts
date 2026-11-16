@@ -84,10 +84,13 @@ export function adfToParts(doc: unknown, attachments: Attachment[] = []): Descri
   return tidy(parts);
 }
 
-// !file.png|thumbnail!  ·  [text|https://…]  ·  [https://…]  ·  a bare https://… URL
-const WIKI_TOKEN = /!([^!\n|]+?)(?:\|[^!\n]*)?!|\[(?:([^|\]\n]*)\|)?(https?:\/\/[^\]\s]+)\]|(https?:\/\/[^\s\]|]+)/gi;
+// Wiki markup (Data Center/Server) and — for Jira over the Atlassian MCP server, whose description comes as a string
+// too — Markdown. In order: ![alt](url) md image · [text](url) md link · !file.png|thumb! wiki image ·
+// [text|url] / [url] wiki link · a bare https://… URL.
+const WIKI_TOKEN =
+  /!\[([^\]]*)\]\(([^)]*)\)|\[([^\]\n]+)\]\((https?:\/\/[^)\s]+)\)|!([^!\n|]+?)(?:\|[^!\n]*)?!|\[(?:([^|\]\n]*)\|)?(https?:\/\/[^\]\s]+)\]|(https?:\/\/[^\s\]|)]+)/gi;
 
-/** Jira wiki markup (Data Center/Server) to ordered parts; other markup stays as plain text. */
+/** Jira wiki markup (Data Center/Server) or MCP Markdown to ordered parts; other markup stays as plain text. */
 export function wikiToParts(text: string, attachments: Attachment[] = []): DescriptionPart[] {
   const pick = imagePicker(attachments, false);
   const parts: DescriptionPart[] = [];
@@ -95,8 +98,15 @@ export function wikiToParts(text: string, attachments: Attachment[] = []): Descr
   for (const m of text.matchAll(WIKI_TOKEN)) {
     parts.push({ type: 'text', text: text.slice(at, m.index) });
     at = m.index + m[0].length;
-    const [, imageName, label, bracketUrl, bareUrl] = m;
-    if (imageName !== undefined) {
+    const [, mdAlt, mdImageUrl, mdLinkText, mdLinkUrl, imageName, label, bracketUrl, bareUrl] = m;
+    if (mdImageUrl !== undefined) {
+      // Markdown inline image: resolve to an attachment by its alt name if we can, otherwise drop it — it's embedded
+      // media we have no downloadable file for (so leaving the raw ![](url) in the text is just noise).
+      const image = mdAlt && IMAGE_NAME.test(mdAlt) ? pick(mdAlt) : undefined;
+      if (image) parts.push(image);
+    } else if (mdLinkUrl !== undefined) {
+      parts.push({ type: 'link', url: mdLinkUrl, text: mdLinkText?.trim() || linkText(mdLinkUrl) });
+    } else if (imageName !== undefined) {
       // Only file names that look like images; "!important!" stays text.
       const image = IMAGE_NAME.test(imageName) ? pick(imageName) : undefined;
       if (image) parts.push(image);
