@@ -1,7 +1,7 @@
 import type { Task } from '@mytask/core';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Bot, FileDiff, FolderGit2, LogIn, Send, Square } from 'lucide-react';
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { ArrowLeft, Bot, File, FileDiff, Folder, FolderGit2, LogIn, Send, Square } from 'lucide-react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { open } from '@tauri-apps/plugin-dialog';
 import { AppHeader } from '@/components/layout/app-header';
@@ -11,13 +11,15 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Spinner } from '@/components/ui/spinner';
 import { ErrorState } from '@/components/ui/state';
 import { toast } from '@/components/ui/toaster';
+import { cn } from '@/lib/cn';
 import { useNav } from '@/stores/nav';
-import { authStatus, cliAvailable, gitDiff, hasAiKey, setRepoPath } from '../api';
+import { authStatus, cliAvailable, gitDiff, hasAiKey, repoFiles, setRepoPath } from '../api';
 import { AuthPanel, InstallGuide } from '../components/auth-panel';
 import { Markdown } from '../components/markdown';
 import { SolverPicker } from '../components/solver-picker';
 import { TextMenu } from '../components/text-menu';
 import { useSolve } from '../hooks/use-solve';
+import { filterPaths, mentionAt, withFolders } from '../mention';
 import { SOLVERS, solverOf } from '../solvers';
 import type { Mode } from '../types';
 
@@ -34,6 +36,35 @@ export function SolveScreen({ task }: { task: Task }) {
   const isAuthError = (text: string) => /authenticat|\blogin\b|CURSOR_API_KEY|OAuth|unauthor|not signed|sign[ -]?in/i.test(text);
   const taRef = useRef<HTMLTextAreaElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
+  const activeMentionRef = useRef<HTMLButtonElement>(null);
+
+  // @-mention: pick a file or folder from the repo to reference, instead of typing the path.
+  const [mention, setMention] = useState<{ query: string; start: number } | null>(null);
+  const [mIndex, setMIndex] = useState(0);
+  const filesQuery = useQuery({ queryKey: ['solve-files', repo], queryFn: () => repoFiles(repo!), enabled: !!repo, staleTime: 5 * 60_000 });
+  const entries = useMemo(() => withFolders(filesQuery.data ?? []), [filesQuery.data]);
+  const suggestions = useMemo(() => (mention ? filterPaths(entries, mention.query) : []), [mention, entries]);
+  const onNoteChange = (el: HTMLTextAreaElement) => {
+    setNote(el.value);
+    setMention(mentionAt(el.value, el.selectionStart ?? el.value.length));
+    setMIndex(0);
+  };
+  const insertMention = (path: string) => {
+    const el = taRef.current;
+    if (!el || !mention) return;
+    const caret = el.selectionStart ?? note.length;
+    // Folders keep their trailing slash and no space, so you can keep typing to drill in; files end the token.
+    const inserted = `@${path}${path.endsWith('/') ? '' : ' '}`;
+    const next = note.slice(0, mention.start) + inserted + note.slice(caret);
+    setNote(next);
+    setMention(null);
+    const pos = mention.start + inserted.length;
+    requestAnimationFrame(() => {
+      el.focus();
+      el.setSelectionRange(pos, pos);
+    });
+  };
+
   // Grow the input with its content (up to a cap), like a chat box — no manual resize handle.
   useLayoutEffect(() => {
     const el = taRef.current;
@@ -45,6 +76,10 @@ export function SolveScreen({ task }: { task: Task }) {
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: 'end' });
   }, [items, running]);
+  // Keep the highlighted @-suggestion visible when navigating with the keyboard.
+  useEffect(() => {
+    activeMentionRef.current?.scrollIntoView({ block: 'nearest' });
+  }, [mIndex, mention]);
 
   const available = useQuery({
     queryKey: ['solve-cli'],
@@ -201,15 +236,61 @@ export function SolveScreen({ task }: { task: Task }) {
       )}
 
       {/* Composer (Claude-desktop style): the input, with the controls on a row beneath it, all in one box. */}
-      <div className="border-t border-rule p-3">
+      <div className="relative border-t border-rule p-3">
+        {/* @-mention picker: the repo's files/folders, floating above the input, like Claude Code's. */}
+        {mention && suggestions.length > 0 && (
+          <div className="absolute inset-x-3 bottom-full z-10 mb-2 max-h-64 overflow-auto rounded-card border border-rule bg-paper py-1 shadow-float">
+            {suggestions.map((p, i) => (
+              <button
+                key={p}
+                type="button"
+                ref={i === mIndex ? activeMentionRef : undefined}
+                // Keep the textarea focused: a plain click would blur it first, so act on mousedown and stop the blur.
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  insertMention(p);
+                }}
+                onMouseEnter={() => setMIndex(i)}
+                className={cn('flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm', i === mIndex ? 'bg-paper-3 text-ink' : 'text-ink-2')}
+              >
+                {p.endsWith('/') ? <Folder className="size-3.5 shrink-0 text-muted" aria-hidden /> : <File className="size-3.5 shrink-0 text-muted" aria-hidden />}
+                <span className="truncate font-mono">{p}</span>
+              </button>
+            ))}
+          </div>
+        )}
         {/* The input pill: just the text and send, like Claude Code's input. */}
         <div className="flex items-end gap-2 rounded-card border border-rule bg-paper-2 px-3 py-2 transition-colors focus-within:border-muted/50">
           <textarea
             ref={taRef}
             rows={1}
             value={note}
-            onChange={(e) => setNote(e.target.value)}
+            onChange={(e) => onNoteChange(e.target)}
+            onClick={(e) => setMention(mentionAt(e.currentTarget.value, e.currentTarget.selectionStart ?? 0))}
+            onBlur={() => setMention(null)}
             onKeyDown={(e) => {
+              if (mention && suggestions.length > 0) {
+                if (e.key === 'ArrowDown') {
+                  e.preventDefault();
+                  setMIndex((i) => (i + 1) % suggestions.length);
+                  return;
+                }
+                if (e.key === 'ArrowUp') {
+                  e.preventDefault();
+                  setMIndex((i) => (i - 1 + suggestions.length) % suggestions.length);
+                  return;
+                }
+                if (e.key === 'Enter' || e.key === 'Tab') {
+                  e.preventDefault();
+                  insertMention(suggestions[mIndex]!);
+                  return;
+                }
+                if (e.key === 'Escape') {
+                  e.preventDefault();
+                  setMention(null);
+                  return;
+                }
+              }
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 submit();

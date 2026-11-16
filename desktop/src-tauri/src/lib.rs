@@ -672,6 +672,7 @@ pub fn run() {
             solve::solve_stop,
             solve::solve_cli_available,
             solve::solve_git_diff,
+            solve::solve_repo_files,
             solve::solve_login,
             solve::solve_login_input,
             solve::solve_auth_status

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { withSecrets } from '@/features/connections/api/connections';
 import { useBoard } from '@/features/tasks/hooks/use-board';
 import { http } from '@/lib/http';
-import { getRepoPath, startSolve, stopSolve } from '../api';
+import { getRepoPath, loadSolveChat, loadSolvePrefs, saveSolveChat, saveSolvePrefs, startSolve, stopSolve } from '../api';
 import { solverOf } from '../solvers';
 import type { ChatEvent, ChatItem, Mode, SolverId } from '../types';
 
@@ -83,6 +83,43 @@ export function useSolve(task: Task) {
   const setRepo = useCallback((path: string) => qc.setQueryData(['solve-repo', task.connectionId], path), [qc, task.connectionId]);
 
   useEffect(() => () => void (runIdRef.current && stopSolve(runIdRef.current)), []);
+
+  // Keep the chat for a task so leaving and reopening the screen doesn't lose it (1-day TTL lives in the api).
+  const chatKey = `${task.connectionId}:${task.key}`;
+  useEffect(() => {
+    let alive = true;
+    void loadSolveChat(chatKey).then((c) => {
+      if (!alive || !c) return;
+      setItems(c.items);
+      sessionRef.current = c.sessionId;
+      // shortcut: only resume when we saved a session id; a stale id (CLI pruned it) just errors on the next send.
+      startedRef.current = !!c.sessionId;
+      costRef.current = c.cost;
+      setSessionCost(c.cost);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [chatKey]);
+  // Persist once a turn settles (and on any transcript change while idle); never mid-stream.
+  useEffect(() => {
+    if (!running && items.length > 0) void saveSolveChat(chatKey, { items, sessionId: sessionRef.current, cost: costRef.current });
+  }, [running, items, chatKey]);
+
+  // Remember the last-used mode / effort / model (globally), so they don't reset on reopen. Only save after the
+  // initial load, or the mount defaults would overwrite the stored choice before it's read back.
+  const prefsLoaded = useRef(false);
+  useEffect(() => {
+    void loadSolvePrefs().then((p) => {
+      if (p.mode) setMode(p.mode);
+      if (p.effort !== undefined) setEffort(p.effort);
+      if (p.model !== undefined) setModel(p.model);
+      prefsLoaded.current = true;
+    });
+  }, []);
+  useEffect(() => {
+    if (prefsLoaded.current) void saveSolvePrefs({ mode, effort, model });
+  }, [mode, effort, model]);
 
   const chooseSolver = useCallback((next: SolverId) => {
     if (running) return;

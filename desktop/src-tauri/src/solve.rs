@@ -231,6 +231,24 @@ pub fn solve_git_diff(repo: String) -> Result<String, String> {
     Ok(String::from_utf8_lossy(&out.stdout).into_owned())
 }
 
+/// The repo's tracked files (honors .gitignore), for the @-mention picker. Paths are relative to the repo root.
+#[tauri::command]
+pub fn solve_repo_files(repo: String) -> Result<Vec<String>, String> {
+    let repo = valid_repo(&repo)?;
+    let git = resolve_bin("git").ok_or("git not found")?;
+    let out = Command::new(git)
+        .arg("-C").arg(&repo)
+        .arg("ls-files")
+        .env("PATH", child_path())
+        .output()
+        .map_err(|e| e.to_string())?;
+    if !out.status.success() {
+        return Err(String::from_utf8_lossy(&out.stderr).trim().to_string());
+    }
+    // shortcut: cap at 20k paths so a giant repo can't flood the picker; upgrade to a filtered query if that's ever hit.
+    Ok(String::from_utf8_lossy(&out.stdout).lines().map(String::from).take(20_000).collect())
+}
+
 /// Keychain read that treats any error as "no key" — the key is optional, a lookup failure shouldn't block a run.
 fn get_secret_opt(app: &AppHandle, account: &str) -> Option<String> {
     crate::get_secret(app, account).ok().flatten()
