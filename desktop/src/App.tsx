@@ -8,10 +8,12 @@ import { OnboardingScreen } from '@/features/onboarding/onboarding-screen';
 import { BackgroundSync } from '@/features/tasks/components/background-sync';
 import { BoardSidebar, SidebarToggle } from '@/features/tasks/components/board-sidebar';
 import { PlaygroundScreen } from '@/features/playground/screens/playground-screen';
+import { SolveScreen } from '@/features/solve/screens/solve-screen';
 import { TaskDetailScreen } from '@/features/tasks/screens/task-detail-screen';
 import { TasksScreen } from '@/features/tasks/screens/tasks-screen';
 import { queryClient } from '@/lib/query';
 import { cn } from '@/lib/cn';
+import { ErrorBoundary } from '@/components/error-boundary';
 import type { Task } from '@mytask/core';
 import { invoke } from '@tauri-apps/api/core';
 import { onNotificationClick } from '@/lib/notifications';
@@ -62,13 +64,20 @@ function useOutsideClickOnlyCloses() {
 /** A task's detail page sits over the screen, so the list keeps its search, filters and scroll position. */
 function Screens() {
   const detail = useNav((s) => s.detail);
+  const solve = useNav((s) => s.solve);
+  const covered = !!detail || !!solve;
   return (
     <div className="relative h-full">
       {/* Hidden, not unmounted: the detail page shares the window's translucent background, so the list mustn't show through. */}
-      <div className={cn('h-full', detail && 'invisible')} inert={!!detail}>
+      <div className={cn('h-full', covered && 'invisible')} inert={covered}>
         <CurrentScreen />
       </div>
-      {detail && <TaskDetailScreen key={detail.id} snapshot={detail} />}
+      {detail && !solve && <TaskDetailScreen key={detail.id} snapshot={detail} />}
+      {solve && (
+        <ErrorBoundary key={solve.id}>
+          <SolveScreen task={solve} />
+        </ErrorBoundary>
+      )}
     </div>
   );
 }
@@ -77,15 +86,16 @@ function Screens() {
 function useShortcuts() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      const { screen, go, detail, closeTask } = useNav.getState();
+      const { screen, go, detail, closeTask, solve, closeSolve } = useNav.getState();
       if (e.metaKey && e.key === 'r') {
         e.preventDefault();
         void queryClient.refetchQueries({ queryKey: ['tasks'] });
       } else if (e.metaKey && e.key === ',') {
         e.preventDefault();
         go({ name: 'settings' });
-      } else if (e.key === 'Escape' && (detail || screen.name !== 'tasks') && !document.querySelector('[role="dialog"],[role="menu"]')) {
-        if (detail) closeTask();
+      } else if (e.key === 'Escape' && (solve || detail || screen.name !== 'tasks') && !document.querySelector('[role="dialog"],[role="menu"]')) {
+        if (solve) closeSolve();
+        else if (detail) closeTask();
         else go({ name: 'tasks' });
       }
     };

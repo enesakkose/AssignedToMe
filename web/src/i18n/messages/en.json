@@ -131,6 +131,8 @@
     "statusLine": "Right on the card.",
     "timeTitle": "Log time",
     "timeLine": "Without opening Jira.",
+    "solveTitle": "Solve it with AI",
+    "solveLine": "Hand a task to Claude Code on the Mac app — it works in your repo while you watch.",
     "today": "Today",
     "logTime": "Log time",
     "nav": "Site",

@@ -131,6 +131,8 @@
     "statusLine": "Doğrudan kartın üstünde.",
     "timeTitle": "Süre gir",
     "timeLine": "Jira'yı açmadan.",
+    "solveTitle": "AI ile çöz",
+    "solveLine": "Görevi Mac uygulamasında Claude Code'a devret — sen izlerken repo'nda çalışır.",
     "today": "Bugün",
     "logTime": "Süre gir",
     "nav": "Site",

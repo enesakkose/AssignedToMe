@@ -19,6 +19,7 @@ import { setLanguage } from '@/lib/i18n';
 import { getTheme, setTheme, type ThemePreference } from '@/lib/theme';
 import { REFRESH_CHOICES_MIN, useNav } from '@/stores/nav';
 import { UpdateBanner, useAvailableUpdate } from '@/features/updates/update-banner';
+import { AiSettings } from '@/features/solve/components/ai-settings';
 import { ReceiveFromPhoneDialog, SendToPhoneDialog } from '../components/transfer-dialogs';
 import { useConnections } from '../hooks/use-connections';
 
@@ -196,6 +197,10 @@ export function SettingsScreen() {
               {t('update.check')}
             </Button>
           </div>
+        </Section>
+
+        <Section title={t('solve.title')} description={t('solve.hint')}>
+          <AiSettings />
         </Section>
 
         {import.meta.env.DEV && (

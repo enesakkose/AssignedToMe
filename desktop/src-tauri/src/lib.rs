@@ -10,6 +10,9 @@ use tauri::{AppHandle, Manager, PhysicalPosition, WebviewUrl, WebviewWindowBuild
 use tauri_plugin_positioner::{Position, WindowExt};
 use tauri_plugin_store::StoreExt;
 
+// "Solve with AI": spawn an allowlisted local coding CLI (Claude Code, Cursor) in a mapped repo and stream it.
+mod solve;
+
 // A non-activating panel so the popover can float over other apps — including one in full screen — without
 // switching Spaces or stealing the active app's focus. It can still become key, so search typing works.
 tauri_nspanel::tauri_panel! {
@@ -85,19 +88,25 @@ mod dev_secrets {
     }
 }
 
-#[tauri::command]
-fn secret_get(app: AppHandle, account: String) -> Result<Option<String>, String> {
+/// Reads a stored secret by account. Shared by the `secret_get` command and the solve module
+/// (which injects an AI provider's API key as an env var without it ever crossing the JS boundary).
+pub(crate) fn get_secret(app: &AppHandle, account: &str) -> Result<Option<String>, String> {
     #[cfg(debug_assertions)]
-    return dev_secrets::get(&app, &account);
+    return dev_secrets::get(app, account);
     #[cfg(not(debug_assertions))]
     {
         let _ = app;
-        match keyring::Entry::new(KEYCHAIN_SERVICE, &account).and_then(|e| e.get_password()) {
+        match keyring::Entry::new(KEYCHAIN_SERVICE, account).and_then(|e| e.get_password()) {
             Ok(value) => Ok(Some(value)),
             Err(keyring::Error::NoEntry) => Ok(None),
             Err(e) => Err(e.to_string()),
         }
     }
+}
+
+#[tauri::command]
+fn secret_get(app: AppHandle, account: String) -> Result<Option<String>, String> {
+    get_secret(&app, &account)
 }
 
 #[tauri::command]
@@ -633,6 +642,7 @@ pub fn run() {
         .manage(AllowedOrigins(Mutex::new(HashSet::new())))
         .manage(OAuthListener(Mutex::new(None)))
         .manage(OAuthCancelled(std::sync::atomic::AtomicBool::new(false)))
+        .manage(solve::Solves::default())
         .plugin(tauri_plugin_autostart::Builder::new().arg("--autostart").build())
         .plugin(tauri_plugin_positioner::init())
         // In-app updates from GitHub Releases (latest.json), verified against the pubkey in tauri.conf.json.
@@ -640,6 +650,7 @@ pub fn run() {
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_notification::init())
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_nspanel::init())
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_opener::init())
@@ -656,7 +667,14 @@ pub fn run() {
             focus_app_window,
             oauth_listen,
             oauth_wait,
-            oauth_cancel
+            oauth_cancel,
+            solve::solve_start,
+            solve::solve_stop,
+            solve::solve_cli_available,
+            solve::solve_git_diff,
+            solve::solve_login,
+            solve::solve_login_input,
+            solve::solve_auth_status
         ])
         .setup(|app| {
             // Menubar-only app: no Dock icon, no app switcher entry.

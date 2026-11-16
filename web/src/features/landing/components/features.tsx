@@ -1,4 +1,4 @@
-import { Clock, LayoutGrid, SquareCheckBig } from "lucide-react";
+import { Bot, Clock, LayoutGrid, SquareCheckBig } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import type { ComponentType } from "react";
 
@@ -9,6 +9,7 @@ export async function Features() {
     { icon: SquareCheckBig, title: t("statusTitle"), line: t("statusLine") },
     { icon: Clock, title: t("timeTitle"), line: t("timeLine") },
     { icon: LayoutGrid, title: t("tabsTitle"), line: t("tabsLine") },
+    { icon: Bot, title: t("solveTitle"), line: t("solveLine") },
   ];
   return (
     <ul className="grid border-t border-l border-rule sm:grid-cols-2 lg:grid-cols-3">

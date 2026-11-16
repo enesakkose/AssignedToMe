@@ -36,6 +36,7 @@ Your work is spread out: a client's Jira, your team's Linear, a few GitHub repos
 - **Lives in the menubar.** A click on the menubar icon shows your tasks over whatever you're doing, even a full-screen app. The icon shows how many tasks you have.
 - **Or use it as a window.** Open the full window with a boards sidebar. Close the window and the app keeps running in the menubar. You can also choose "menubar only".
 - **Act without switching apps.** Change status, reassign, comment and log time, where the tool supports it (see the table below).
+- **Solve a task with AI.** Hand a task straight to [Claude Code](https://claude.com/claude-code) running locally on your project: it reads the whole issue (description, parent, epic, sub-tasks) and works in your repo while you watch, with a diff to review. Your code and keys stay on your Mac — nothing goes through a server.
 - **Task details.** Description with images, sub-tasks, epic issues, linked and blocking issues.
 - **Search and filter.** Search your tasks instantly; on a Jira board, also search the whole project. Filter by status, type, priority, sprint and time logged.
 - **New task notifications.** A macOS notification when something new is assigned to you. Clicking it opens that task.

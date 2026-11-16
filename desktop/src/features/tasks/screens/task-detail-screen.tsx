@@ -1,6 +1,6 @@
 import { getProvider, type RelatedTask, type Task } from '@mytask/core';
 import { skipToken, useIsFetching, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, ArrowUpRight, Ban, Hash, House, Link2, MoreHorizontal, RefreshCw } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, Ban, Bot, Hash, House, Link2, MoreHorizontal, RefreshCw } from 'lucide-react';
 import { Fragment, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AppHeader } from '@/components/layout/app-header';
@@ -63,6 +63,7 @@ export function TaskDetailScreen({ snapshot }: { snapshot: Task }) {
   const closeTask = useNav((s) => s.closeTask);
   const openTask = useNav((s) => s.openTask);
   const go = useNav((s) => s.go);
+  const openSolve = useNav((s) => s.openSolve);
   const connections = useConnections();
   const connection = connections.data?.find((c) => c.id === snapshot.connectionId);
   // The board's own query (same options as the list), so status, time and assignee stay fresh here and refresh works.
@@ -145,6 +146,9 @@ export function TaskDetailScreen({ snapshot }: { snapshot: Task }) {
         }
         actions={
           <>
+            <IconButton label={t('solve.solveWithAi')} onClick={() => openSolve(task)}>
+              <Bot />
+            </IconButton>
             <Menu>
               <MenuTrigger render={<IconButton label={t('tasks.more')} />}>
                 <MoreHorizontal />

@@ -29,6 +29,8 @@ type NavState = {
   board: string;
   /** The task whose detail page is open over the current screen (a snapshot; the page reads fresh data by id). */
   detail: Task | null;
+  /** The task being solved with an AI CLI; its chat screen sits over everything. */
+  solve: Task | null;
   /** Detail pages opened before this one (task → sub-task → …), so Back returns to where you came from. */
   history: Task[];
   /** Board tabs on screen; off keeps board names out of sight (e.g. while screen sharing), boards switch from the menu. */
@@ -50,6 +52,8 @@ type NavState = {
   selectBoard: (board: string) => void;
   openTask: (task: Task) => void;
   closeTask: () => void;
+  openSolve: (task: Task) => void;
+  closeSolve: () => void;
 };
 
 export const useNav = create<NavState>((set) => ({
@@ -57,6 +61,7 @@ export const useNav = create<NavState>((set) => ({
   from: { name: 'tasks' },
   board: ALL_BOARDS,
   detail: null,
+  solve: null,
   history: [],
   showTabs: true,
   setShowTabs: (showTabs) => {
@@ -89,6 +94,8 @@ export const useNav = create<NavState>((set) => ({
   openTask: (task) =>
     set(({ detail, history }) => (detail?.id === task.id ? {} : { detail: task, history: detail ? [...history, detail] : [] })),
   closeTask: () => set(({ history }) => ({ detail: history.at(-1) ?? null, history: history.slice(0, -1) })),
+  openSolve: (solve) => set({ solve }),
+  closeSolve: () => set({ solve: null }),
 }));
 
 // Best effort: the preference still holds for this session if the store is unavailable (browser preview).
