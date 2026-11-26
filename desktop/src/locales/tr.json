@@ -224,7 +224,9 @@
     "refreshEvery": "Yenileme",
     "minutesShort": "{{m}} dk",
     "hourShort": "1 sa",
-    "openSystem": "Sistem ayarlarını aç"
+    "openSystem": "Sistem ayarlarını aç",
+    "about": "Hakkında",
+    "github": "GitHub'da kaynak kod"
   },
   "playground": {
     "title": "Tasarım sistemi",

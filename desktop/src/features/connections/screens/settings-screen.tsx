@@ -1,7 +1,7 @@
 import { getProvider, type Locale } from '@mytask/core';
 import { getVersion } from '@tauri-apps/api/app';
 import { disable, enable, isEnabled } from '@tauri-apps/plugin-autostart';
-import { ArrowLeft, ChevronRight, Download, Monitor, Moon, Plus, Smartphone, Sun } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Code2, Download, ExternalLink, Monitor, Moon, Plus, Smartphone, Sun } from 'lucide-react';
 import { invoke } from '@tauri-apps/api/core';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
@@ -16,6 +16,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import { toast } from '@/components/ui/toaster';
 import { setLanguage } from '@/lib/i18n';
+import { openExternal } from '@/lib/open-external';
 import { getTheme, setTheme, type ThemePreference } from '@/lib/theme';
 import { REFRESH_CHOICES_MIN, useNav } from '@/stores/nav';
 import { UpdateBanner, useAvailableUpdate } from '@/features/updates/update-banner';
@@ -201,6 +202,20 @@ export function SettingsScreen() {
 
         <Section title={t('solve.title')} description={t('solve.hint')}>
           <AiSettings />
+        </Section>
+
+        <Section title={t('settings.about')}>
+          <button
+            type="button"
+            onClick={() => void openExternal('https://github.com/enesakkose/AssignedToMe')}
+            className="flex items-center justify-between gap-3 text-md text-ink-2 transition-colors hover:text-ink"
+          >
+            <span className="flex items-center gap-2">
+              <Code2 className="size-4 text-muted" />
+              {t('settings.github')}
+            </span>
+            <ExternalLink className="size-4 text-muted" />
+          </button>
         </Section>
 
         {import.meta.env.DEV && (
