@@ -1,6 +1,6 @@
 {
   "description": "AssignedToMe, ekibinin zaten kullandığı araçlardan — Jira, Linear, GitHub, GitLab ve daha fazlası — sana atanan her görevi tek bir panoda toplar; böylece hiçbir iş gözden kaçmaz.\n\n• Tüm bağlı kaynaklardan sana atanan her şey tek panoda\n• Her görev kaynağına bağlanır — orijinalini tek dokunuşla aç\n• Durum değiştir, süre gir, yorum yap ve yeniden ata — uygulamadan çıkmadan\n• Bağlı kaynaklar, yeniden adlandırabileceğin sekmeler olarak görünür\n• Otomatik yenilenir, listen her zaman güncel kalır\n• API anahtarların yalnızca cihazının güvenli Keychain'inde saklanır — hesap yok, sunucu yok, takip yok\n\nAraçlarını bir kez bağla, gerçek iş yükünü saniyeler içinde gör.",
-  "keywords": "jira,linear,github,görev,atanan,takip,iş,verimlilik,yapılacaklar,sprint,issue",
+  "keywords": "görevlerim,proje,yönetimi,kanban,sprint,sorun,talep,ekip,yazılım,geliştirici,yapılacaklar,pano,todo",
   "promotionalText": "Jira, Linear ve GitHub'da sana atanan her görev tek panoda — otomatik yenilenir.",
   "supportUrl": "https://github.com/enesakkose/AssignedToMe/issues"
 }

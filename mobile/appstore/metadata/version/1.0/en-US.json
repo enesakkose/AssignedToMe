@@ -1,6 +1,6 @@
 {
   "description": "AssignedToMe gathers every task assigned to you across the tools your team already uses — Jira, Linear, GitHub, GitLab and more — into one board, so nothing slips through the cracks.\n\n• One board for everything assigned to you, across every connected source\n• Each task links back to its source — open the original in one tap\n• Update status, log time, comment and reassign without leaving the app\n• Connected sources appear as tabs you can rename\n• Refreshes automatically so your list stays current\n• Your API keys are stored only in the device's secure Keychain — no account, no server, no tracking\n\nConnect your tools once and see your real workload in seconds.",
-  "keywords": "jira,linear,github,gitlab,tasks,assigned,issues,tracker,work,productivity,todo,sprint",
+  "keywords": "tracker,ticket,kanban,sprint,backlog,agile,developer,standup,scrum,work,project,todo,inbox,planner",
   "promotionalText": "Every task assigned to you across Jira, Linear and GitHub — in one board, refreshed automatically.",
   "supportUrl": "https://github.com/enesakkose/AssignedToMe/issues"
 }
