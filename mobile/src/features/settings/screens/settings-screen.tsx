@@ -18,6 +18,7 @@ import { ProviderLogo } from "@/features/connections/components/provider-logo";
 import { type ThemePreference } from "@/hooks/use-app-theme";
 import { appMetadata } from "@/lib/app";
 import { i18n } from "@/lib/i18n";
+import { openLink } from "@/lib/open-link";
 import { type AppLocale } from "@/lib/localization";
 import {
   isNotificationGranted,
@@ -27,10 +28,28 @@ import {
 import { REFRESH_CHOICES_MIN, usePersistStore } from "@/stores/persist-store";
 import { useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
-import { ChevronRight, Laptop, Plus, QrCode } from "lucide-react-native";
+import { ChevronRight, Code2, ExternalLink, Laptop, type LucideIcon, Plus, QrCode } from "lucide-react-native";
 import { type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, View } from "react-native";
+
+const DESKTOP_URL = "https://github.com/enesakkose/AssignedToMe/releases";
+const REPO_URL = "https://github.com/enesakkose/AssignedToMe";
+
+/** A tappable row that opens a link in the in-app browser. */
+function LinkRow({ icon, label, onPress }: { icon: LucideIcon; label: string; onPress: () => void }) {
+  return (
+    <Pressable
+      accessibilityRole="link"
+      className="min-h-14 flex-row items-center gap-3 border-t border-rule px-5 py-3 active:bg-paper-2"
+      onPress={onPress}
+    >
+      <Icon as={icon} className="text-muted-foreground" size={18} />
+      <Text className="min-w-0 flex-1 font-medium">{label}</Text>
+      <Icon as={ExternalLink} className="text-muted-foreground" size={16} />
+    </Pressable>
+  );
+}
 
 /** A setting: its label (and hint) on the left, the control on the right, as on desktop. */
 function Row({ label, hint, children }: { label: string; hint?: string; children?: ReactNode }) {
@@ -184,6 +203,13 @@ export function SettingsScreen() {
             <Text>{permission.data ? t("settings.openSystem") : t("settings.allow")}</Text>
           </Button>
         </Row>
+      </Section>
+
+      <Section flush title={t("settings.about")}>
+        <View>
+          <LinkRow icon={Laptop} label={t("settings.desktopApp")} onPress={() => void openLink(DESKTOP_URL)} />
+          <LinkRow icon={Code2} label={t("settings.github")} onPress={() => void openLink(REPO_URL)} />
+        </View>
       </Section>
 
       <Text className="px-5 py-4" variant="muted">

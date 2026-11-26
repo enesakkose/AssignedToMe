@@ -33,6 +33,9 @@
     "notificationsHint": "Yeni atanan task için bildirim.",
     "notificationsOff": "iOS ayarlarında kapalı.",
     "allow": "İzin ver",
+    "about": "Hakkında",
+    "desktopApp": "Masaüstü uygulaması",
+    "github": "GitHub'da kaynak kod",
     "version": "Sürüm {{version}}"
   },
   "connections": {

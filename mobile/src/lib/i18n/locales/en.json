@@ -33,6 +33,9 @@
     "notificationsHint": "Alerts for newly assigned tasks.",
     "notificationsOff": "Turned off in iOS settings.",
     "allow": "Allow",
+    "about": "About",
+    "desktopApp": "Desktop app",
+    "github": "Source on GitHub",
     "version": "Version {{version}}"
   },
   "connections": {
